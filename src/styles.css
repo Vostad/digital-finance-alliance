@@ -1,0 +1,308 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-bone: var(--bone);
+  --color-paper: var(--paper);
+  --color-hairline: var(--hairline);
+  --color-hairline-invert: var(--hairline-invert);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0rem;
+
+  --ink: oklch(0.16 0.006 265);
+  --bone: oklch(0.965 0.004 90);
+  --paper: oklch(0.99 0.002 90);
+  --hairline: oklch(0.16 0.006 265 / 12%);
+  --hairline-invert: oklch(1 0 0 / 14%);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: oklch(0.99 0.002 90);
+  --secondary: var(--bone);
+  --secondary-foreground: var(--ink);
+  --muted: var(--bone);
+  --muted-foreground: oklch(0.5 0.008 265);
+  --accent: oklch(0.52 0.17 252);
+  --accent-foreground: oklch(0.99 0.002 90);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0.002 90);
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--ink);
+}
+
+.dark {
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --muted-foreground: oklch(0.72 0.008 265);
+  --border: var(--hairline-invert);
+}
+
+/* ==========================================================================
+   AI_ACCORD_ORANGE_EXPERIMENT — the #D8663A signature-orange palette
+   --------------------------------------------------------------------------
+   Activated by <html data-accord-palette="orange-experiment">, driven by
+   ACTIVE_PALETTE in src/lib/accord-palette.ts. Everything above this block is
+   AI_ACCORD_ORIGINAL and is left untouched, so reverting is one line.
+
+   Black stays authority, white stays intelligence. The accent is the voice of
+   the labelling system — eyebrows, indices, field labels, one rule, one
+   locator point — plus interaction. It never touches a headline, a paragraph,
+   a photograph or a background fill.
+
+   TWO SURFACE TONES, ONE HUE. A single accent cannot clear AA on both grounds
+   at the 11px the labels are set in, so the system carries two values of the
+   same hue: #7C7FFF on dark surfaces, #3D3FA0 on light ones.
+   ========================================================================== */
+
+[data-accord-palette="orange-experiment"] {
+  /* #7C7FFF — the signature accent, used on ink and every dark surface. */
+  --accord-orange: #7C7FFF;
+  /* #3D3FA0 — the surface-paired value, used on paper and bone. */
+  --accord-orange-deep: #3D3FA0;
+
+  /* Interaction. Ink on orange is 5.44:1; paper on orange would be 3.48:1. */
+  --accent: var(--accord-orange);
+  --accent-foreground: var(--ink);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+}
+
+/* ==========================================================================
+   INDIA ENERGY RESILIENCE FORUM — a standalone event property
+   --------------------------------------------------------------------------
+   Scoped entirely to [data-forum="india-energy-resilience"]. Nothing here
+   reaches AI Accord: the block re-points --accent inside the forum only, so
+   the shared button, card and CTA components keep working while carrying the
+   forum's own identity.
+
+   One hue (205°, petrol), two surface tones, same discipline as the accord
+   palette: #42949D clears 5.51:1 on ink, #086A73 clears 5.70:1 on bone.
+   ========================================================================== */
+
+[data-forum="india-energy-resilience"] {
+  --forum-accent: oklch(0.62 0.08 205);
+  --forum-accent-deep: oklch(0.48 0.08 205);
+
+  --accent: var(--forum-accent);
+  --accent-foreground: var(--ink);
+}
+
+[data-forum="india-energy-resilience"] {
+  /* Editorial markers, surface-paired. Never placed over photography. */
+  .forum-signal {
+    color: var(--forum-accent-deep);
+    opacity: 1;
+  }
+
+  .forum-signal-invert {
+    color: var(--forum-accent);
+    opacity: 1;
+  }
+
+  .forum-rule {
+    background-color: var(--forum-accent);
+  }
+
+  ::selection {
+    background: var(--forum-accent);
+    color: var(--color-ink);
+  }
+}
+
+/* Signature-orange hooks -------------------------------------------------- */
+
+/* These class names are applied in the markup but are deliberately INERT in
+   AI_ACCORD_ORIGINAL — no rule below matches unless the experiment palette is
+   active, so the original design renders exactly as authored.
+
+   Written unlayered and on purpose: unlayered declarations outrank everything
+   in Tailwind's @layer utilities, so `opacity: 1` here replaces the authored
+   `opacity-45` / `opacity-35` rather than compounding with it. A signature
+   colour muddied to 35% would not be a signature. */
+
+[data-accord-palette="orange-experiment"] {
+  /* Editorial markers on light surfaces: eyebrows, indices, field labels. */
+  .accord-signal {
+    color: var(--accord-orange-deep);
+    opacity: 1;
+  }
+
+  /* The same markers on ink. */
+  .accord-signal-invert {
+    color: var(--accord-orange);
+    opacity: 1;
+  }
+
+  /* The short rule under each headline metric. */
+  .accord-rule {
+    background-color: var(--accord-orange);
+  }
+
+  /* A rule that marks a single line as consequential. Used once, on light. */
+  .accord-hairline {
+    border-color: var(--accord-orange-deep);
+  }
+
+  ::selection {
+    background: var(--accord-orange);
+    color: var(--color-ink);
+  }
+}
+
+/* Editorial type utilities ------------------------------------------------ */
+
+@utility display-xl {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.84;
+  letter-spacing: -0.03em;
+  font-size: clamp(2.25rem, 4.6vw, 5.75rem);
+  overflow-wrap: break-word;
+}
+
+@utility display-lg {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.028em;
+  font-size: clamp(1.9rem, 3.6vw, 3.75rem);
+  overflow-wrap: break-word;
+}
+
+@utility display-md {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.5rem, 2.6vw, 2.5rem);
+  overflow-wrap: break-word;
+}
+
+@utility display-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  font-size: clamp(1.05rem, 1.5vw, 1.375rem);
+  overflow-wrap: break-word;
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+@utility lede {
+  font-size: clamp(1.05rem, 1.35vw, 1.375rem);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+}
+
+/* Motion ------------------------------------------------------------------ */
+
+@utility reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+@utility reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+@utility marquee-track {
+  animation: aa-marquee 42s linear infinite;
+}
+
+@keyframes aa-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .marquee-track {
+    animation: none;
+  }
+}
