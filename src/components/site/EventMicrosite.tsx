@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { AIAccordIcon } from "@/components/site/AIAccordIcon";
+import { FinancialRailsIcon } from "@/components/site/FinancialRailsIcon";
 import { Reveal } from "@/components/site/Reveal";
 import { Section } from "@/components/site/Section";
 import { MicrositePhoto } from "@/components/site/MicrositePhoto";
 import type { MicrositePhoto as MicrositePhotoData } from "@/lib/microsite-photography";
 import { NetworkMarquee } from "@/components/site/NetworkMarquee";
+import { Arrow } from "@/components/site/primitives";
 import type { EventMicrositeData } from "@/lib/event-microsite";
 
 /**
@@ -133,13 +134,13 @@ function Cta({
     <Link
       to={to}
       className={cn(
-        "label inline-flex items-center gap-3 px-7 py-4 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 motion-reduce:transition-none",
+        "group label inline-flex items-center gap-4 px-7 py-4 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 motion-reduce:transition-none",
         styles[tone],
         className,
       )}
     >
-      {children}
-      <span aria-hidden>→</span>
+      <span>{children}</span>
+      <Arrow />
     </Link>
   );
 }
@@ -179,11 +180,11 @@ function SummitNav({ nav }: { nav: EventMicrositeData["nav"] }) {
             onClick={() => setOpen(false)}
             className="group flex shrink-0 items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper"
           >
-            <AIAccordIcon className="h-7" onPhotography={!scrolled} />
+            <FinancialRailsIcon className="h-7" onPhotography={!scrolled} />
             <span className="font-display whitespace-nowrap text-xs font-extrabold uppercase leading-[0.95] tracking-tight">
-              Digital Finance
+              Financial
               <br />
-              Alliance
+              Rails
             </span>
           </a>
 
@@ -202,16 +203,17 @@ function SummitNav({ nav }: { nav: EventMicrositeData["nav"] }) {
           <div className="flex shrink-0 items-center gap-3">
             <Link
               to="/contact"
-              className="label hidden whitespace-nowrap bg-paper px-5 py-3 text-ink transition-colors duration-200 hover:bg-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:block motion-reduce:transition-none"
+              className="group label hidden items-center gap-4 whitespace-nowrap bg-paper px-5 py-3 text-ink transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:inline-flex motion-reduce:transition-none"
             >
-              Request an Invitation <span aria-hidden>→</span>
+              <span>Request an Invitation</span>
+              <Arrow />
             </Link>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="label border border-hairline-invert px-4 py-3 transition-colors duration-500 hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper lg:hidden motion-reduce:transition-none"
+              className="label border border-hairline-invert px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper lg:hidden motion-reduce:transition-none"
             >
               {open ? "Close" : "Menu"}
             </button>
@@ -242,9 +244,10 @@ function SummitNav({ nav }: { nav: EventMicrositeData["nav"] }) {
           <Link
             to="/contact"
             onClick={() => setOpen(false)}
-            className="label mt-10 inline-flex items-center gap-3 self-start bg-paper px-6 py-4 text-ink transition-colors duration-200 hover:bg-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none"
+            className="group label mt-10 inline-flex items-center gap-4 self-start bg-paper px-6 py-4 text-ink transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none"
           >
-            Request an Invitation <span aria-hidden>→</span>
+            <span>Request an Invitation</span>
+            <Arrow />
           </Link>
         </nav>
       </div>
@@ -386,7 +389,7 @@ function V2HeroPhoto({ photo }: { photo: MicrositePhotoData }) {
  * becomes horizontally scrollable instead of stranding the tail.
  */
 /**
- * 04 — the historical mark field: the shared Digital Finance Alliance network,
+ * 04 — the historical mark field: the shared Financial Rails network,
  * replayed on this chapter's dark ground as historical proof. Same component,
  * same eighty-mark source of truth as the homepage's network section — the
  * two surfaces can never disagree. The dark tone applies the chapter's
@@ -865,7 +868,7 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
       {/* FOOTER */}
       <footer className="border-t border-hairline-invert bg-ink pb-10 pt-20 text-paper">
         <div className={CONTENT_CANVAS}>
-          <p className="label opacity-65">Digital Finance Alliance</p>
+          <p className="label opacity-65">Financial Rails</p>
           <p className="font-display mt-5 text-[clamp(1.8rem,4.6vw,4.2rem)] font-extrabold uppercase leading-[0.87] tracking-[-0.03em]">
             {V2_EVENT.name}
           </p>
@@ -911,22 +914,23 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
             </nav>
 
             <div>
-              <p className="label accord-signal-invert">Presented by Digital Finance Alliance</p>
+              <p className="label accord-signal-invert">Presented by Financial Rails</p>
               <ul className="mt-5 space-y-3">
                 <li>
                   <Link
                     to="/"
                     className="text-sm opacity-75 transition-opacity duration-500 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper motion-reduce:transition-none"
                   >
-                    <span aria-hidden>←</span> Back to Digital Finance Alliance
+                    <span aria-hidden>←</span> Back to Financial Rails
                   </Link>
                 </li>
                 <li>
                   <Link
                     to="/forums"
-                    className="text-sm opacity-75 transition-opacity duration-500 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper motion-reduce:transition-none"
+                    className="group inline-flex items-center gap-4 text-sm opacity-75 transition-opacity duration-500 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper motion-reduce:transition-none"
                   >
-                    All Digital Finance Alliance Forums <span aria-hidden>→</span>
+                    <span>All Financial Rails Forums</span>
+                    <Arrow />
                   </Link>
                 </li>
               </ul>
@@ -934,9 +938,7 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
           </div>
 
           <div className="mt-14 flex flex-col gap-3 border-t border-hairline-invert pt-6 md:flex-row md:items-center md:justify-between">
-            <p className="label opacity-55">
-              © 2026 Digital Finance Alliance. All Rights Reserved.
-            </p>
+            <p className="label opacity-55">© 2026 Financial Rails. All Rights Reserved.</p>
             <p className="label opacity-55">
               Privacy <span className="mx-2">|</span> Terms
             </p>

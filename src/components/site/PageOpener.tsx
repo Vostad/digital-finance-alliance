@@ -9,7 +9,7 @@ import { Reveal } from "./Reveal";
 export function PageOpener({
   meta,
   title,
-  ghost = "Digital Finance Alliance",
+  ghost = "Financial Rails",
   /** Standard scale. Titles with a word too long to fit the column pass a
       smaller step so the word is never clipped. */
   titleSize = "text-[clamp(3.5rem,15vw,15rem)]",

@@ -15,11 +15,17 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CouncilRouteImport } from './routes/council'
 import { Route as Df30RouteImport } from './routes/df30'
 import { Route as Df30GlobalListRouteImport } from './routes/df30-global-list'
+import { Route as Fr30RouteImport } from './routes/fr30'
+import { Route as Fr30GlobalListRouteImport } from './routes/fr30-global-list'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as IntelRouteImport } from './routes/intel'
+import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ForumsIndexRouteImport } from './routes/forums.index'
 import { Route as ForumsAfricanMoneyMovementRouteImport } from './routes/forums.african-money-movement'
+import { Route as ForumsFinancialRailsAfricaRouteImport } from './routes/forums.financial-rails-africa'
+import { Route as ForumsFinancialRailsAsiaRouteImport } from './routes/forums.financial-rails-asia'
+import { Route as ForumsFinancialRailsMenaRouteImport } from './routes/forums.financial-rails-mena'
 import { Route as ForumsFinancialRailsV2RouteImport } from './routes/forums.financial-rails-v2'
 import { Route as ForumsIndiaDigitalPaymentsRouteImport } from './routes/forums.india-digital-payments'
 
@@ -53,6 +59,16 @@ const Df30GlobalListRoute = Df30GlobalListRouteImport.update({
   path: '/df30-global-list',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Fr30Route = Fr30RouteImport.update({
+  id: '/fr30',
+  path: '/fr30',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Fr30GlobalListRoute = Fr30GlobalListRouteImport.update({
+  id: '/fr30-global-list',
+  path: '/fr30-global-list',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -61,6 +77,11 @@ const InsightsRoute = InsightsRouteImport.update({
 const IntelRoute = IntelRouteImport.update({
   id: '/intel',
   path: '/intel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceRoute = IntelligenceRouteImport.update({
+  id: '/intelligence',
+  path: '/intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersRoute = PartnersRouteImport.update({
@@ -77,6 +98,24 @@ const ForumsAfricanMoneyMovementRoute =
   ForumsAfricanMoneyMovementRouteImport.update({
     id: '/forums/african-money-movement',
     path: '/forums/african-money-movement',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ForumsFinancialRailsAfricaRoute =
+  ForumsFinancialRailsAfricaRouteImport.update({
+    id: '/forums/financial-rails-africa',
+    path: '/forums/financial-rails-africa',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ForumsFinancialRailsAsiaRoute =
+  ForumsFinancialRailsAsiaRouteImport.update({
+    id: '/forums/financial-rails-asia',
+    path: '/forums/financial-rails-asia',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ForumsFinancialRailsMenaRoute =
+  ForumsFinancialRailsMenaRouteImport.update({
+    id: '/forums/financial-rails-mena',
+    path: '/forums/financial-rails-mena',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ForumsFinancialRailsV2Route = ForumsFinancialRailsV2RouteImport.update({
@@ -98,10 +137,16 @@ export interface FileRoutesByFullPath {
   '/council': typeof CouncilRoute
   '/df30': typeof Df30Route
   '/df30-global-list': typeof Df30GlobalListRoute
+  '/fr30': typeof Fr30Route
+  '/fr30-global-list': typeof Fr30GlobalListRoute
   '/insights': typeof InsightsRoute
   '/intel': typeof IntelRoute
+  '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
+  '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
+  '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
+  '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums/': typeof ForumsIndexRoute
@@ -113,10 +158,16 @@ export interface FileRoutesByTo {
   '/council': typeof CouncilRoute
   '/df30': typeof Df30Route
   '/df30-global-list': typeof Df30GlobalListRoute
+  '/fr30': typeof Fr30Route
+  '/fr30-global-list': typeof Fr30GlobalListRoute
   '/insights': typeof InsightsRoute
   '/intel': typeof IntelRoute
+  '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
+  '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
+  '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
+  '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums': typeof ForumsIndexRoute
@@ -129,10 +180,16 @@ export interface FileRoutesById {
   '/council': typeof CouncilRoute
   '/df30': typeof Df30Route
   '/df30-global-list': typeof Df30GlobalListRoute
+  '/fr30': typeof Fr30Route
+  '/fr30-global-list': typeof Fr30GlobalListRoute
   '/insights': typeof InsightsRoute
   '/intel': typeof IntelRoute
+  '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
+  '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
+  '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
+  '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums/': typeof ForumsIndexRoute
@@ -146,10 +203,16 @@ export interface FileRouteTypes {
     | '/council'
     | '/df30'
     | '/df30-global-list'
+    | '/fr30'
+    | '/fr30-global-list'
     | '/insights'
     | '/intel'
+    | '/intelligence'
     | '/partners'
     | '/forums/african-money-movement'
+    | '/forums/financial-rails-africa'
+    | '/forums/financial-rails-asia'
+    | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums/'
@@ -161,10 +224,16 @@ export interface FileRouteTypes {
     | '/council'
     | '/df30'
     | '/df30-global-list'
+    | '/fr30'
+    | '/fr30-global-list'
     | '/insights'
     | '/intel'
+    | '/intelligence'
     | '/partners'
     | '/forums/african-money-movement'
+    | '/forums/financial-rails-africa'
+    | '/forums/financial-rails-asia'
+    | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums'
@@ -176,10 +245,16 @@ export interface FileRouteTypes {
     | '/council'
     | '/df30'
     | '/df30-global-list'
+    | '/fr30'
+    | '/fr30-global-list'
     | '/insights'
     | '/intel'
+    | '/intelligence'
     | '/partners'
     | '/forums/african-money-movement'
+    | '/forums/financial-rails-africa'
+    | '/forums/financial-rails-asia'
+    | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums/'
@@ -192,10 +267,16 @@ export interface RootRouteChildren {
   CouncilRoute: typeof CouncilRoute
   Df30Route: typeof Df30Route
   Df30GlobalListRoute: typeof Df30GlobalListRoute
+  Fr30Route: typeof Fr30Route
+  Fr30GlobalListRoute: typeof Fr30GlobalListRoute
   InsightsRoute: typeof InsightsRoute
   IntelRoute: typeof IntelRoute
+  IntelligenceRoute: typeof IntelligenceRoute
   PartnersRoute: typeof PartnersRoute
   ForumsAfricanMoneyMovementRoute: typeof ForumsAfricanMoneyMovementRoute
+  ForumsFinancialRailsAfricaRoute: typeof ForumsFinancialRailsAfricaRoute
+  ForumsFinancialRailsAsiaRoute: typeof ForumsFinancialRailsAsiaRoute
+  ForumsFinancialRailsMenaRoute: typeof ForumsFinancialRailsMenaRoute
   ForumsFinancialRailsV2Route: typeof ForumsFinancialRailsV2Route
   ForumsIndiaDigitalPaymentsRoute: typeof ForumsIndiaDigitalPaymentsRoute
   ForumsIndexRoute: typeof ForumsIndexRoute
@@ -245,6 +326,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Df30GlobalListRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fr30': {
+      id: '/fr30'
+      path: '/fr30'
+      fullPath: '/fr30'
+      preLoaderRoute: typeof Fr30RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fr30-global-list': {
+      id: '/fr30-global-list'
+      path: '/fr30-global-list'
+      fullPath: '/fr30-global-list'
+      preLoaderRoute: typeof Fr30GlobalListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
@@ -257,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/intel'
       fullPath: '/intel'
       preLoaderRoute: typeof IntelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence': {
+      id: '/intelligence'
+      path: '/intelligence'
+      fullPath: '/intelligence'
+      preLoaderRoute: typeof IntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partners': {
@@ -278,6 +380,27 @@ declare module '@tanstack/react-router' {
       path: '/forums/african-money-movement'
       fullPath: '/forums/african-money-movement'
       preLoaderRoute: typeof ForumsAfricanMoneyMovementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forums/financial-rails-africa': {
+      id: '/forums/financial-rails-africa'
+      path: '/forums/financial-rails-africa'
+      fullPath: '/forums/financial-rails-africa'
+      preLoaderRoute: typeof ForumsFinancialRailsAfricaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forums/financial-rails-asia': {
+      id: '/forums/financial-rails-asia'
+      path: '/forums/financial-rails-asia'
+      fullPath: '/forums/financial-rails-asia'
+      preLoaderRoute: typeof ForumsFinancialRailsAsiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forums/financial-rails-mena': {
+      id: '/forums/financial-rails-mena'
+      path: '/forums/financial-rails-mena'
+      fullPath: '/forums/financial-rails-mena'
+      preLoaderRoute: typeof ForumsFinancialRailsMenaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forums/financial-rails-v2': {
@@ -304,10 +427,16 @@ const rootRouteChildren: RootRouteChildren = {
   CouncilRoute: CouncilRoute,
   Df30Route: Df30Route,
   Df30GlobalListRoute: Df30GlobalListRoute,
+  Fr30Route: Fr30Route,
+  Fr30GlobalListRoute: Fr30GlobalListRoute,
   InsightsRoute: InsightsRoute,
   IntelRoute: IntelRoute,
+  IntelligenceRoute: IntelligenceRoute,
   PartnersRoute: PartnersRoute,
   ForumsAfricanMoneyMovementRoute: ForumsAfricanMoneyMovementRoute,
+  ForumsFinancialRailsAfricaRoute: ForumsFinancialRailsAfricaRoute,
+  ForumsFinancialRailsAsiaRoute: ForumsFinancialRailsAsiaRoute,
+  ForumsFinancialRailsMenaRoute: ForumsFinancialRailsMenaRoute,
   ForumsFinancialRailsV2Route: ForumsFinancialRailsV2Route,
   ForumsIndiaDigitalPaymentsRoute: ForumsIndiaDigitalPaymentsRoute,
   ForumsIndexRoute: ForumsIndexRoute,

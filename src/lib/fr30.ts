@@ -1,14 +1,15 @@
 /**
- * DIGITAL FINANCE DF30 — the editorial property's content and media manifest.
+ * FR30 — the editorial property's content and media manifest.
  *
  * The complete copy and imagery for /df30, and for that page only. Nothing
  * here is imported by the homepage, the event micro-site or the partner page,
- * and this module mutates nothing it imports, so DF30 can be recast by editing
+ * and this module mutates nothing it imports, so FR30 can be recast by editing
  * this one file.
  *
- * THE NAME IS DIGITAL FINANCE DF30, short form DF30. Never D30, never Digital
- * Finance 30 — the franchise name is written out here once so no surface can
- * drift from it.
+ * THE NAME IS FR30. Never FR-30, never Financial Rails 30, never DF30 — the
+ * franchise name is written out here once so no surface can drift from it.
+ * It reads as "the thirty people shaping the infrastructure of the next
+ * financial system", and that sentence is the whole editorial remit.
  *
  * REAL PHOTOGRAPHY ONLY. Both frames are the platform's own event record,
  * re-encoded from masters that already lived in /public/forums but were served
@@ -16,14 +17,14 @@
  * served; the ladders below are AVIF with a JPEG fallback, 27 KB and 23 KB at
  * the width this page actually renders. The masters are untouched.
  *
- * NO REGIONAL PHOTOGRAPHY EXISTS. The three forthcoming editions are Middle
- * East, India and Africa, and the library holds no photograph made in India or
- * in Africa. Labelling an existing UAE frame as either would be a false claim
- * about where the picture was taken, so the regional cards are typographic and
- * carry no image at all rather than an invented one.
+ * NO REGIONAL PHOTOGRAPHY EXISTS. The forthcoming editions are Asia, Africa
+ * and the Gulf, and the library holds no photograph made in Asia or in Africa.
+ * Labelling an existing UAE frame as either would be a false claim about where
+ * the picture was taken, so the regional cards are typographic and carry no
+ * image at all rather than an invented one.
  */
 
-export type Df30Photo = {
+export type Fr30Photo = {
   /** Path stem; widths and extensions are appended. */
   base: string;
   widths: number[];
@@ -46,7 +47,7 @@ const HALF_COLUMN =
   "(min-width: 1024px) calc(50vw - 136px), (min-width: 768px) calc(100vw - 96px), calc(100vw - 48px)";
 
 /** 01 — the hero frame: the room the index is drawn from. */
-export const DF30_HERO_PHOTO: Df30Photo = {
+export const FR30_HERO_PHOTO: Fr30Photo = {
   base: "/media/df30/df30-hero",
   widths: LADDER,
   intrinsic: { width: 1600, height: 1000 },
@@ -55,7 +56,7 @@ export const DF30_HERO_PHOTO: Df30Photo = {
 };
 
 /** 02 — the Global edition's frame. */
-export const DF30_GLOBAL_PHOTO: Df30Photo = {
+export const FR30_GLOBAL_PHOTO: Fr30Photo = {
   base: "/media/df30/df30-global",
   widths: LADDER,
   intrinsic: { width: 1600, height: 1000 },
@@ -64,22 +65,22 @@ export const DF30_GLOBAL_PHOTO: Df30Photo = {
 };
 
 /** 01 — the hero, locked. */
-export const DF30_HERO = {
-  label: "Digital Finance DF30",
-  headline: ["30 Leaders Shaping", "the Future of Finance"],
-  lede: "An editorial index recognising the people building, transforming and governing the next financial system.",
-  meta: "Global · Regional · Sector",
+export const FR30_HERO = {
+  label: "FR30",
+  headline: ["The 30 people", "building the rails"],
+  lede: "An editorial index of the people designing, operating, financing and regulating the infrastructure through which money moves.",
+  meta: "Money · Markets · Infrastructure · Rules",
 };
 
 /** 02 — the Global edition, locked. */
-export const DF30_FEATURED = {
-  label: "Featured DF30",
-  title: "Global DF30 — 2026",
-  line: "30 Leaders Shaping the Future of Finance",
+export const FR30_FEATURED = {
+  label: "Featured FR30",
+  title: "Global FR30 — 2026",
+  line: "The 30 people building the rails",
   published: "Published 15 August 2026",
-  body: "The inaugural Global DF30 recognises 30 leaders whose work is materially shaping the infrastructure, institutions, markets and technologies of the next financial system.",
-  cta: "Explore Global DF30",
-  to: "/df30-global-list",
+  body: "The inaugural Global FR30 recognises thirty people whose work is materially shaping the payment networks, settlement systems, market infrastructure and rules that money moves through.",
+  cta: "Explore Global FR30",
+  to: "/fr30-global-list",
 };
 
 /**
@@ -88,7 +89,7 @@ export const DF30_FEATURED = {
  * — GCC, Southeast Asia, Europe, Latin America — and an edition goes live by
  * giving it a `to`. None has a route yet, so none is a link.
  */
-export type Df30Edition = {
+export type Fr30Edition = {
   index: string;
   title: string;
   status: string;
@@ -97,40 +98,40 @@ export type Df30Edition = {
   to?: string;
 };
 
-export const DF30_EDITIONS: Df30Edition[] = [
+export const FR30_EDITIONS: Fr30Edition[] = [
   {
     index: "01",
-    title: "DF30 — Middle East",
+    title: "FR30 — Asia",
     status: "Coming Soon",
-    body: "Leaders shaping the future of digital finance across the Middle East.",
+    body: "The people operating the instant payment schemes, settlement systems and digital banks that already run at national scale.",
   },
   {
     index: "02",
-    title: "DF30 — India",
+    title: "FR30 — Africa",
     status: "Coming Soon",
-    body: "Leaders transforming India's rapidly evolving financial ecosystem.",
+    body: "The people building mobile money, instant payments and the cross-border infrastructure the continent still lacks.",
   },
   {
     index: "03",
-    title: "DF30 — Africa",
+    title: "FR30 — Gulf",
     status: "Coming Soon",
-    body: "Leaders building the next generation of African financial infrastructure.",
+    body: "The people building the settlement, tokenization and regulatory infrastructure of the Gulf's financial centres.",
   },
 ];
 
 /** 04 — the methodology, locked. */
-export const DF30_METHOD = {
-  heading: "How the DF30 is built",
+export const FR30_METHOD = {
+  heading: "How the FR30 is built",
   statement:
-    "The DF30 is an editorial selection, not a popularity contest or quantitative ranking. Each edition recognises leaders based on demonstrable contribution, institutional influence, current relevance and the significance of their work to the evolution of finance.",
+    "The FR30 is an editorial selection, not a popularity contest or a quantitative ranking. Each edition recognises people on demonstrable contribution to financial infrastructure, institutional influence, current relevance, and the significance of their work to how money is moved, settled and governed.",
   close: "Each edition is independently reviewed and published with a defined editorial date.",
 };
 
-export const DF30_PRINCIPLES = [
+export const FR30_PRINCIPLES = [
   {
     index: "01",
     title: "Contribution",
-    body: "Demonstrable impact on financial systems, institutions or infrastructure.",
+    body: "Demonstrable impact on the systems money actually moves through.",
   },
   {
     index: "02",
@@ -140,7 +141,7 @@ export const DF30_PRINCIPLES = [
   {
     index: "03",
     title: "Relevance",
-    body: "Current contribution to the evolution of finance.",
+    body: "Work that is live now, not a reputation earned elsewhere.",
   },
   {
     index: "04",
@@ -150,8 +151,8 @@ export const DF30_PRINCIPLES = [
 ];
 
 /** 05 — the close, locked. */
-export const DF30_CLOSE = {
+export const FR30_CLOSE = {
   headline: ["The financial system", "is being rebuilt."],
-  line: "DF30 recognises the people shaping what comes next.",
-  signature: "Digital Finance Alliance",
+  line: "FR30 recognises the people doing the rebuilding.",
+  signature: "Financial Rails",
 };

@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import { DIGITAL_FINANCE_FEATURED_LOGOS } from "@/lib/digital-asset-accord-logos";
+import { FINANCIAL_RAILS_FEATURED_LOGOS } from "@/lib/financial-rails-logos";
 
 /**
- * The network marquee: the eighty-mark Digital Finance Alliance network as
+ * The network marquee: the eighty-mark Financial Rails network as
  * continuous single-direction streams. One system, two contexts — the
  * homepage runs it on the brand light ground, Financial Rails V2 on dark —
  * both from the same curated set, so the surfaces can never disagree while
@@ -73,7 +73,7 @@ const PRESENCE = {
 export function NetworkMarquee({
   tone = "light",
   rows = 2,
-  logos = DIGITAL_FINANCE_FEATURED_LOGOS,
+  logos = FINANCIAL_RAILS_FEATURED_LOGOS,
   presence = "standard",
 }: {
   tone?: "light" | "dark";

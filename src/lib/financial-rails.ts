@@ -1,45 +1,50 @@
 import { type MicrositePhoto } from "@/lib/microsite-photography";
-import { DIGITAL_ASSET_ACCORD_LEADERS } from "@/lib/digital-asset-accord-leaders";
-import type { EventMicrositeData } from "@/lib/event-microsite";
 
 /**
- * FINANCIAL RAILS SUMMIT — V2 DATA.
+ * FINANCIAL RAILS — THE SHARED EDITION LIBRARY.
  *
- * The complete content and media manifest for /forums/financial-rails-v2, and
- * for that page only. Nothing here is imported by V1, the homepage, or any
- * other micro-site, and this module mutates nothing it imports — it reads the
- * shared photo library and re-exports its own selection, so V2's media can be
- * recast by editing this one file.
+ * One institution, four editions. Everything an edition inherits rather than
+ * authors lives here: the brand constants, the hero film, the photography, the
+ * speaker roster, the partner marks, the four Experience frames and the
+ * Agenda index. An edition file supplies only what is genuinely regional.
  *
- * REAL PROOF ONLY. The speakers are real people photographed at the
- * platform's own programmes — names, titles and organisations verbatim from
- * the photographed record. The partner marks are the historical client set.
- * The copy is locked editorial content, reproduced exactly.
+ * SHARED MEDIA IS A FEATURE. The archive being shown belongs to the platform,
+ * not to any single edition, so the film and the frames are the same objects
+ * across Asia, Africa and MENA. Swap a path here and every edition follows.
  *
- * All media points at assets that already live in /public — nothing external,
- * nothing invented. Swap a path here and the page follows.
+ * REAL PROOF ONLY. The speakers are real people photographed at the platform's
+ * own programmes — names, titles and organisations verbatim from the
+ * photographed record. The partner marks are the historical client set.
+ * Nothing here is invented and nothing points outside /public.
+ *
+ * ASSET PATHS ARE HISTORICAL. Files under /media/financial-rails-v2/ keep the
+ * directory name they were encoded into; renaming them on disk would buy
+ * nothing and break every cached URL.
  */
 
-export const V2_EVENT = {
-  name: "Financial Rails Summit",
+/** The institution, stated once so no surface can drift from it. */
+export const FINANCIAL_RAILS = {
+  name: "Financial Rails",
+  positioning: "The infrastructure of the next financial system.",
   descriptor: "The infrastructure of the next financial system",
-  footerLine: "The infrastructure of the next financial system.",
-  positioning: "The institutions building the rails are already moving.",
-  dates: "4–5 November 2026",
-  city: "Dubai, UAE",
-  capacity: "250 curated decision-makers. Invitation only.",
+  summitBrand: "Financial Rails Summit",
+  operator: "Vostad",
+  domain: "financialrails.org",
+  origin: "https://financialrails.org",
 };
 
-export const V2_NAV = [
+/** The Agenda — the four chapters every edition works through. */
+export const FINANCIAL_RAILS_AGENDA = ["Money", "Markets", "Infrastructure", "Rules"];
+
+export const FR_NAV = [
   { label: "The Room", id: "the-room" },
   { label: "The People", id: "the-people" },
   { label: "The Experience", id: "the-experience" },
 ];
 
 /**
- * 01 — the hero film. V2's own asset, not the shared `/media/hero-events.mp4`
- * that V1 and the other micro-sites play, so replacing it here cannot reach
- * another page.
+ * 01 — the hero film, shared by every edition. One asset, one encode: the
+ * institution has one archive and every edition draws the same frame from it.
  *
  * Encoded from original-media/video-digital-accord.mp4 (1920×1080, 60fps,
  * 26.7 MB, no audio) at native resolution, 30fps, H.264 crf 34, faststart:
@@ -49,7 +54,7 @@ export const V2_NAV = [
  * stored in native colour — the grayscale is a CSS filter over both video and
  * poster, which keeps the two identical in every state including hover.
  */
-export const V2_HERO_FILM = {
+export const FR_HERO_FILM = {
   src: "/media/financial-rails-v2-hero.mp4",
   poster: "/media/financial-rails-v2-hero-poster.jpg",
 };
@@ -60,25 +65,18 @@ export const V2_HERO_FILM = {
  *
  * DESKTOP ONLY. The frame is rendered above lg and nowhere else, and its
  * `<source>` elements are media-gated to the same breakpoint so a phone never
- * requests the file at all — see V2HeroPhoto. `sizes` therefore describes
+ * requests the file at all — see the micro-site's hero photo component. `sizes` therefore describes
  * only the desktop track: a six-column slot measuring (50vw − 136px).
  *
  * The source is 16:9 and the frame is 16:9, so nothing is cropped — the room's
  * full depth survives, which is the whole point of the picture.
  */
-export const V2_HERO_IMAGE = {
+export const FR_HERO_IMAGE = {
   base: "/media/microsite/closing-frame",
   widths: [768, 1280, 1920, 2560, 3840],
   intrinsic: { width: 3840, height: 2160 },
   alt: "Delegates seated at round tables during a conference session",
   sizes: "calc(50vw - 136px)",
-};
-
-/** 02 — locked, in reading order. */
-export const V2_WHY = {
-  heading: "This is where the next financial system gets built.",
-  couplet: ["You won't be told what might happen.", "You'll meet the people making it happen."],
-  close: "That is the only reason to be here.",
 };
 
 /**
@@ -92,7 +90,7 @@ export const V2_WHY = {
  * a third and fetch a 1280 file where 1648 device pixels are needed. The
  * measured track is (50vw − 136px) at lg and up.
  */
-export const V2_WHY_IMAGE = {
+export const FR_WHY_IMAGE = {
   base: "/media/microsite/why-attend",
   widths: [480, 768, 1280, 1888],
   intrinsic: { width: 2000, height: 2500 },
@@ -109,7 +107,7 @@ export const V2_WHY_IMAGE = {
  * 16:9, the source's own ratio, so nothing is cropped. Six-column slot:
  * (50vw − 136px) at lg and up.
  */
-export const V2_ROOM_IMAGE = {
+export const FR_ROOM_IMAGE = {
   base: "/media/microsite/closing-frame",
   widths: [768, 1280, 1920, 2560, 3840],
   intrinsic: { width: 3840, height: 2160 },
@@ -118,32 +116,21 @@ export const V2_ROOM_IMAGE = {
     "(min-width: 1024px) calc(50vw - 136px), (min-width: 768px) calc(100vw - 96px), calc(100vw - 48px)",
 };
 
-/** 03 — the four figures, locked. */
-export const V2_ROOM_FIGURES = [
-  { value: "200+", line: "C-level executives from banking, payments, markets, and technology" },
-  { value: "40+", line: "Speakers and contributors already building the rails" },
-  { value: "20+", line: "Selected partners with real infrastructure to show" },
-  { value: "2", line: "Days of closed-door working sessions" },
-];
+/* The roster: the shared Financial Rails leaders, the same list and the same
+   order as the homepage, re-exported so an edition keeps its own name for it
+   while every surface stays in step. */
+export { FINANCIAL_RAILS_LEADERS as FR_SPEAKERS } from "@/lib/financial-rails-leaders";
 
-export const V2_ROOM_FILTERS = ["No mass audience.", "No exhibition floor.", "No press."];
+export const FR_ROOM_FILTERS = ["No mass audience.", "No exhibition floor.", "No press."];
 
-export const V2_ROOM_CLOSE =
-  "A deliberately limited room for the institutions funding, building, regulating, and operating the next financial system.";
-
-/* 04 — the roster: the shared Digital Finance Alliance leaders, same list and
-   same order as the homepage, re-exported so this page keeps its own name for
-   it while both surfaces stay in step. */
-export { DIGITAL_ASSET_ACCORD_LEADERS as V2_SPEAKERS } from "@/lib/digital-asset-accord-leaders";
-
-export const V2_PARTNERS_STATEMENT =
+export const FR_PARTNERS_STATEMENT =
   "The institutions below have already shaped this conversation.";
 
 /**
  * 05 — THE EXPERIENCE's own photography.
  *
  * These four frames belong to this chapter alone and are NOT part of the
- * shared microsite set: the homepage, /partners and the DF30 pages all read
+ * shared microsite set: the homepage, /partners and the FR30 pages all read
  * MICROSITE_PHOTOS, so recasting the Experience chapter through that library
  * would have moved images on three other pages. They live here instead, and
  * the shared library is untouched.
@@ -176,7 +163,7 @@ const experienceFrame = (name: string, alt: string): MicrositePhoto => ({
 });
 
 /** 05 — the four experiences, locked, each with its own composition note. */
-export type V2Experience = {
+export type FrExperience = {
   index: string;
   title: string;
   body: string;
@@ -188,7 +175,7 @@ export type V2Experience = {
  * The four frames, exported so sibling editions share the exact same media
  * rather than duplicating the files or choosing their own.
  */
-export const V2_EXPERIENCE_FRAMES = {
+export const FR_EXPERIENCE_FRAMES = {
   keynote: experienceFrame(
     "keynote",
     "A speaker delivering opening remarks at a lectern beside a large presentation screen",
@@ -199,45 +186,6 @@ export const V2_EXPERIENCE_FRAMES = {
     "A panel of speakers seated on stage in front of a seated audience",
   ),
   agenda: experienceFrame("agenda", "Delegates working with documents at tables during a session"),
-};
-
-export const V2_EXPERIENCE: V2Experience[] = [
-  {
-    index: "01",
-    title: "Keynotes from people who move money",
-    body: "The leaders running the biggest payment networks, settlement systems, and digital asset platforms share what they are building—and what they need from the room.",
-    photo: V2_EXPERIENCE_FRAMES.keynote,
-  },
-  {
-    index: "02",
-    title: "Private 1:1 meetings",
-    body: "Pre-arranged meetings built around your strategic priorities. The right person in the right conversation. No wasted time.",
-    photo: V2_EXPERIENCE_FRAMES.networking,
-  },
-  {
-    index: "03",
-    title: "Panels that talk about solutions",
-    body: "No theory. No slideware. Closed-door sessions where operators and regulators break down what is working, what is broken, and what must change next.",
-    photo: V2_EXPERIENCE_FRAMES.panel,
-  },
-  {
-    index: "04",
-    title: "The Financial Rails Agenda",
-    body: "Leave with the annual institutional agenda capturing what is ready to scale, what remains unresolved, and what to build next.",
-    /* The forthcoming annual output, represented by a real frame — delegates
-       working at the table — not an invented report cover. */
-    photo: V2_EXPERIENCE_FRAMES.agenda,
-  },
-];
-
-/** 05 · the Output strip's horizontal editorial index. */
-export const V2_OUTPUT_INDEX = ["Money", "Markets", "Infrastructure", "Rules"];
-
-/** 06 — the close, locked. */
-export const V2_INVITATION = {
-  heading: "The rails are being built now.",
-  line: "Be in the room where they are defined.",
-  body: "A closed-door gathering of 250 curated decision-makers shaping the infrastructure of the next financial system.",
 };
 
 /**
@@ -251,26 +199,3 @@ export const V2_INVITATION = {
  * binds — 376px at 1024 is its tightest, where 4.7vw leaves 8% of margin.
  * These are the master's own values, unchanged.
  */
-export const FINANCIAL_RAILS_EVENT: EventMicrositeData = {
-  event: V2_EVENT,
-  heroLabel: "Financial Rails",
-  heroTitle: ["Financial", "Rails Summit"],
-  heroTitleClass: "text-[clamp(2.2rem,11vw,6rem)] lg:text-[clamp(2.6rem,4.7vw,7.5rem)]",
-  nav: V2_NAV,
-  heroFilm: V2_HERO_FILM,
-  heroImage: V2_HERO_IMAGE,
-  why: V2_WHY,
-  whyImage: V2_WHY_IMAGE,
-  roomHeading: "250 decision-makers. No spectators.",
-  roomFigures: V2_ROOM_FIGURES,
-  roomImage: V2_ROOM_IMAGE,
-  roomFilters: V2_ROOM_FILTERS,
-  roomClose: V2_ROOM_CLOSE,
-  peopleHeading: "You will be in the room with the people who matter.",
-  speakers: DIGITAL_ASSET_ACCORD_LEADERS,
-  partnersStatement: V2_PARTNERS_STATEMENT,
-  experienceHeading: "This is not a conference. This is a working room.",
-  experience: V2_EXPERIENCE,
-  outputIndex: V2_OUTPUT_INDEX,
-  invitation: V2_INVITATION,
-};

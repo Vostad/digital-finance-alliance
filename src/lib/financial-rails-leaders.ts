@@ -1,8 +1,8 @@
 /**
- * THE DIGITAL FINANCE ALLIANCE LEADERS — one roster, two surfaces.
+ * THE FINANCIAL RAILS LEADERS — one roster, every surface.
  *
  * The eight leaders, in the order supplied, powering both the homepage
- * network strip and Financial Rails V2's Previous Speakers grid. One list, so
+ * network strip and every edition's Previous Speakers grid. One list, so
  * the two surfaces can never disagree: change a leader here and both follow.
  *
  * REAL PEOPLE, VERBATIM. Every name, title and organisation is read straight
@@ -23,7 +23,7 @@ export type Leader = {
   image: string;
 };
 
-export const DIGITAL_ASSET_ACCORD_LEADERS: Leader[] = [
+export const FINANCIAL_RAILS_LEADERS: Leader[] = [
   {
     name: "Dr. Marwan Alzarouni",
     title: "CEO",

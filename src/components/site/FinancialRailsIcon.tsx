@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The official Digital Finance Alliance master brand icon.
+ * The official Financial Rails master brand icon.
  *
  * GEOMETRY IS THE CONSTANT. The mark itself is unchanged by the institution's
  * rename — only the wordmark beside it carries the name, and it lives in the
@@ -34,7 +34,7 @@ const ICON_ORANGE = "/brand/icon-orange-144.png";
 const W = 164;
 const H = 144;
 
-export function AIAccordIcon({
+export function FinancialRailsIcon({
   className,
   onPhotography = false,
 }: {

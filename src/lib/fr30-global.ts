@@ -1,13 +1,13 @@
 /**
- * DIGITAL FINANCE DF30 — GLOBAL EDITION · 2026. The published list.
+ * FR30 — GLOBAL EDITION · 2026. The published list.
  *
- * The source of truth for /df30-global-list, and for that page only. Exactly
+ * The source of truth for /fr30-global-list, and for that page only. Exactly
  * thirty people in six editorial domains of five, in the page's published
  * order — the index each person carries is their position in that sequence,
  * an editorial numbering, not a rank.
  *
  * THE ROSTER MATCHES THE SUPPLIED PORTRAIT SET ONE-TO-ONE. The thirty names
- * are the thirty files delivered in DF30/df-global; every portrait was opened
+ * are the thirty files delivered in the global portrait set; every portrait was opened
  * and visually verified against its filename before the list was built, and
  * no one has been added, removed or substituted. Roles are the public,
  * verifiable positions these leaders hold or held, with current/former
@@ -23,17 +23,17 @@
  * Sources whose 4:5 crop fell below 480px were upscaled to the 480 floor with
  * Lanczos and a gentle unsharp pass — better than leaving the browser to do
  * it — and are marked by a single-entry `widths`. The originals in
- * DF30/df-global are untouched.
+ * FR30/df-global are untouched.
  */
 
-export type Df30Portrait = {
+export type Fr30Portrait = {
   /** Path stem under /media/df30/global; `-<w>.avif|jpg` appended at render. */
   stem: string;
   /** The widths that actually exist on disk — srcset lists only real files. */
   widths: number[];
 };
 
-export type Df30Person = {
+export type Fr30Person = {
   /** Editorial index across the whole list, "01"–"30". */
   index: string;
   name: string;
@@ -43,21 +43,21 @@ export type Df30Person = {
   slot: string;
   /** One factual sentence; no invented biography, no invented statistics. */
   note: string;
-  portrait: Df30Portrait;
+  portrait: Fr30Portrait;
 };
 
-export type Df30Domain = {
+export type Fr30Domain = {
   index: string;
   title: string;
-  people: Df30Person[];
+  people: Fr30Person[];
 };
 
-const P = (stem: string, widths: number[]): Df30Portrait => ({
+const P = (stem: string, widths: number[]): Fr30Portrait => ({
   stem: `/media/df30/global/${stem}`,
   widths,
 });
 
-export const DF30_DOMAINS: Df30Domain[] = [
+export const FR30_DOMAINS: Fr30Domain[] = [
   {
     index: "01",
     title: "Infrastructure & Core Technology",
@@ -337,32 +337,32 @@ export const DF30_DOMAINS: Df30Domain[] = [
 ];
 
 /** Exactly thirty, by construction — and checked, so a bad edit fails loudly. */
-export const DF30_COUNT = DF30_DOMAINS.reduce((n, d) => n + d.people.length, 0);
-if (DF30_COUNT !== 30) {
-  throw new Error(`DF30 must list exactly 30 people; found ${DF30_COUNT}`);
+export const FR30_COUNT = FR30_DOMAINS.reduce((n, d) => n + d.people.length, 0);
+if (FR30_COUNT !== 30) {
+  throw new Error(`FR30 must list exactly 30 people; found ${FR30_COUNT}`);
 }
 
 /** The publication's fixed metadata, locked. */
-export const DF30_GLOBAL_META = {
-  label: "Digital Finance DF30",
-  headline: ["30 Leaders Shaping", "the Future of Finance"],
+export const FR30_GLOBAL_META = {
+  label: "FR30",
+  headline: ["The 30 people", "building the rails"],
   edition: "Global Edition · 2026",
   published: "Published 15 August 2026",
   introLabel: "The People Shaping the System",
-  introHeading: "Finance is being rebuilt.",
+  introHeading: "Money is changing at the infrastructure level.",
   intro:
-    "Finance is being rebuilt across its infrastructure, institutions and interfaces. The DF30 recognises 30 leaders whose work is materially shaping that transition — from payments and financial infrastructure to digital assets, inclusion, regulation, AI and financial intelligence.",
-  introMeta: ["30 Leaders", "6 Domains", "Global Edition", "2026"],
-  listLabel: "The DF30 — Global 2026",
+    "The rails money moves through are being rebuilt — the payment networks, the settlement systems, the market infrastructure and the rules around them. The FR30 recognises thirty people whose work is materially shaping that rebuild, across core infrastructure, inclusion, regulation, institutional adoption, capital markets and financial intelligence.",
+  introMeta: ["30 People", "6 Domains", "Global Edition", "2026"],
+  listLabel: "The FR30 — Global 2026",
   methodHeading: "An editorial selection, not a popularity contest.",
   method:
-    "The DF30 is an editorial selection, not a quantitative ranking or popularity contest. Leaders are selected based on demonstrable contribution, institutional influence, current relevance and the significance of their work to the evolution of finance.",
+    "The FR30 is an editorial selection, not a quantitative ranking or popularity contest. People are selected on demonstrable contribution to financial infrastructure, institutional influence, current relevance, and the significance of their work to how money is moved, settled and governed.",
   closeHeadline: ["The financial system", "is being rebuilt."],
-  closeLine: "DF30 recognises the people shaping what comes next.",
-  signature: "Digital Finance Alliance",
+  closeLine: "FR30 recognises the people doing the rebuilding.",
+  signature: "Financial Rails",
 };
 
-export const DF30_GLOBAL_PRINCIPLES = [
+export const FR30_GLOBAL_PRINCIPLES = [
   {
     title: "Contribution",
     body: "Demonstrable impact on financial systems, institutions or infrastructure.",

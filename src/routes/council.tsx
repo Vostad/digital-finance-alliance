@@ -10,19 +10,20 @@ const HERO_WIDTHS = [480, 768, 1024, 1400];
 export const Route = createFileRoute("/council")({
   head: () => ({
     meta: [
-      { title: "Digital Assets Council — The People Shaping the Conversation" },
+      { title: "Financial Rails Council — The People Shaping the Conversation | Financial Rails" },
       {
         name: "description",
         content:
-          "The Digital Assets Council brings together senior leaders and experts who help shape the questions, priorities and conversations defining the next phase of digital assets.",
+          "The Financial Rails Council brings together senior leaders and institutions who help shape the questions, priorities and conversations defining the infrastructure money moves through.",
       },
-      { property: "og:title", content: "Digital Assets Council" },
+      { property: "og:title", content: "Financial Rails Council" },
       {
         property: "og:description",
         content:
-          "A working council of senior leaders across markets, technology, capital, regulation and policy.",
+          "A working council of senior leaders across payments, banking, settlement, markets, capital and regulation.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://financialrails.org/council" }],
   }),
   component: Council,
 });
@@ -37,7 +38,7 @@ const PILLARS = [
   },
   {
     name: "Shape",
-    body: "Contribute to the themes, priorities and conversations explored across Digital Finance Alliance.",
+    body: "Contribute to the themes, priorities and conversations explored across Financial Rails.",
   },
   {
     name: "Connect",
@@ -49,24 +50,24 @@ const PILLARS = [
     membership is introduced only when confirmed. */
 const SECTORS = [
   {
-    name: "Tokenization & Asset Issuance",
-    body: "Leaders bringing real-world assets onto digital infrastructure.",
+    name: "Payments & Banking Infrastructure",
+    body: "The people running the schemes, networks and core systems money moves through.",
   },
   {
-    name: "Payments & Stablecoins",
-    body: "Leaders building the next generation of digital money and settlement.",
+    name: "Digital Money & Stablecoins",
+    body: "Issuers and banks building tokenized deposits, stablecoins and programmable settlement.",
   },
   {
-    name: "Institutional Custody & Trading",
-    body: "Executives responsible for safeguarding and trading digital assets at scale.",
+    name: "Settlement & Market Infrastructure",
+    body: "Executives responsible for clearing, collateral, custody and post-trade at scale.",
   },
   {
-    name: "Capital & Investment",
-    body: "Investors and institutions financing the digital asset economy.",
+    name: "Capital & Institutional Adoption",
+    body: "Investors and institutions financing the buildout and deciding what reaches production.",
   },
   {
     name: "Regulation & Policy",
-    body: "Leaders shaping the rules, standards and supervision of digital assets.",
+    body: "The authorities shaping the rules, standards and supervision the rails operate under.",
   },
 ];
 
@@ -77,8 +78,8 @@ function Council() {
     <>
       {/* 01 — HERO · private and selective. Architecture, not a meeting. */}
       <PageHero
-        meta="Digital Assets Council"
-        eyebrow="Digital Assets Council"
+        meta="Financial Rails Council"
+        eyebrow="Financial Rails Council"
         title={
           <>
             The people
@@ -93,9 +94,9 @@ function Council() {
            three natural lines at a readable size instead of shrinking the
            25-character line onto one row. */
         titleClassName="font-display max-w-[26ch] text-[clamp(1.5rem,8vw,1.75rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.03em] break-words sm:text-[clamp(1.75rem,2.8vw,2.9rem)]"
-        lede="The Digital Assets Council brings together senior leaders and experts who help shape the questions, priorities and conversations defining the next phase of digital assets."
+        lede="The Financial Rails Council brings together senior leaders and institutions who help shape the questions, priorities and conversations defining the infrastructure money moves through."
         actions={[{ label: "Express Interest", to: "/contact" }]}
-        seed="aiaccord-council"
+        seed="financial-rails-council"
         /* Replaces the hotlinked Unsplash stock frame with the project's own
            photograph. No `ratio` is passed, so this frame keeps the height it
            has always had here — it stretches to the text column, which makes
@@ -134,15 +135,15 @@ function Council() {
             <Reveal delay={120}>
               <p className="lede opacity-80">
                 {" "}
-                The forces reshaping digital assets span markets, technology, capital, regulation
-                and policy.
+                The forces rebuilding financial infrastructure span payments, banking, settlement,
+                markets, capital and regulation.
               </p>
             </Reveal>
             <Reveal delay={180}>
               <p className="mt-6 text-base leading-relaxed opacity-75">
                 {" "}
-                The Council brings different perspectives into one room so Digital Finance Alliance
-                can focus on the questions that matter.
+                The Council brings different perspectives into one room so Financial Rails can focus
+                on the questions that matter.
               </p>
             </Reveal>
           </div>
@@ -252,8 +253,8 @@ function Council() {
               <p className="lede opacity-80">
                 {" "}
                 The Council is designed to be an active body of people who contribute perspective,
-                challenge assumptions and help Digital Finance Alliance stay focused on the issues
-                that will matter next.
+                challenge assumptions and help Financial Rails stay focused on the issues that will
+                matter next.
               </p>
             </Reveal>
           </div>
@@ -280,8 +281,8 @@ function Council() {
             <Reveal delay={120}>
               <p className="lede opacity-80">
                 {" "}
-                Digital Finance Alliance is building a Council of senior leaders and experts across
-                markets, technology, capital, regulation and policy.
+                Financial Rails is building a Council of senior leaders and institutions across
+                payments, banking, settlement, markets, capital and regulation.
               </p>
             </Reveal>
             <Reveal delay={180}>

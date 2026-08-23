@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 /**
- * Insights became Intel. This URL survives only so that the global
- * navigation, footer and any shared links keep working — the publication
- * lives at /intel.
+ * Insights became Intel, and Intel became Financial Rails Intelligence. This
+ * URL survives so the oldest shared links still resolve — one hop, straight to
+ * the publication, never through the intermediate name.
  */
 export const Route = createFileRoute("/insights")({
   beforeLoad: () => {
-    throw redirect({ to: "/intel", replace: true });
+    throw redirect({ to: "/intelligence", replace: true });
   },
 });

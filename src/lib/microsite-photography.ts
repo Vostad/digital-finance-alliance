@@ -1,7 +1,7 @@
 /**
  * THE SHARED NEUTRAL EVENT PHOTOGRAPHY SET.
  *
- * One set of Digital Finance Alliance event photographs, deliberately common to every forum
+ * One set of Financial Rails event photographs, deliberately common to every forum
  * micro-site. This is the ONLY imagery that is shared: each forum still owns
  * its own EVENT, ROOM, THEMES, WHY_ATTEND, EXPERIENCE copy, DESTINATION notes
  * and metadata in its own file. Changing a photograph here is meant to change

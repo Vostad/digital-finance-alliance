@@ -4,19 +4,22 @@ import { Reveal } from "./Reveal";
 
 const EXPLORE = [
   { label: "Forums", to: "/forums" },
-  { label: "DF30", to: "/df30" },
-  { label: "Digital Assets Council", to: "/council" },
-  { label: "Intel", to: "/insights" },
+  { label: "FR30", to: "/fr30" },
+  { label: "Council", to: "/council" },
+  { label: "Intelligence", to: "/intelligence" },
 ];
 
 const COMPANY = [
   { label: "About", to: "/about" },
-  { label: "Partners", to: "/contact" },
+  { label: "Partners", to: "/partners" },
   { label: "Speakers", to: "/contact" },
   { label: "Contact", to: "/contact" },
 ];
 
-const CONNECT = ["hello@digitalassetsaccord.org", "LinkedIn", "YouTube", "X"];
+/* Channels only. No address is published here because none is configured for
+   Financial Rails yet — /contact carries the operational route, and inventing
+   an inbox would send real enquiries nowhere. */
+const CONNECT = ["LinkedIn", "YouTube", "X"];
 
 export function Footer() {
   return (
@@ -25,7 +28,7 @@ export function Footer() {
         <div className="hidden border-r border-hairline-invert lg:block">
           <div className="flex justify-center py-10">
             <span className="label opacity-30" style={{ writingMode: "vertical-rl" }}>
-              Digital Finance Alliance
+              Financial Rails
             </span>
           </div>
         </div>
@@ -33,10 +36,10 @@ export function Footer() {
         <div className="px-6 py-20 md:px-12 lg:px-16">
           <div className="grid gap-14 border-b border-hairline-invert pb-16 lg:grid-cols-12 lg:gap-10">
             <Reveal className="lg:col-span-4">
-              <p className="display-md">Digital Finance Alliance</p>
+              <p className="display-md">Financial Rails</p>
               <p className="mt-6 max-w-sm text-sm leading-relaxed opacity-60">
-                Advancing institutional adoption of real digital assets through executive forums,
-                private networks and leadership communities.
+                The institutional platform for the infrastructure through which money is created,
+                moved, settled, secured and governed.
               </p>
             </Reveal>
 
@@ -86,8 +89,7 @@ export function Footer() {
             <Reveal delay={240} className="lg:col-span-2">
               <p className="label opacity-40">Stay Connected</p>
               <p className="mt-6 text-sm leading-relaxed opacity-60">
-                Receive updates on upcoming forums, private briefings and the latest intelligence
-                from Digital Finance Alliance.
+                Briefings on the forums, the FR30 and the infrastructure moving money.
               </p>
               <form
                 className="group mt-6 flex items-center justify-between border-b border-hairline-invert pb-3"
@@ -99,7 +101,7 @@ export function Footer() {
                   aria-label="Email"
                   className="w-full bg-transparent text-sm outline-none placeholder:opacity-40"
                 />
-                <button type="submit" className="label inline-flex items-center gap-2">
+                <button type="submit" className="group label inline-flex items-center gap-4">
                   Subscribe <Arrow />
                 </button>
               </form>
@@ -107,9 +109,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-4 pt-8 md:flex-row md:items-center md:justify-between">
-            <p className="label opacity-40">
-              © 2026 Digital Finance Alliance. All Rights Reserved.
-            </p>
+            <p className="label opacity-40">© 2026 Financial Rails. All Rights Reserved.</p>
             <p className="label opacity-40">
               Privacy Policy <span className="mx-2">|</span> Terms &amp; Conditions
               <span className="mx-2">|</span> Cookie Policy

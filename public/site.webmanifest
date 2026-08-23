@@ -1,7 +1,7 @@
 {
-  "name": "Digital Finance Alliance",
-  "short_name": "Digital Finance Alliance",
-  "description": "Where institutions meet digital assets.",
+  "name": "Financial Rails",
+  "short_name": "Financial Rails",
+  "description": "The infrastructure of the next financial system.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#101223",

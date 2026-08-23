@@ -14,19 +14,20 @@ import {
 export const Route = createFileRoute("/forums/")({
   head: () => ({
     meta: [
-      { title: "Forums — Digital Finance Alliance" },
+      { title: "Financial Rails Forums — Asia, Africa, MENA | Financial Rails" },
       {
         name: "description",
         content:
-          "Digital Finance Alliance's forums bring together the institutions, regulators and builders shaping digital assets across the world's most important markets.",
+          "Three editions in 2026 — Asia, Africa and MENA. Closed-door working rooms for the institutions building, funding, regulating and operating financial infrastructure.",
       },
-      { property: "og:title", content: "Forums — Digital Finance Alliance" },
+      { property: "og:title", content: "Financial Rails Forums" },
       {
         property: "og:description",
         content:
-          "Executive forums exploring digital assets across tokenization, payments, custody, market infrastructure and regulation.",
+          "Closed-door working rooms across payments, banking infrastructure, digital money, settlement, markets and regulation.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://financialrails.org/forums" }],
   }),
   component: Forums,
 });
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/forums/")({
 /* ------------------------------------------------------------------ data -- */
 
 /**
- * This page has one job: list the active Digital Finance Alliance events. The old two-tier
+ * This page has one job: list the active Financial Rails editions. The old two-tier
  * category architecture (Originals / Vertical Summits) is retired — the
  * portfolio in src/lib/event-portfolio.ts is the whole inventory, and this
  * page presents it in its editorial order: the two events that matter most
@@ -44,7 +45,7 @@ const DISPLAY_ORDER: PortfolioEvent[] = [NEXT_EVENT, FEATURED_EVENT, ...UPCOMING
 
 /** The filter reads the portfolio's own statuses — no invented categories. */
 const STATUS_FILTERS = [
-  { id: "all", label: "All Events" },
+  { id: "all", label: "All Editions" },
   { id: "next", label: "Next" },
   { id: "featured", label: "Featured" },
   { id: "upcoming", label: "Upcoming" },
@@ -61,7 +62,7 @@ type StatusFilterId = (typeof STATUS_FILTERS)[number]["id"];
  * NOT EVERY EVENT HAS A PAGE. The platform now runs one canonical event
  * micro-site template, so an event is only linked once its instance of that
  * template exists — `to` is set. An event still on the calendar without a page
- * renders exactly the same card minus the link and the "View Event" line,
+ * renders exactly the same card minus the link and the "View Edition" line,
  * rather than pointing at a route that would 404. The card body is identical
  * in both states, so the grid never breaks rhythm.
  */
@@ -101,7 +102,7 @@ function EventCardBody({ event, index }: { event: PortfolioEvent; index: number 
           </p>
           {event.to ? (
             <span className="label accord-signal mt-4 inline-flex items-center gap-3">
-              View Event
+              View Edition
               <span
                 aria-hidden
                 className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/card:translate-x-1.5 motion-reduce:transition-none"
@@ -173,9 +174,7 @@ function Forums() {
               the document needs exactly one. Visually identical — display-lg
               sets size and weight explicitly, and preflight resets heading
               defaults, so nothing about the rendering changes. */}
-          <h1 className="display-lg mt-8 max-w-[20ch]">
-            The conversations shaping what digital assets become next.
-          </h1>
+          <h1 className="display-lg mt-8 max-w-[20ch]">The rooms where the rails get decided.</h1>
         </Reveal>
 
         {/* The filter — deliberately quiet: mono, small, one row. It reads the
@@ -202,7 +201,7 @@ function Forums() {
             );
           })}
           <span className="label ml-auto opacity-35">
-            {visible.length} {visible.length === 1 ? "Event" : "Events"}
+            {visible.length} {visible.length === 1 ? "Edition" : "Editions"}
           </span>
         </Reveal>
 
@@ -217,7 +216,7 @@ function Forums() {
 
             {/* The rest of the calendar. */}
             <Reveal className="mt-20 border-t border-hairline pt-14 lg:mt-24">
-              <h2 className="display-lg">Upcoming Events</h2>
+              <h2 className="display-lg">Upcoming Editions</h2>
             </Reveal>
             <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-10">
               {UPCOMING_EVENTS.map((event, i) => (
@@ -234,7 +233,7 @@ function Forums() {
         )}
       </Section>
 
-      {/* Institutional positioning — the philosophy behind every Alliance
+      {/* Institutional positioning — the philosophy behind every Financial Rails
           forum, not one of them. It reads as the answer to the directory above:
           having seen what the forums are, this is how they are run. Built on
           this page's own Section rail rather than lifted wholesale from the
@@ -247,7 +246,7 @@ function Forums() {
         </Reveal>
 
         <Reveal delay={80}>
-          <h2 className="display-lg mt-14">Not another crypto event.</h2>
+          <h2 className="display-lg mt-14">Not another industry conference.</h2>
         </Reveal>
 
         <div className="mt-14 grid gap-y-12 lg:grid-cols-12 lg:gap-x-8">
@@ -283,7 +282,7 @@ function Forums() {
 
       <FinalCta
         title="Find the Forum That Fits Your Institution."
-        body="Explore the conversations, technologies and leaders shaping digital assets across every major market."
+        body="Three editions in 2026 — Asia, Africa and MENA. Each one a working room, not an audience."
         actions={[
           { label: "Explore Upcoming Forums", to: "/forums" },
           { label: "Become a Speaker", to: "/contact" },

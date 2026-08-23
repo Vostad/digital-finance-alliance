@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { AIAccordIcon } from "./AIAccordIcon";
+import { FinancialRailsIcon } from "./FinancialRailsIcon";
 
 export const NAV_LINKS = [
   { label: "Forums", to: "/forums" },
-  { label: "DF30", to: "/df30" },
+  { label: "FR30", to: "/fr30" },
   { label: "Council", to: "/council" },
-  { label: "Intel", to: "/insights" },
+  { label: "Intelligence", to: "/intelligence" },
   { label: "About", to: "/about" },
 ];
 
@@ -41,12 +41,11 @@ export function Nav() {
       >
         <div className="flex items-center justify-between px-6 py-4 text-paper md:px-10">
           <Link to="/" className="group flex items-center gap-3" onClick={() => setOpen(false)}>
-            <AIAccordIcon />
+            <FinancialRailsIcon />
             <span className="font-display text-sm font-extrabold uppercase leading-[0.95] tracking-tight">
-              {" "}
-              Digital Finance
+              Financial
               <br />
-              Alliance
+              Rails
             </span>
           </Link>
 
@@ -66,7 +65,7 @@ export function Nav() {
           <div className="flex items-center gap-4">
             <Link
               to="/contact"
-              className="label hidden border border-hairline-invert px-5 py-3 transition-colors duration-500 hover:bg-paper hover:text-ink md:inline-block"
+              className="label hidden border border-hairline-invert px-5 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink md:inline-block"
             >
               Contact
             </Link>
@@ -74,7 +73,7 @@ export function Nav() {
               type="button"
               onClick={() => setOpen((value) => !value)}
               aria-label={open ? "Close menu" : "Open menu"}
-              className="label border border-hairline-invert px-4 py-3 transition-colors duration-500 hover:bg-paper hover:text-ink xl:hidden"
+              className="label border border-hairline-invert px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink xl:hidden"
             >
               {open ? "Close" : "Menu"}
             </button>

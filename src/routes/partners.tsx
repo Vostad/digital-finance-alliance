@@ -3,7 +3,7 @@ import { Section } from "@/components/site/Section";
 import { Reveal } from "@/components/site/Reveal";
 import { MicrositePhoto } from "@/components/site/MicrositePhoto";
 import { Action } from "@/components/site/primitives";
-import { DIGITAL_ASSET_ACCORD_LOGOS } from "@/lib/digital-asset-accord-logos";
+import { FINANCIAL_RAILS_LOGOS } from "@/lib/financial-rails-logos";
 import { MICROSITE_PHOTOS } from "@/lib/microsite-photography";
 
 /**
@@ -14,7 +14,7 @@ import { MICROSITE_PHOTOS } from "@/lib/microsite-photography";
  * the numbered left rail, the grounds, the type and the buttons are the
  * existing system rather than a new one.
  *
- * The archive reads from DIGITAL_ASSET_ACCORD_LOGOS — the same eighty marks
+ * The archive reads from FINANCIAL_RAILS_LOGOS — the same eighty marks
  * that power the homepage network field and Financial Rails V2 — so the three
  * surfaces can never disagree and a mark is added or retired in one place.
  *
@@ -40,20 +40,20 @@ import { MICROSITE_PHOTOS } from "@/lib/microsite-photography";
 export const Route = createFileRoute("/partners")({
   head: () => ({
     meta: [
-      { title: "Partners & Network — The Institutions Behind the Room | Digital Finance Alliance" },
+      { title: "Partners & Network — The Institutions Behind the Room | Financial Rails" },
       {
         name: "description",
         content:
           "A network of leading organisations that have participated in, supported and shaped our programmes.",
       },
-      { property: "og:title", content: "Partners & Network — Digital Finance Alliance" },
+      { property: "og:title", content: "Partners & Network — Financial Rails" },
       {
         property: "og:description",
         content:
           "A network of leading organisations that have participated in, supported and shaped our programmes.",
       },
     ],
-    links: [{ rel: "canonical", href: "/partners" }],
+    links: [{ rel: "canonical", href: "https://financialrails.org/partners" }],
   }),
   component: Partners,
 });
@@ -63,7 +63,7 @@ const WHY_PARTNER = [
   {
     index: "01",
     title: "Access",
-    body: "Reach senior decision-makers across digital assets, finance and emerging infrastructure.",
+    body: "Reach senior decision-makers across payments, banking, settlement, markets and regulation.",
     photo: MICROSITE_PHOTOS.whyAttend,
   },
   {
@@ -155,10 +155,10 @@ function Partners() {
             assistive technology; the heading above states the claim. */}
         <Reveal delay={110}>
           <ul
-            aria-label={`${DIGITAL_ASSET_ACCORD_LOGOS.length} organisations from the Digital Finance Alliance network`}
+            aria-label={`${FINANCIAL_RAILS_LOGOS.length} organisations from the Financial Rails network`}
             className="mt-14 grid grid-cols-3 items-center gap-x-6 gap-y-12 sm:gap-x-10 md:grid-cols-4 md:gap-x-12 md:gap-y-14 lg:mt-16 xl:grid-cols-6 xl:gap-x-14 xl:gap-y-16"
           >
-            {DIGITAL_ASSET_ACCORD_LOGOS.map((src) => (
+            {FINANCIAL_RAILS_LOGOS.map((src) => (
               <li key={src} className="flex items-center justify-center">
                 <img
                   src={src.replace("/network-logos/", "/network-logos-trimmed/")}

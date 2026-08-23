@@ -7,88 +7,94 @@ import { Action, Arrow, FinalCta } from "@/components/site/primitives";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Digital Finance Alliance — Why We Exist, What We Do, Who Is Behind It" },
+      { title: "About Financial Rails — Why It Exists, What It Does, Who Is Behind It" },
       {
         name: "description",
         content:
-          "Digital Finance Alliance convenes the institutions building digital asset infrastructure and the leaders deploying it across the world's financial system.",
+          "Financial Rails is the institutional platform for the infrastructure through which money is created, moved, settled, secured and governed. Forums, the FR30, the Council and original intelligence.",
       },
-      { property: "og:title", content: "About Digital Finance Alliance" },
+      { property: "og:title", content: "About Financial Rails" },
       {
         property: "og:description",
         content:
-          "Money is going programmable. Assets are becoming liquid. Digital Finance Alliance brings the people making those decisions into the same room.",
+          "Money is changing at the infrastructure level. Financial Rails brings the institutions building, funding, regulating and operating that infrastructure into the same room.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://financialrails.org/about" }],
   }),
   component: About,
 });
 
 /* ------------------------------------------------------------------ data -- */
 
-/** The closing argument of Why Digital Finance Alliance — four words, one thesis. */
-const WHY_CLOSING = ["The infrastructure.", "The institutions.", "The capital.", "The people."];
+/**
+ * The closing argument of Why Financial Rails — the Agenda itself, which is
+ * also the four chapters every forum works through and the four domains the
+ * platform covers. One list, stated here as the thesis.
+ */
+const WHY_CLOSING = ["Money.", "Markets.", "Infrastructure.", "Rules."];
 
-/** What the Alliance does, in three verbs. Not services — functions. */
+/** What Financial Rails does, in four verbs. Not services — functions. */
 const PILLARS = [
   {
     name: "Convene",
-    body: "Bring together the people building, regulating, financing and deploying digital assets.",
+    body: "Put the institutions building, funding, regulating and operating financial infrastructure in one room.",
   },
   {
     name: "Connect",
-    body: "Create the relationships and private conversations that lead to strategic opportunities.",
+    body: "Create the private conversations between operators, regulators and capital that move decisions forward.",
   },
   {
-    name: "Inform",
-    body: "Surface the intelligence, signals and ideas shaping the next phase of digital assets.",
+    name: "Research",
+    body: "Publish original analysis on what is working, what is broken, and what has to be built next.",
+  },
+  {
+    name: "Recognise",
+    body: "Name the people doing the work through the FR30, an editorial index rather than a ranking.",
   },
 ];
 
 /** The four components of the platform. Each links to its real page. */
 const PLATFORM = [
   {
-    name: "Forums",
-    body: "Invitation-only forums focused on the infrastructure and institutions shaping digital assets.",
+    name: "Financial Rails Forums",
+    body: "Invitation-only working rooms in Asia, Africa and MENA. Closed-door sessions, no exhibition floor, no press.",
     to: "/forums",
   },
   {
-    name: "Council",
-    body: "A network of senior leaders and experts helping shape the questions Digital Finance Alliance explores.",
+    name: "FR30",
+    body: "An editorial index of the thirty people designing, operating, financing and regulating the infrastructure money moves through.",
+    to: "/fr30",
+  },
+  {
+    name: "Financial Rails Council",
+    body: "A working council of senior leaders and institutions shaping the questions Financial Rails explores.",
     to: "/council",
   },
   {
-    name: "Intel",
-    body: "Original research, intelligence and perspectives on the forces reshaping digital assets.",
-    to: "/insights",
-  },
-  {
-    /* The retired DA30 recognition programme is superseded by Digital Finance
-       DF30, the platform's editorial index; this pillar now names and links
-       the live property. */
-    name: "DF30",
-    body: "An editorial index recognising the people building, transforming and governing the next financial system.",
-    to: "/df30",
+    name: "Financial Rails Intelligence",
+    body: "Research, briefings and analysis on payments, settlement, digital money, market infrastructure and the rules around them.",
+    to: "/intelligence",
   },
 ];
 
 /** Who it is for — recognition, not an audience list. */
 const AUDIENCES = [
   {
-    name: "Asset Owners",
-    body: "Funds, treasuries, corporates and institutions bringing real assets on-chain.",
-  },
-  {
     name: "Financial Institutions",
-    body: "Banks, asset managers, exchanges and market infrastructure providers deploying digital assets.",
+    body: "Banks, payment providers, exchanges and market infrastructure operators running the systems money moves through.",
   },
   {
     name: "Technology Builders",
-    body: "The platforms, protocols and companies building digital asset infrastructure.",
+    body: "The platforms, networks and companies building settlement, identity, compliance and core banking infrastructure.",
   },
   {
     name: "Regulators & Policymakers",
-    body: "The authorities shaping the rules under which digital assets operate.",
+    body: "The authorities writing the rules, issuing the licences and supervising the rails.",
+  },
+  {
+    name: "Capital",
+    body: "The investors, treasuries and institutions financing the buildout and deciding what reaches production.",
   },
 ];
 
@@ -135,14 +141,14 @@ function About() {
                 className="label whitespace-nowrap opacity-40"
                 style={{ writingMode: "vertical-rl" }}
               >
-                About Digital Finance Alliance
+                About Financial Rails
               </span>
             </div>
           </div>
 
           <div className="px-6 py-24 md:px-12 md:py-32 lg:px-16 lg:py-36">
             <Reveal>
-              <p className="label mb-10 opacity-50">About Digital Finance Alliance</p>
+              <p className="label mb-10 opacity-50">About Financial Rails</p>
             </Reveal>
             <Reveal delay={60}>
               {/* display-xl written out so a mobile-only fluid floor can hold
@@ -150,17 +156,15 @@ function About() {
                   fracture at narrow widths, so below sm the size tracks the
                   viewport instead of stopping at the utility's 2.25rem floor. */}
               <h1 className="font-display text-[clamp(0.9rem,4.7vw,2rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.03em] break-words sm:text-[clamp(2rem,4.6vw,5.75rem)] lg:text-[clamp(2rem,4.2vw,5.75rem)]">
-                {" "}
-                Money is going programmable.
+                Money is changing
                 <br />
-                Assets are becoming liquid.
+                at the infrastructure level.
               </h1>
             </Reveal>
             <Reveal delay={140}>
               <p className="lede mt-10 max-w-2xl border-t border-hairline pt-8 opacity-80">
-                {" "}
-                Digital Finance Alliance convenes the institutions building digital asset
-                infrastructure and the leaders deploying it across the world's financial system.
+                Financial Rails is the institutional platform for the infrastructure through which
+                money is created, moved, settled, secured and governed.
               </p>
             </Reveal>
             <Reveal delay={220} className="mt-12">
@@ -170,36 +174,35 @@ function About() {
         </div>
       </section>
 
-      {/* 02 — WHY AI ACCORD EXISTS · the argument for the institution. */}
-      <Section label="Why Digital Finance Alliance">
+      {/* 02 — WHY FINANCIAL RAILS EXISTS · the argument for the institution. */}
+      <Section label="Why Financial Rails">
         <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-8">
           <div className="lg:col-span-6">
             <Reveal>
-              <p className="label accord-signal opacity-45">Why Digital Finance Alliance</p>
+              <p className="label accord-signal opacity-45">Why Financial Rails</p>
             </Reveal>
             <Reveal delay={60}>
               <h2 className="display-lg mt-8 max-w-[14ch]">
-                {" "}
-                Digital assets are no longer just a trading story.
+                The rails are being rebuilt, not upgraded.
               </h2>
             </Reveal>
           </div>
           <div className="lg:col-span-5 lg:col-start-8 lg:pt-4">
             <Reveal delay={120}>
-              <p className="lede opacity-80">Digital assets are becoming infrastructure.</p>
+              <p className="lede opacity-80">
+                The change is happening underneath the products, not in them.
+              </p>
             </Reveal>
             <Reveal delay={160}>
               <p className="mt-6 text-base leading-relaxed opacity-75">
-                {" "}
-                Tokenization, stablecoins, institutional custody and settlement are moving into the
-                core of the financial system.
+                Instant payment schemes, tokenized deposits, stablecoins and always-on settlement
+                are moving into the core of the financial system.
               </p>
             </Reveal>
             <Reveal delay={200}>
               <p className="mt-6 text-base leading-relaxed opacity-75">
-                {" "}
-                At the same time, real-world assets — funds, bonds, deposits and commodities — are
-                beginning to move on-chain.
+                At the same time the rules are being rewritten around them — licensing, supervision
+                and the standards that decide what may connect to what.
               </p>
             </Reveal>
             <Reveal delay={240}>
@@ -209,9 +212,8 @@ function About() {
             </Reveal>
             <Reveal delay={280} className="mt-10 border-t border-hairline pt-8">
               <p className="display-sm">
-                {" "}
-                Digital Finance Alliance exists to bring the people making those decisions into the
-                same room.
+                Financial Rails exists to bring the people making those decisions into the same
+                room.
               </p>
             </Reveal>
           </div>
@@ -227,7 +229,7 @@ function About() {
         </div>
       </Section>
 
-      {/* 03 — WHAT AI ACCORD DOES · three functions, one sentence each. */}
+      {/* 03 — WHAT FINANCIAL RAILS DOES · four functions, one sentence each. */}
       <Section label="What We Do" tone="bone">
         <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-8">
           <div className="lg:col-span-6">
@@ -242,15 +244,13 @@ function About() {
           </div>
           <Reveal delay={120} className="lg:col-span-5 lg:col-start-8 lg:pt-6">
             <p className="lede opacity-75">
-              {" "}
-              Digital Finance Alliance creates high-trust environments where decision-makers can
-              meet, exchange intelligence, form partnerships and move important conversations toward
-              action.
+              Financial Rails creates high-trust environments where decision-makers meet, exchange
+              intelligence, form partnerships and move working conversations toward decisions.
             </p>
           </Reveal>
         </div>
 
-        <div className="mt-16 grid gap-x-8 gap-y-10 sm:grid-cols-3 lg:mt-20">
+        <div className="mt-16 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
           {PILLARS.map((pillar, i) => (
             <Reveal key={pillar.name} delay={i * 80} className="border-t border-hairline pt-6">
               <p className="label accord-signal opacity-60">{String(i + 1).padStart(2, "0")}</p>
@@ -271,16 +271,14 @@ function About() {
             </Reveal>
             <Reveal delay={60}>
               <h2 className="display-lg mt-8 max-w-[18ch]">
-                {" "}
-                Four ways we bring the digital asset economy together.
+                Four ways the institution does its work.
               </h2>
             </Reveal>
           </div>
           <Reveal delay={120} className="lg:col-span-4 lg:col-start-9 lg:pt-6">
             <p className="lede opacity-75">
-              {" "}
-              Digital Finance Alliance is not one event. It is an institutional platform with four
-              distinct components.
+              Financial Rails is not one event. It is an institutional platform with four distinct
+              components.
             </p>
           </Reveal>
         </div>
@@ -325,15 +323,15 @@ function About() {
           <div className="lg:col-span-5 lg:col-start-8 lg:pt-4">
             <Reveal delay={120}>
               <p className="lede opacity-80">
-                Since 2014, Vostad has brought together decision-makers, experts and institutions
-                across industries and more than 50 countries.
+                Vostad has convened decision-makers, experts and institutions across industries and
+                more than 50 countries since 2014, and has run its financial-infrastructure
+                programme since 2018.
               </p>
             </Reveal>
             <Reveal delay={180}>
               <p className="mt-6 text-base leading-relaxed opacity-75">
-                {" "}
-                Digital Finance Alliance is the next expression of that experience — focused on the
-                forces reshaping money, markets and the institutional adoption of digital assets.
+                Financial Rails is the next expression of that experience — focused on the
+                infrastructure through which money moves, and on the institutions that operate it.
               </p>
             </Reveal>
           </div>
@@ -353,8 +351,8 @@ function About() {
             </Reveal>
             <Reveal delay={60}>
               <h2 className="display-lg mt-8 max-w-[22ch]">
-                {" "}
-                If you are building the digital asset economy, you belong in the conversation.
+                If you build, fund, regulate or operate financial infrastructure, you belong in the
+                conversation.
               </h2>
             </Reveal>
           </div>
@@ -380,7 +378,7 @@ function About() {
       {/* 07 — FINAL CTA · the institutional close. Nothing after this. */}
       <FinalCta
         title="The next financial system will be built by people."
-        body="Digital Finance Alliance brings those people together."
+        body="Financial Rails brings those people together."
         actions={[
           { label: "Explore Our Forums", to: "/forums" },
           { label: "Get Involved", to: "/contact" },

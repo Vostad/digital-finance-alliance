@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
-  Link,
   createRootRouteWithContext,
   useRouter,
   useRouterState,
@@ -12,26 +11,31 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { ACTIVE_PALETTE } from "../lib/accord-palette";
+import { FINANCIAL_RAILS } from "../lib/financial-rails";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Nav } from "../components/site/Nav";
 import { Footer } from "../components/site/Footer";
+import { Action, Arrow } from "../components/site/primitives";
 
+/**
+ * The site's own 404, not the scaffold's. This page and the error boundary
+ * below were the only two surfaces still drawn in the starter kit's language —
+ * rounded fills, `bg-primary`, `text-muted-foreground`, a 7xl sans numeral —
+ * none of which exist anywhere else on Financial Rails. They now use the same
+ * ground, display type, rule and Action button as every other page, so a
+ * visitor who mistypes a URL still lands somewhere that looks like the site.
+ */
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+    <div className="flex min-h-screen items-center justify-center bg-paper px-6 text-ink">
+      <div className="w-full max-w-xl">
+        <p className="label accord-signal opacity-60">Error 404</p>
+        <h1 className="display-lg mt-8 max-w-[16ch]">This page does not exist.</h1>
+        <p className="lede mt-8 max-w-[46ch] border-t border-hairline pt-8 opacity-75">
           The page you're looking for doesn't exist or has been moved.
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+        <div className="mt-12">
+          <Action to="/">Return Home</Action>
         </div>
       </div>
     </div>
@@ -46,30 +50,31 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+    <div className="flex min-h-screen items-center justify-center bg-paper px-6 text-ink">
+      <div className="w-full max-w-xl">
+        <p className="label accord-signal opacity-60">Something went wrong</p>
+        <h1 className="display-lg mt-8 max-w-[16ch]">This page didn't load.</h1>
+        <p className="lede mt-8 max-w-[46ch] border-t border-hairline pt-8 opacity-75">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {/* "Try again" runs a router action rather than navigating, so it has to
+            be a real <button> — Action renders a Link. It carries the Action
+            base and `solid` classes verbatim so the pair reads as one system. */}
+        <div className="mt-12 flex flex-wrap gap-4">
           <button
+            type="button"
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="group label inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent"
           >
-            Try again
+            <span>Try Again</span>
+            <Arrow />
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
+          <Action to="/" variant="outline">
+            Return Home
+          </Action>
         </div>
       </div>
     </div>
@@ -81,26 +86,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Digital Finance Alliance — Where Institutions Meet Digital Assets" },
+      { title: "Financial Rails — The Infrastructure of the Next Financial System" },
       {
         name: "description",
         content:
-          "Digital Finance Alliance brings together financial institutions, regulators and technology builders through executive forums, private networks and leadership communities.",
+          "Financial Rails is the institutional platform for the infrastructure through which money is created, moved, settled, secured and governed — convening the institutions, regulators and builders through executive forums, the FR30, the Council and original intelligence.",
       },
-      { name: "author", content: "Digital Finance Alliance" },
+      { name: "author", content: "Financial Rails" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Financial Rails" },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "Financial Rails — The Infrastructure of the Next Financial System",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "The institutional platform for the infrastructure through which money is created, moved, settled, secured and governed.",
+      },
       // Share cards want a 1200x630 image, not a favicon, so this is the
       // official accent mark composed on brand ink at that size.
       { property: "og:image", content: "/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Digital Finance Alliance" },
+      { property: "og:image:alt", content: "Financial Rails" },
       { name: "twitter:image", content: "/og-image.png" },
       { name: "theme-color", content: "#101223" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: FINANCIAL_RAILS.origin },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -126,11 +142,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    // Selects the Digital Finance Alliance colour palette for the whole document.
+    // Selects the Financial Rails colour palette for the whole document.
     // See src/lib/accord-palette.ts — one constant switches the system.
     <html lang="en" data-accord-palette={ACTIVE_PALETTE}>
       <head>
         <HeadContent />
+        {/* Organisation identity, stated once for the whole site. Only facts
+            the platform already publishes — no invented address, no invented
+            contact point, no unverifiable claim. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: FINANCIAL_RAILS.name,
+              url: FINANCIAL_RAILS.origin,
+              slogan: FINANCIAL_RAILS.positioning,
+              logo: `${FINANCIAL_RAILS.origin}/favicon-512.png`,
+              parentOrganization: { "@type": "Organization", name: FINANCIAL_RAILS.operator },
+            }),
+          }}
+        />
       </head>
       <body>
         {children}
@@ -145,7 +178,7 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   // Event micro-sites (/forums/<slug>) carry their own navigation and footer so
-  // each reads as its own property. Institutional pages keep the Alliance
+  // each reads as its own property. Institutional pages keep the Financial Rails
   // chrome untouched. The standalone-property branch was dropped along with the
   // experimental event routes it served.
   const isEventMicrosite = /^\/forums\/[^/]+\/?$/.test(pathname);

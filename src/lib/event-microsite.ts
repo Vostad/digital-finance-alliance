@@ -1,5 +1,5 @@
 import type { MicrositePhoto } from "@/lib/microsite-photography";
-import type { Leader } from "@/lib/digital-asset-accord-leaders";
+import type { Leader } from "@/lib/financial-rails-leaders";
 
 /**
  * THE EVENT MICRO-SITE CONTRACT — what an edition of the forum supplies.

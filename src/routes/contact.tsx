@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/PageHero";
 import { Section } from "@/components/site/Section";
 import { Reveal } from "@/components/site/Reveal";
-import { Action, Faq, FinalCta, TagList, TitleBlock } from "@/components/site/primitives";
+import { Action, Arrow, Faq, FinalCta, TagList, TitleBlock } from "@/components/site/primitives";
 
 /** The widths that exist on disk for the hero photograph. */
 const HERO_WIDTHS = [480, 768, 1024, 1400];
@@ -10,18 +10,19 @@ const HERO_WIDTHS = [480, 768, 1024, 1400];
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Digital Finance Alliance — Forums, Partnerships, Council" },
+      { title: "Contact Financial Rails — Forums, Partnerships, Council | Financial Rails" },
       {
         name: "description",
         content:
-          "Get in touch about attending a forum, partnerships, speaking opportunities, DF30 or Digital Assets Council membership.",
+          "Get in touch about attending a forum, partnerships, speaking opportunities, the FR30 or Financial Rails Council membership.",
       },
-      { property: "og:title", content: "Contact Digital Finance Alliance" },
+      { property: "og:title", content: "Contact Financial Rails" },
       {
         property: "og:description",
-        content: "Let's shape the future of digital assets together.",
+        content: "Let's build the rails together.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://financialrails.org/contact" }],
   }),
   component: Contact,
 });
@@ -36,21 +37,21 @@ const TEAMS = [
   },
   {
     title: "Partnerships & Sponsorships",
-    body: "Partner with Digital Finance Alliance to connect with senior decision-makers across markets.",
+    body: "Partner with Financial Rails to connect with senior decision-makers across payments, banking, settlement and markets.",
     cta: "Contact Partnerships",
   },
   {
     title: "Speaker Opportunities",
-    body: "Share your expertise at an upcoming Digital Finance Alliance forum.",
+    body: "Share your expertise at an upcoming Financial Rails forum.",
     cta: "Contact the Programme Team",
   },
   {
-    title: "DF30",
-    body: "Nominations, submissions and partnership enquiries for DF30.",
-    cta: "Contact the DF30 Team",
+    title: "FR30",
+    body: "Nominations, submissions and partnership enquiries for the FR30.",
+    cta: "Contact the FR30 Team",
   },
   {
-    title: "Digital Assets Council",
+    title: "Financial Rails Council",
     body: "Membership enquiries and strategic partnerships.",
     cta: "Contact the Council",
   },
@@ -65,8 +66,8 @@ const INTERESTS = [
   "Attending a Forum",
   "Partnerships & Sponsorships",
   "Speaking",
-  "DF30",
-  "Digital Assets Council",
+  "FR30",
+  "Financial Rails Council",
   "Media & Press",
   "General Enquiry",
 ];
@@ -78,7 +79,7 @@ const FAQS = [
   },
   {
     q: "Do you work internationally?",
-    a: "Yes. Digital Finance Alliance convenes executive forums and programmes globally.",
+    a: "Yes. Financial Rails convenes executive forums and programmes globally.",
   },
   {
     q: "Can my organization become a partner?",
@@ -90,7 +91,7 @@ const FAQS = [
   },
   {
     q: "Where are your forums held?",
-    a: "Digital Finance Alliance hosts executive forums in leading international business hubs. Event locations are announced on each forum page.",
+    a: "Financial Rails runs its 2026 editions in Asia, Africa and MENA. Each edition\u2019s location is announced on its own forum page.",
   },
 ];
 
@@ -103,9 +104,9 @@ function Contact() {
       <PageHero
         meta="Contact"
         eyebrow="Contact"
-        title="Let's Shape the Future of Digital Assets Together."
-        lede="Whether you're interested in attending a forum, partnering with Digital Finance Alliance or speaking at one of our events, we'd love to hear from you."
-        seed="aiaccord-contact"
+        title="Let's Build the Rails Together."
+        lede="Whether you're interested in attending a forum, partnering with Financial Rails or speaking at one of our editions, we'd like to hear from you."
+        seed="financial-rails-contact"
         /* Replaces the seeded picsum.photos placeholder with the project's own
            photograph. The master is a native 1400x1867 — exactly the 3:4 the
            placeholder's frame held — so the ratio is carried over explicitly
@@ -150,23 +151,18 @@ function Contact() {
                 <p className="mt-5 max-w-[40ch] text-sm opacity-70">{team.body}</p>
               </div>
               <a
-                href="mailto:hello@digitalassetsaccord.org"
-                className="group label mt-10 inline-flex items-center gap-3 transition-opacity duration-500 hover:opacity-60"
+                href="#enquiry"
+                className="group label mt-10 inline-flex items-center gap-4 transition-opacity duration-500 hover:opacity-60"
               >
-                {team.cta}
-                <span
-                  aria-hidden
-                  className="inline-block transition-transform duration-500 group-hover:translate-x-1.5"
-                >
-                  →
-                </span>
+                <span>{team.cta}</span>
+                <Arrow />
               </a>
             </Reveal>
           ))}
         </div>
       </Section>
 
-      <Section label="Send Us a Message" tone="bone">
+      <Section id="enquiry" label="Send Us a Message" tone="bone">
         <div className="grid gap-16 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <Reveal>
@@ -177,17 +173,11 @@ function Contact() {
             </Reveal>
             <Reveal delay={140} className="mt-16 border-t border-hairline pt-8">
               <p className="label opacity-50">Global Office</p>
-              <p className="display-sm mt-6">DIGITAL FINANCE ALLIANCE</p>
+              <p className="display-sm mt-6">FINANCIAL RAILS</p>
               <p className="mt-3 text-base opacity-70">Dubai, United Arab Emirates</p>
-              <p className="mt-6 text-base">
-                <a
-                  href="mailto:hello@digitalassetsaccord.org"
-                  className="underline-offset-4 hover:underline"
-                >
-                  hello@digitalassetsaccord.org
-                </a>
+              <p className="mt-6 text-base opacity-70">
+                Every enquiry routes through the form on this page.
               </p>
-              <p className="mt-1 text-base opacity-70">+971 XX XXX XXXX</p>
             </Reveal>
             <Reveal delay={200} className="mt-12 border-t border-hairline pt-8">
               <p className="label opacity-50">Connect With Us</p>
@@ -264,15 +254,10 @@ function Contact() {
                 <div className="sm:col-span-2 mt-8">
                   <button
                     type="submit"
-                    className="group label inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 hover:bg-accent"
+                    className="group label inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent"
                   >
-                    Submit Enquiry
-                    <span
-                      aria-hidden
-                      className="inline-block transition-transform duration-500 group-hover:translate-x-1.5"
-                    >
-                      →
-                    </span>
+                    <span>Submit Enquiry</span>
+                    <Arrow />
                   </button>
                 </div>
               </form>

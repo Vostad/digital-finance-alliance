@@ -1,5 +1,5 @@
 /**
- * AI ACCORD COLOUR SYSTEM — the palette switch.
+ * FINANCIAL RAILS COLOUR SYSTEM — the palette switch.
  *
  * The whole site renders from one of two named palettes. The active one is
  * written to <html data-accord-palette="…"> in src/routes/__root.tsx, and every

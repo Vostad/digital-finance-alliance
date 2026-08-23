@@ -5,131 +5,214 @@ import { PageHero } from "@/components/site/PageHero";
 import { Section } from "@/components/site/Section";
 import { Reveal } from "@/components/site/Reveal";
 import { NetworkMarquee } from "@/components/site/NetworkMarquee";
-import { MicrositePhoto } from "@/components/site/MicrositePhoto";
-import { DIGITAL_ASSET_ACCORD_LEADERS } from "@/lib/digital-asset-accord-leaders";
-import { MICROSITE_PHOTOS } from "@/lib/microsite-photography";
-import { Action, FinalCta, TitleBlock } from "@/components/site/primitives";
+import { FINANCIAL_RAILS_LEADERS } from "@/lib/financial-rails-leaders";
+import { EVENT_PORTFOLIO, type PortfolioEvent } from "@/lib/event-portfolio";
+import { FinalCta, TitleBlock } from "@/components/site/primitives";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Digital Finance Alliance — Where Institutions Meet Digital Assets" },
+      { title: "Financial Rails — The Infrastructure of the Next Financial System" },
       {
         name: "description",
         content:
-          "Executive forums, private networks and leadership communities advancing institutional adoption of real digital assets.",
+          "The institutional platform for the infrastructure through which money is created, moved, settled, secured and governed. Forums in Asia, Africa and MENA, the FR30, the Council and original intelligence.",
       },
       {
         property: "og:title",
-        content: "Digital Finance Alliance — Where Institutions Meet Digital Assets",
+        content: "Financial Rails — The Infrastructure of the Next Financial System",
       },
       {
         property: "og:description",
         content:
-          "Executive forums, private networks and leadership communities advancing institutional adoption of real digital assets.",
+          "The institutions building, funding, regulating and operating the financial rails are already moving.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://financialrails.org" }],
   }),
   component: Home,
 });
 
+/**
+ * The four components of the platform, in the order the institution presents
+ * them: the room, the index, the council, the desk. Each links to its own
+ * property — nothing here is a label without a page behind it.
+ */
+const PLATFORM = [
+  {
+    name: "Financial Rails Forums",
+    body: "Invitation-only working rooms in Asia, Africa and MENA.",
+    to: "/forums",
+  },
+  {
+    name: "FR30",
+    body: "The thirty people building the infrastructure money moves through.",
+    to: "/fr30",
+  },
+  {
+    name: "Financial Rails Council",
+    body: "The institutional leadership network shaping the agenda.",
+    to: "/council",
+  },
+  {
+    name: "Financial Rails Intelligence",
+    body: "Research, briefings and analysis from the editorial desk.",
+    to: "/intelligence",
+  },
+];
+
 const MISSION_METRICS = [
-  { value: "7+", label: "Years" },
-  { value: "10+", label: "Niche Events" },
+  { value: "50+", label: "Countries" },
+  { value: "10+", label: "Programmes" },
 ];
 
 /**
- * The Digital Finance Alliance signature device: one statement, one changing final word.
+ * The Financial Rails positioning statement, set as one fixed lockup.
  *
- *   AI IS GOING PHYSICAL.  →  AI IS GOING VERTICAL.
+ *   THE INFRASTRUCTURE / OF THE NEXT / FINANCIAL SYSTEM.
  *
- * "AI IS GOING" never moves. The word sits in a masked slot measured against
- * BOTH words, so the slot is as wide and as tall as the widest of them and the
- * headline cannot reflow, resize or shift the copy beneath it.
- *
- * The track carries a third item duplicating the first, so every transition
- * slides upward — the word always exits up and the next enters from below. The
- * final step renders the same glyphs as the first, which makes the reset back
- * to zero invisible; the transition is disarmed for exactly that one frame.
- *
- * Two lines at every breakpoint, deliberately: one line needs 743px against
- * the 705px hero column at 1440, and would only fit past roughly 1900px — a
- * lockup that flips between one and two lines is not a signature.
+ * Each line is its own block, so the break points are authored rather than left
+ * to the measure. The break falls where the sentence breaks — after the noun,
+ * then after the qualifier — which is why the short middle line reads as
+ * deliberate rather than as a bad wrap. The lockup holds all three lines from
+ * 320px up; nothing reflows between breakpoints, only the type scale moves.
  */
-const HEADLINE_WORDS = ["programmable.", "tokenized."];
-const HEADLINE_TRACK = [...HEADLINE_WORDS, HEADLINE_WORDS[0]];
-const HEADLINE_DWELL_MS = 3600;
-const HEADLINE_SLIDE_MS = 620;
+const HEADLINE_LINES = ["The infrastructure", "of the next", "financial system."];
 
 function SignatureHeadline() {
-  const [step, setStep] = useState(0);
-  const [snapping, setSnapping] = useState(false);
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
-
-  useEffect(() => {
-    if (reduced) return;
-    // The duplicate step exists only for the length of one slide.
-    if (step === HEADLINE_TRACK.length - 1) {
-      const reset = setTimeout(() => {
-        setSnapping(true);
-        setStep(0);
-      }, HEADLINE_SLIDE_MS);
-      return () => clearTimeout(reset);
-    }
-    const advance = setTimeout(() => setStep((s) => s + 1), HEADLINE_DWELL_MS);
-    return () => clearTimeout(advance);
-  }, [step, reduced]);
-
-  // Re-arm the transition a frame after the invisible reset, never during it.
-  useEffect(() => {
-    if (!snapping) return;
-    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setSnapping(false)));
-    return () => cancelAnimationFrame(raf);
-  }, [snapping]);
-
   return (
     <>
-      {/* The whole signature is spoken once; the animation carries no meaning
-          a screen reader would otherwise miss. */}
-      <span className="sr-only">Money is going programmable. Money is going tokenized.</span>{" "}
-      <span aria-hidden>
-        Money is going
-        <br />
-        <span className="relative block overflow-hidden">
-          {/* Invisible measure — both words stacked in one grid cell, so the
-              slot takes the width and height of the wider one. */}
-          <span className="invisible grid">
-            {HEADLINE_WORDS.map((word) => (
-              <span key={word} className="col-start-1 row-start-1 block">
-                {word}
-              </span>
-            ))}
-          </span>
-          <span
-            className={cn(
-              "absolute inset-0 block",
-              !snapping &&
-                "transition-transform duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
-            )}
-            style={{ transform: `translateY(-${(reduced ? 0 : step) * 100}%)` }}
-          >
-            {HEADLINE_TRACK.map((word, i) => (
-              <span key={`${word}-${i}`} className="block h-full">
-                {word}
-              </span>
-            ))}
-          </span>
+      {HEADLINE_LINES.map((line) => (
+        <span key={line} className="block">
+          {line}
         </span>
-      </span>
+      ))}
     </>
+  );
+}
+
+/**
+ * THE WORLD TOUR — the editions of Financial Rails, wherever they are held.
+ *
+ * The tour is an open series, not a fixed set. This band reads the platform's
+ * own registry rather than a local list, so an edition added to EVENT_PORTFOLIO
+ * appears here without touching this file — and the copy below never counts the
+ * editions or calls them complete.
+ *
+ * Two things are stated per edition that the directory card states differently:
+ * a tour-voice tagline, and a location written the way the edition writes it
+ * ("Dubai, UAE", not the registry's formal country). Both are overrides keyed by
+ * the registry id; anything without an override falls back to the registry, so a
+ * new edition is legible here the moment it is added.
+ */
+const WORLD_TOUR_COPY: Record<string, { tagline?: string; location?: string }> = {
+  "financial-rails-asia": { tagline: "Building Asia's next financial infrastructure." },
+  "financial-rails-africa": { tagline: "Building Africa's next financial infrastructure." },
+  "financial-rails-mena": {
+    tagline: "Building the MENA financial infrastructure.",
+    location: "Dubai, UAE",
+  },
+};
+
+/** The registry's own formal location, used when an edition has no override. */
+function registryLocation(event: PortfolioEvent) {
+  return event.country === event.city ? event.city : `${event.city}, ${event.country}`;
+}
+
+/**
+ * One edition, as a card: image, name, tagline, date, location, action — in
+ * that order, and in that order at every width. The card is a flex column with
+ * the schedule block pushed to `mt-auto`, so a longer tagline in one edition
+ * cannot leave its neighbours' rules sitting at different heights.
+ */
+function WorldTourCard({ event, delay }: { event: PortfolioEvent; delay: number }) {
+  const copy = WORLD_TOUR_COPY[event.id] ?? {};
+  const body = (
+    <>
+      <figure
+        className="relative w-full overflow-hidden bg-ink/40"
+        style={{ aspectRatio: "16 / 10" }}
+      >
+        <img
+          src={event.image.src}
+          alt={event.image.alt}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover grayscale transition-[filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/tour:grayscale-0 group-focus-visible/tour:grayscale-0 motion-reduce:transition-none"
+        />
+      </figure>
+
+      <div className="mt-7 flex grow flex-col">
+        <h3 className="font-display text-[clamp(1.6rem,2.5vw,2.15rem)] font-extrabold uppercase leading-[1.02] tracking-[-0.025em] break-words">
+          {event.name}
+        </h3>
+        <p className="mt-4 max-w-[40ch] text-sm leading-relaxed opacity-65">
+          {copy.tagline ?? event.tagline}
+        </p>
+
+        <div className="mt-auto border-t border-hairline-invert pt-6">
+          <p className="label opacity-70">{event.dates}</p>
+          <p className="label mt-2 opacity-45">{copy.location ?? registryLocation(event)}</p>
+          {event.to ? (
+            <span className="label accord-signal-invert mt-6 inline-flex items-center gap-3">
+              Explore Forum
+              <span
+                aria-hidden
+                className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/tour:translate-x-1.5 motion-reduce:transition-none"
+              >
+                →
+              </span>
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </>
+  );
+
+  const shell = "group/tour flex h-full flex-col";
+  return (
+    <Reveal delay={delay}>
+      {event.to ? (
+        <Link
+          to={event.to}
+          className={cn(
+            shell,
+            "transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none",
+          )}
+        >
+          {body}
+        </Link>
+      ) : (
+        <article className={shell}>{body}</article>
+      )}
+    </Reveal>
+  );
+}
+
+function WorldTour() {
+  return (
+    <Section label="World Tour" tone="ink">
+      <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-8">
+        <div className="lg:col-span-7">
+          <Reveal>
+            <p className="label accord-signal-invert opacity-70">Financial Rails World Tour</p>
+          </Reveal>
+          <Reveal delay={60}>
+            <h2 className="display-lg mt-8 max-w-[20ch]">
+              The infrastructure of global finance, in every market.
+            </h2>
+          </Reveal>
+        </div>
+      </div>
+
+      {/* The site's standing card grid: one column, two at md, three at lg —
+          the same track the forums directory runs, so the tour and the
+          directory read as one system rather than two. */}
+      <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:mt-20 lg:grid-cols-3 lg:gap-x-10">
+        {EVENT_PORTFOLIO.map((event, i) => (
+          <WorldTourCard key={event.id} event={event} delay={i * 80} />
+        ))}
+      </div>
+    </Section>
   );
 }
 
@@ -158,7 +241,7 @@ function SpeakerStrip() {
   const period = useCallback(() => {
     const node = scroller.current;
     const first = node?.children[0] as HTMLElement | undefined;
-    const clone = node?.children[DIGITAL_ASSET_ACCORD_LEADERS.length] as HTMLElement | undefined;
+    const clone = node?.children[FINANCIAL_RAILS_LEADERS.length] as HTMLElement | undefined;
     return first && clone ? clone.offsetLeft - first.offsetLeft : 0;
   }, []);
 
@@ -246,8 +329,8 @@ function SpeakerStrip() {
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink",
       )}
     >
-      {[...DIGITAL_ASSET_ACCORD_LEADERS, ...DIGITAL_ASSET_ACCORD_LEADERS].map((speaker, index) => {
-        const duplicate = index >= DIGITAL_ASSET_ACCORD_LEADERS.length;
+      {[...FINANCIAL_RAILS_LEADERS, ...FINANCIAL_RAILS_LEADERS].map((speaker, index) => {
+        const duplicate = index >= FINANCIAL_RAILS_LEADERS.length;
         return (
           <figure
             key={`${speaker.name}-${index}`}
@@ -329,120 +412,31 @@ function SpeakerStrip() {
     </div>
   );
 }
-/**
- * THE FEATURED SUMMIT — the flagship, presented as the homepage's one dark
- * editorial spread. Five things and nothing else: what it is, why it matters,
- * when, where, and the one door in. The visitor should be able to answer all
- * five within seconds, so everything that was competing with them — the
- * "Invitation Only" tag, the five-rail taxonomy line, the delegate count and
- * the second CTA — is gone.
- *
- * A REAL ROOM, NOT A STOCK PHOTOGRAPH. The frame this module used to carry was
- * an external stock picture of glass office towers, which said "finance
- * website" rather than "our event". It now carries the summit's own hero
- * frame from the shared event photography — a room of senior delegates in
- * session — so the homepage and /forums/financial-rails-v2 open on the same
- * image and the property is recognisable at a glance.
- *
- * The composition follows the approved V2 editorial language: two equal halves
- * on the site's own grid, the words left and one landscape frame right, and no
- * nested container of its own — the section is the homepage canvas.
- */
-
-/* The frame's slot: a six-column half of the content column, which sits inside
-   the shared Section's 96px rail and lg:px-16 padding. Six of twelve columns
-   with 48px gutters resolves to 50vw − 136px; below lg the halves stack and the
-   frame is the full content width inside the shell's padding. This overrides
-   the shared library's full-bleed `sizes`, which would fetch a 3840 file for a
-   584px slot, and is a spread onto a fresh object so the shared set is read and
-   never mutated. */
 /** The widths that exist on disk for the hero photograph. */
 const HERO_HOME_WIDTHS = [480, 768, 1024, 1400];
-
-const FEATURE_PHOTO_SIZES =
-  "(min-width: 1024px) calc(50vw - 136px), (min-width: 768px) calc(100vw - 96px), calc(100vw - 48px)";
-
-function FinancialRailsFeature() {
-  return (
-    <Section label="Featured Summit" tone="ink">
-      <Reveal>
-        <h2 className="display-lg">Featured Summit</h2>
-      </Reveal>
-
-      <div className="mt-10 grid gap-y-12 lg:mt-14 lg:grid-cols-12 lg:items-center lg:gap-x-12">
-        {/* The words lead the DOM, so the stack reads title → statement →
-            date → location → door → frame on a phone, and no `order`
-            utilities are needed to get there. */}
-        <div className="min-w-0 lg:col-span-6">
-          <Reveal delay={80}>
-            {/* Fitted to the six-column half: "RAILS SUMMIT" is the wide line
-                at a measured 7.23em, and the column is 376px at 1024 and 584px
-                at 1440, so 4.9vw with a 4.4rem ceiling holds the lockup at
-                every width without wrapping. */}
-            <h3 className="font-display text-[clamp(2.2rem,4.9vw,4.4rem)] font-extrabold uppercase leading-[0.84] tracking-[-0.035em]">
-              Financial
-              <br />
-              Rails Summit
-            </h3>
-          </Reveal>
-
-          <Reveal delay={140}>
-            <p className="display-sm mt-8 max-w-[30ch]">
-              The infrastructure of the next financial system.
-            </p>
-          </Reveal>
-
-          <Reveal delay={200} className="mt-10 border-t border-hairline-invert pt-8">
-            <p className="display-sm">4–5 November 2026</p>
-            <p className="label mt-3 opacity-60">Dubai, UAE</p>
-          </Reveal>
-
-          <Reveal delay={260} className="mt-10">
-            <Action to="/forums/financial-rails-v2" variant="outlineInvert">
-              Explore Summit
-            </Action>
-          </Reveal>
-        </div>
-
-        {/* One landscape frame, 3:2 — a 15% crop off the sides of the native
-            16:9 master, which costs the room nothing. The reveal class lands on
-            the <img>, which fills the figure absolutely, so colour returns
-            under the photograph and nowhere else: not the column, not the
-            words, not the ground. Only the filter moves — no zoom, no scale. */}
-        <Reveal delay={120} className="min-w-0 lg:col-span-6">
-          <figure className="relative aspect-[3/2] w-full overflow-hidden bg-ink/40">
-            <MicrositePhoto
-              photo={{ ...MICROSITE_PHOTOS.closing, sizes: FEATURE_PHOTO_SIZES }}
-              className="grayscale transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:grayscale-0 motion-reduce:transition-none"
-            />
-          </figure>
-        </Reveal>
-      </div>
-    </Section>
-  );
-}
 
 function Home() {
   return (
     <>
       <PageHero
-        meta="TOKENIZATION . PAYMENTS . CUSTODY . REGULATION."
+        meta="MONEY · MARKETS · INFRASTRUCTURE · RULES"
         title={<SignatureHeadline />}
-        /* The signature slot is measured against its widest word, and
-           "PROGRAMMABLE." is 9.14em — far wider than the 5.35em "PHYSICAL."
-           this hero was originally fitted for. The shared 14ch default capped
-           the line at 8.76em, so the final E wrapped inside the slot's
-           overflow-hidden and was clipped at every breakpoint. 15.5ch clears
-           the widest word, and below sm the size tracks the viewport because
-           the 2.25rem floor alone needs 329px inside a 327px column at 375. */
-        titleClassName="font-display max-w-[15.5ch] text-[clamp(1.1rem,9vw,2.25rem)] font-extrabold uppercase leading-[0.84] tracking-[-0.03em] sm:text-[clamp(2.25rem,4.6vw,5.75rem)]"
-        lede="We convene the institutions, regulators, and builders deploying real digital asset infrastructure."
-        body="Initiative by Vostad Labs · Established in 2014."
+        /* Fitted, not chosen. "THE INFRASTRUCTURE" is the wide line at a
+           measured 11.60em — far wider than the 10.05em the previous lockup
+           was cut for — so the old 4.6vw wrapped it into two lines at every
+           desktop width. The hero column is (0.62·(vw−96px) − 128px), which is
+           447px at 1024 where it is tightest: 3.65vw puts the line at 433px
+           there, a 3% margin, and it clears every width above. Below sm the
+           column is (100vw − 48px) — 272px at 320px — and 7.2vw is what fits
+           the same line inside it. */
+        titleClassName="font-display max-w-[19ch] text-[clamp(1.1rem,7.2vw,2.25rem)] font-extrabold uppercase leading-[0.84] tracking-[-0.03em] sm:text-[clamp(2.25rem,3.65vw,5.75rem)]"
+        lede="The institutions building, funding, regulating and operating the financial rails are already moving."
+        body="An initiative by Vostad · Convening since 2014."
         actions={[
           { label: "Explore Forums", to: "/forums" },
-          { label: "About Digital Finance Alliance", to: "/about" },
+          { label: "About Financial Rails", to: "/about" },
         ]}
-        seed="aiaccord-hero"
+        seed="dfa-hero"
         /* The standing image. Replaces the seeded picsum.photos placeholder
            the hero fell back to — a random stock frame — with the project's
            own photograph, encoded to the site's usual AVIF-first ladder.
@@ -464,8 +458,8 @@ function Home() {
           ratio: "3 / 4",
           alt: "Glass office towers rising above a financial district, photographed looking upward",
         }}
-        figureTo="/forums/financial-rails-v2"
-        figureLabel="Financial Rails Summit"
+        figureTo="/forums/financial-rails-mena"
+        figureLabel="Financial Rails MENA"
       />
 
       {/* One continuous proof of experience: the heading states the claim, the
@@ -475,8 +469,8 @@ function Home() {
           single block. */}
       <Section>
         <TitleBlock
-          title="Transforming Finance Since 2018"
-          body="More than a sever years of bringing leaders, organizations and ideas together across ecosystem and around the world."
+          title="Convening Since 2014"
+          body="Bringing leaders, institutions and ideas together across industries and more than 50 countries — and running a dedicated financial-infrastructure programme since 2018."
         />
         <div className="mt-16">
           <NetworkMarquee rows={2} presence="quiet" />
@@ -489,10 +483,46 @@ function Home() {
         </Reveal>
       </Section>
 
+      {/* The world tour — the editions themselves, between the institution's
+          record and the institution's architecture. */}
+      <WorldTour />
+
       {/* The featured event — the flagship carries the homepage alone. The
           full portfolio still lives at /forums; this page names only the
           signature property. */}
-      <FinancialRailsFeature />
+      {/* The platform — the institution's architecture, before any single
+          event. Four components, each a real page. */}
+      <Section label="The Platform" tone="ink">
+        <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-8">
+          <div className="lg:col-span-7">
+            <Reveal>
+              <p className="label accord-signal-invert opacity-70">The Platform</p>
+            </Reveal>
+            <Reveal delay={60}>
+              <h2 className="display-lg mt-8 max-w-[18ch]">Not one event. An institution.</h2>
+            </Reveal>
+          </div>
+        </div>
+
+        <div className="mt-16 border-t border-hairline-invert lg:mt-20">
+          {PLATFORM.map((component, i) => (
+            <Reveal key={component.name} delay={i * 80}>
+              <Link
+                to={component.to}
+                className="group grid items-baseline gap-x-8 gap-y-3 border-b border-hairline-invert py-8 transition-opacity duration-500 hover:opacity-60 lg:grid-cols-12 lg:py-10"
+              >
+                <p className="label accord-signal-invert opacity-60 lg:col-span-1">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="display-md lg:col-span-5">{component.name}</h3>
+                <p className="max-w-[52ch] text-base leading-relaxed opacity-70 lg:col-span-5 lg:col-start-7">
+                  {component.body}
+                </p>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </Section>
 
       <Section label="Mission" tone="ink" flush>
         <div className="grid lg:grid-cols-[minmax(0,1fr)_28rem]">
@@ -500,24 +530,20 @@ function Home() {
             <Reveal>
               <div className="max-w-[52ch] text-[clamp(1.25rem,2.05vw,1.9rem)] leading-[1.4] tracking-[-0.01em]">
                 <p>
-                  Since 2018, we have convened leaders across 50+ countries around the forces
+                  Since 2018 we have convened leaders across 50+ countries around the forces
                   reshaping global markets.
                 </p>
                 <p className="mt-6">
                   From Blockchain for Banking and Blockchain for Sustainability to the Halal Economy
-                  and multiple editions of the World Token Summit, our work has consistently focused
-                  on what comes next.
+                  and multiple editions of the World Token Summit, that work kept arriving at the
+                  same place.
                 </p>
-                <p className="mt-6">We saw two things clearly:</p>
+                <p className="mt-6">Not the products. The rails underneath them.</p>
                 <p className="mt-6">
-                  Digital assets need trusted infrastructure.
-                  <br />
-                  And they need real-world adoption.
+                  Payments, settlement, digital money and the rules around them are being rebuilt at
+                  the same time, by institutions that rarely sit in one room.
                 </p>
-                <p className="mt-6">
-                  Digital Finance Alliance exists to bring the people building both into the same
-                  room.
-                </p>
+                <p className="mt-6">Financial Rails exists to put them there.</p>
               </div>
             </Reveal>
           </div>
@@ -538,9 +564,12 @@ function Home() {
       </Section>
 
       <FinalCta
-        title="Money Is Becoming Programmable."
-        body="No hype. Only deployed. Join the institutions, regulators and builders putting real digital assets to work."
-        actions={[{ label: "Explore Forums", to: "/forums" }]}
+        title="The Rails Are Being Built Now."
+        body="Join the institutions building, funding, regulating and operating the infrastructure money moves through."
+        actions={[
+          { label: "Explore Forums", to: "/forums" },
+          { label: "About Financial Rails", to: "/about" },
+        ]}
       />
     </>
   );
