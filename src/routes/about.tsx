@@ -19,6 +19,7 @@ export const Route = createFileRoute("/about")({
         content:
           "Money is changing at the infrastructure level. Financial Rails brings the institutions building, funding, regulating and operating that infrastructure into the same room.",
       },
+      { property: "og:url", content: "https://financialrails.org/about" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/about" }],
   }),

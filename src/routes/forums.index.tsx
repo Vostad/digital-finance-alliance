@@ -10,6 +10,7 @@ import {
   UPCOMING_EVENTS,
   type PortfolioEvent,
 } from "@/lib/event-portfolio";
+import { forumsGraph, jsonLd } from "@/lib/structured-data";
 
 export const Route = createFileRoute("/forums/")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/forums/")({
         content:
           "Closed-door working rooms across payments, banking infrastructure, digital money, settlement, markets and regulation.",
       },
+      { property: "og:url", content: "https://financialrails.org/forums" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/forums" }],
   }),
@@ -160,6 +162,13 @@ function Forums() {
 
   return (
     <>
+      {/* The directory's BreadcrumbList and the calendar as an ItemList. The
+          three editions carry their own Event graphs on their own pages; this
+          one only states that they are a set and what order they run in. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(forumsGraph()) }}
+      />
       {/* The directory — the functional heart of the page, and now its first
           section. pt-20 is not spacing of its own: it is the clearance the
           fixed nav needs, carried by whichever section opens a page (PageHero

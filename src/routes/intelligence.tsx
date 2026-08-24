@@ -19,6 +19,7 @@ export const Route = createFileRoute("/intelligence")({
         property: "og:description",
         content: "What matters before it becomes obvious. The editorial desk of Financial Rails.",
       },
+      { property: "og:url", content: "https://financialrails.org/intelligence" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/intelligence" }],
   }),

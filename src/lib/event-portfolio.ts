@@ -35,8 +35,22 @@ export type PortfolioEvent = {
   /** The chip a card carries — "Featured Edition", "Next Edition", "Upcoming Edition". */
   statusLabel: string;
   dates: string;
+  /**
+   * The same day as `dates`, in ISO 8601, for schema.org `startDate`. Kept
+   * beside the display string rather than parsed out of it, because "6 October
+   * 2026" is written for a reader and a date parser should never be the thing
+   * standing between an edition and its rich result.
+   */
+  startDateISO: string;
   city: string;
   country: string;
+  /**
+   * ISO 3166-1 alpha-2, for schema.org `addressCountry`. Google asks for the
+   * code rather than the printed country name, and `country` above is the
+   * printed name — "United Arab Emirates" is what a card should say and "AE"
+   * is what a crawler should read.
+   */
+  countryCode: string;
   /**
    * The edition's own micro-site. Absent while an announced edition has no
    * page yet — the directory then renders the card unlinked rather than
@@ -54,8 +68,10 @@ export const EVENT_PORTFOLIO: PortfolioEvent[] = [
     status: "next",
     statusLabel: "Next Edition",
     dates: "6 October 2026",
+    startDateISO: "2026-10-06",
     city: "Singapore",
     country: "Singapore",
+    countryCode: "SG",
     to: "/forums/financial-rails-asia",
     image: {
       src: "/media/financial-rails-v2/experience/panel-1280.jpg",
@@ -69,8 +85,10 @@ export const EVENT_PORTFOLIO: PortfolioEvent[] = [
     status: "upcoming",
     statusLabel: "Upcoming Edition",
     dates: "14 October 2026",
+    startDateISO: "2026-10-14",
     city: "Nairobi",
     country: "Kenya",
+    countryCode: "KE",
     to: "/forums/financial-rails-africa",
     image: {
       src: "/media/financial-rails-v2/experience/networking-1280.jpg",
@@ -84,8 +102,10 @@ export const EVENT_PORTFOLIO: PortfolioEvent[] = [
     status: "featured",
     statusLabel: "Featured Edition",
     dates: "5 November 2026",
+    startDateISO: "2026-11-05",
     city: "Dubai",
     country: "United Arab Emirates",
+    countryCode: "AE",
     to: "/forums/financial-rails-mena",
     image: {
       src: "/media/microsite/closing-frame-1280.jpg",

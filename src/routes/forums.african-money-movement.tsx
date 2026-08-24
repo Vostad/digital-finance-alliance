@@ -8,6 +8,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/forums/african-money-movement")({
   beforeLoad: () => {
-    throw redirect({ to: "/forums/financial-rails-africa", replace: true });
+    throw redirect({ to: "/forums/financial-rails-africa", replace: true, statusCode: 301 });
   },
 });

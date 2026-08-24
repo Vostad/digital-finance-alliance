@@ -8,6 +8,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/df30")({
   beforeLoad: () => {
-    throw redirect({ to: "/fr30", replace: true });
+    throw redirect({ to: "/fr30", replace: true, statusCode: 301 });
   },
 });

@@ -8,6 +8,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/forums/india-digital-payments")({
   beforeLoad: () => {
-    throw redirect({ to: "/forums/financial-rails-asia", replace: true });
+    throw redirect({ to: "/forums/financial-rails-asia", replace: true, statusCode: 301 });
   },
 });

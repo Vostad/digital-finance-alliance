@@ -22,6 +22,7 @@ export const Route = createFileRoute("/council")({
         content:
           "A working council of senior leaders across payments, banking, settlement, markets, capital and regulation.",
       },
+      { property: "og:url", content: "https://financialrails.org/council" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/council" }],
   }),

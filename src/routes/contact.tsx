@@ -21,6 +21,7 @@ export const Route = createFileRoute("/contact")({
         property: "og:description",
         content: "Let's build the rails together.",
       },
+      { property: "og:url", content: "https://financialrails.org/contact" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/contact" }],
   }),

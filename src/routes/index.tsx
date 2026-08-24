@@ -27,6 +27,7 @@ export const Route = createFileRoute("/")({
         content:
           "The institutions building, funding, regulating and operating the financial rails are already moving.",
       },
+      { property: "og:url", content: "https://financialrails.org" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org" }],
   }),

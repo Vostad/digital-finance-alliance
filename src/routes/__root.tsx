@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { ACTIVE_PALETTE } from "../lib/accord-palette";
 import { FINANCIAL_RAILS } from "../lib/financial-rails";
+import { jsonLd, rootGraph } from "../lib/structured-data";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Nav } from "../components/site/Nav";
 import { Footer } from "../components/site/Footer";
@@ -87,36 +88,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Financial Rails — The Infrastructure of the Next Financial System" },
-      {
-        name: "description",
-        content:
-          "Financial Rails is the institutional platform for the infrastructure through which money is created, moved, settled, secured and governed — convening the institutions, regulators and builders through executive forums, the FR30, the Council and original intelligence.",
-      },
+      { name: "description", content: FINANCIAL_RAILS.seoDescription },
       { name: "author", content: "Financial Rails" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Financial Rails" },
+      // twitter:card only. A twitter:title/description here would be the
+      // HOMEPAGE'S, and because no child route overrides those two names it
+      // would ride along on every page — every share card on the site would
+      // read "Financial Rails — The Infrastructure of the Next Financial
+      // System" regardless of the page shared. Twitter falls back to og:title
+      // and og:description when the twitter:* pair is absent, and every route
+      // sets its own og pair, so omitting them here is what makes the cards
+      // page-specific.
       { name: "twitter:card", content: "summary_large_image" },
-      {
-        name: "twitter:title",
-        content: "Financial Rails — The Infrastructure of the Next Financial System",
-      },
-      {
-        name: "twitter:description",
-        content:
-          "The institutional platform for the infrastructure through which money is created, moved, settled, secured and governed.",
-      },
       // Share cards want a 1200x630 image, not a favicon, so this is the
-      // official accent mark composed on brand ink at that size.
-      { property: "og:image", content: "/og-image.png" },
+      // official accent mark composed on brand ink at that size. ABSOLUTE, not
+      // "/og-image.png": og:image is fetched by crawlers that have no page
+      // context to resolve a root-relative path against, so the relative form
+      // silently yields no image on Facebook, LinkedIn, Slack and X.
+      { property: "og:image", content: `${FINANCIAL_RAILS.origin}/og-image.png` },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Financial Rails" },
-      { name: "twitter:image", content: "/og-image.png" },
+      { property: "og:url", content: FINANCIAL_RAILS.origin },
+      { name: "twitter:image", content: `${FINANCIAL_RAILS.origin}/og-image.png` },
       { name: "theme-color", content: "#101223" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: FINANCIAL_RAILS.origin },
+      // NO canonical here. `links` from the root and from a child route are
+      // concatenated, not deduped by `rel` the way `meta` is deduped by
+      // name/property — so a canonical at this level emitted a SECOND
+      // <link rel="canonical" href="https://financialrails.org"> on every
+      // page beneath the home page, alongside that page's own. Two
+      // conflicting canonicals is worse than none: Google discards the
+      // signal rather than choosing. Every indexable route declares its own.
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -152,17 +158,7 @@ function RootShell({ children }: { children: ReactNode }) {
             contact point, no unverifiable claim. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: FINANCIAL_RAILS.name,
-              url: FINANCIAL_RAILS.origin,
-              slogan: FINANCIAL_RAILS.positioning,
-              logo: `${FINANCIAL_RAILS.origin}/favicon-512.png`,
-              parentOrganization: { "@type": "Organization", name: FINANCIAL_RAILS.operator },
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(rootGraph()) }}
         />
       </head>
       <body>

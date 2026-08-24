@@ -53,6 +53,7 @@ export const Route = createFileRoute("/fr30")({
         content:
           "An editorial index recognising the people building, transforming and governing the next financial system.",
       },
+      { property: "og:url", content: "https://financialrails.org/fr30" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/fr30" }],
   }),

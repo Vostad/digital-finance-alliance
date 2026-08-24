@@ -8,6 +8,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/intel")({
   beforeLoad: () => {
-    throw redirect({ to: "/intelligence", replace: true });
+    throw redirect({ to: "/intelligence", replace: true, statusCode: 301 });
   },
 });

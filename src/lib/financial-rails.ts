@@ -31,6 +31,13 @@ export const FINANCIAL_RAILS = {
   operator: "Vostad",
   domain: "financialrails.org",
   origin: "https://financialrails.org",
+  /**
+   * The institution in one sentence, for machines: the meta description the
+   * root document carries and the `description` on both the Organization and
+   * the WebSite node. Stated here so the three can never disagree.
+   */
+  seoDescription:
+    "Financial Rails is the institutional platform for the infrastructure through which money is created, moved, settled, secured and governed — convening institutions, regulators and builders through executive forums, the FR30, the Council and original intelligence.",
 };
 
 /** The Agenda — the four chapters every edition works through. */

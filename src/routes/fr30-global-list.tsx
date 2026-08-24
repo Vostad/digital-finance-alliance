@@ -45,6 +45,7 @@ export const Route = createFileRoute("/fr30-global-list")({
         content:
           "The thirty people building the infrastructure money moves through. An editorial index by Financial Rails.",
       },
+      { property: "og:url", content: "https://financialrails.org/fr30-global-list" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/fr30-global-list" }],
   }),

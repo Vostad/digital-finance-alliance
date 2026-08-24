@@ -52,6 +52,7 @@ export const Route = createFileRoute("/partners")({
         content:
           "A network of leading organisations that have participated in, supported and shaped our programmes.",
       },
+      { property: "og:url", content: "https://financialrails.org/partners" },
     ],
     links: [{ rel: "canonical", href: "https://financialrails.org/partners" }],
   }),
