@@ -839,80 +839,75 @@ function TheRoom() {
   );
 }
 
-/* 04 · WHO IS IN IT — the strongest buyer-facing band. A numbered
-   institutional taxonomy against a tall networking photograph, then the
-   qualification bar stated in public, then the one buyer door. */
-function WhoIsInIt() {
+/* 04 · THE PEOPLE — a third photographic mode, deliberately. 02 anchors a
+   sticky frame beside the argument; 03 mirrors it. Here the photograph is
+   the section's own moment: full content width, between the claim and the
+   index, so the room is met as people before it is read as a taxonomy.
+
+   The five constituencies are an editorial index, not cards — a number, a
+   title and one line, on hairlines. Four run as a two-column register; the
+   fifth takes the full width, which reads as the closing item rather than a
+   leftover in an empty second column. */
+function ThePeople() {
   const open = useModals();
   return (
     <SummitSection id="who-is-in-it" chapter="04 — The People" tone="ink">
       <Reveal>
-        <Eyebrow index="04" label="Who Is in It" invert />
+        <Eyebrow index="04" label={AUDIENCE.label} invert />
       </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[30ch]")}>{AUDIENCE.headline}</h2>
+      <Reveal delay={60}>
+        {/* Authored at the comma: the conditional gets its own line, which
+            is where the sentence turns. */}
+        <h2 className={cn(SECTION_TYPE, "mt-7 lg:mt-0")}>
+          <span className="block">The audience you'd build by hand,</span>
+          <span className="block">if you had six months and a licence register.</span>
+        </h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-y-12 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
-        {/* The taxonomy: five constituencies as a ledger, not five cards. */}
-        <div className="min-w-0 lg:col-span-7">
-          <div className="border-t border-hairline-invert">
-            {AUDIENCE.groups.map((group, i) => (
-              <Reveal key={group.role} delay={100 + i * 40}>
-                <div className="grid grid-cols-[2.6rem_1fr] items-baseline gap-x-5 border-b border-hairline-invert py-6 lg:py-7">
-                  <p className="label-lg accord-signal-invert">{String(i + 1).padStart(2, "0")}</p>
-                  <div className="min-w-0">
-                    <h3 className="display-sm">{group.role}</h3>
-                    <p className={cn(BODY, "mt-2 max-w-[44ch] opacity-75")}>{group.line}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+      {/* THE ROOM, AS PEOPLE. The section's major visual moment: full
+          content width, 16/9 at its native ratio so the two figures are
+          uncropped, tightening toward the subjects on narrower screens. */}
+      <Reveal delay={120}>
+        <figure className="relative mt-12 aspect-[4/3] w-full overflow-hidden bg-ink sm:aspect-[16/10] lg:mt-16 lg:aspect-[16/9]">
+          <SummitPhoto
+            photo={PHOTO_NETWORKING}
+            sizes="(min-width:1024px) calc(100vw - 224px), 100vw"
+          />
+        </figure>
+      </Reveal>
 
-          {/* The bar, in public — hairline-bordered, as specified. */}
-          <Reveal delay={160}>
-            <div className="mt-12 border border-hairline-invert p-7 lg:p-9">
-              <p className="label-lg accord-signal-invert">{AUDIENCE.qualificationHeading}</p>
-              <p className={cn(BODY, "mt-4 opacity-85")}>{AUDIENCE.qualification}</p>
+      {/* THE INDEX. */}
+      <Reveal delay={170}>
+        <div className="mt-14 grid grid-cols-1 border-t border-hairline-invert sm:grid-cols-2 lg:mt-16">
+          {AUDIENCE.groups.map((group, i) => (
+            <div
+              key={group.role}
+              className={cn(
+                "min-w-0 border-b border-hairline-invert py-8 lg:py-10",
+                /* The vertical rule falls between the two columns only, and
+                   the fifth item spans both so it closes the register. */
+                "sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline-invert sm:[&:nth-child(even)]:pl-10 sm:[&:nth-child(odd)]:pr-10",
+                i === 4 && "sm:col-span-2 sm:pr-0",
+              )}
+            >
+              <p className="label-lg accord-signal-invert">{String(i + 1).padStart(2, "0")}</p>
+              <h3 className="display-sm mt-5 max-w-[26ch]">{group.role}</h3>
+              <p className={cn(BODY, "mt-3 max-w-[46ch] opacity-75")}>{group.line}</p>
             </div>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <div className="mt-10">
-              <p className="label-lg opacity-60">{AUDIENCE.compositionLabel}</p>
-              <p className={cn(BODY, "mt-3 max-w-[56ch] opacity-85")}>{AUDIENCE.composition}</p>
-              <p className="mt-2 text-[15px] leading-relaxed opacity-60">
-                {AUDIENCE.compositionNote}
-              </p>
-            </div>
-          </Reveal>
+          ))}
         </div>
+      </Reveal>
 
-        {/* The room's people, at column height. */}
-        <Reveal delay={140} className="min-w-0 lg:col-span-5">
-          <figure className="relative aspect-[4/5] w-full overflow-hidden bg-ink lg:sticky lg:top-28">
-            <SummitPhoto
-              photo={PHOTO_NETWORKING}
-              sizes="(min-width:1024px) calc(41.6vw - 120px), 100vw"
-            />
-          </figure>
-        </Reveal>
-      </div>
-
-      {/* The buyer door. */}
+      {/* THE INVITATION — a door, not a form. */}
       <Reveal delay={220}>
-        <div className="accord-hairline mt-16 border-t pt-9 lg:mt-20">
-          <p className={cn(STATEMENT_TYPE, "max-w-[24ch]")}>{AUDIENCE.buyerHeadline}</p>
-          <p className={cn(BODY, "mt-5 max-w-[44ch] opacity-80")}>{AUDIENCE.buyerLine}</p>
-          <div className="mt-8">
+        <div className="mt-14 lg:mt-16">
+          <p className={cn(STATEMENT_TYPE, "max-w-[22ch]")}>{AUDIENCE.closingHeadline}</p>
+          <p className={cn(BODY, "mt-5 max-w-[42ch] opacity-80")}>{AUDIENCE.closingLine}</p>
+          <div className="mt-9">
             <Btn tone="solidOnDark" onClick={() => open("apply")}>
               {CTA.apply}
             </Btn>
           </div>
-          <p className="mt-6 max-w-[62ch] text-[15px] leading-relaxed opacity-65">
-            {AUDIENCE.buyerNote}
-          </p>
         </div>
       </Reveal>
     </SummitSection>
@@ -1525,7 +1520,7 @@ export function FinancialRailsSummit() {
           <Hero />
           <TheMarket />
           <TheRoom />
-          <WhoIsInIt />
+          <ThePeople />
           <HowItWorks />
           <TheDifference />
           <TheAgenda />

@@ -98,7 +98,9 @@ export const ROOM = {
 /* --------------------------------------------------------- 04 who is in it */
 
 export const AUDIENCE = {
-  label: "Who Is in It",
+  /* Matches the chapter rail exactly: the rail and the sub-lg eyebrow are
+     the same indicator at two widths and must not disagree. */
+  label: "The People",
   headline: "The audience you'd build by hand, if you had six months and a licence register.",
   groups: [
     {
@@ -116,17 +118,13 @@ export const AUDIENCE = {
     },
     { role: "Scheme & FMI Leadership", line: "The operators of the rails themselves." },
   ],
-  qualificationHeading: "Our qualification bar, in public",
-  qualification:
-    "Budget authority or direct influence over payments, treasury or infrastructure spend · organisation on an approved register — licensed financial institution, listed or large corporate, regulated fintech · title floor of Head-of / Director · verified seat by seat by our team.",
-  compositionLabel: "Target Composition",
-  composition:
-    "~35% banks · ~20% licensed payment institutions · ~20% corporate treasury · ~15% infrastructure fintech · ~10% schemes and regulators.",
-  compositionNote: "Target composition, verified seat by seat.",
-  buyerHeadline: "If you qualify, you attend as our guest.",
-  buyerLine: "You choose which meetings you accept — nothing is scheduled without you.",
-  buyerNote:
-    "Applications are reviewed within five working days, in order received. Buy-side capacity is approximately 220 institutional decision-makers.",
+  /* The section closes on an invitation, not an application process. The
+     qualification bar, the target-composition split, the review window and
+     the buy-side capacity all previously lived here and have been removed:
+     this section answers WHO IS IN THE ROOM, and the mechanics belong
+     outside it. */
+  closingHeadline: "Qualify to join the room.",
+  closingLine: "Qualified delegates attend as our guest.",
 } as const;
 
 /* -------------------------------------------------------- 05 how it works */
