@@ -519,14 +519,13 @@ function Hero() {
           {/* THE IDENTITY. Reading order is the hierarchy: masthead, rule,
               proposition, date, doors, trust. */}
           <div className="min-w-0 lg:col-span-7 lg:pt-6">
-            {/* The one colour signal the composition spends: a short accent
-                rule above the masthead — the site's accord-hairline device,
-                opening the page the way it closes its arguments. */}
-            <Reveal>
-              <div className="accord-hairline w-12 border-t-2" aria-hidden />
-            </Reveal>
+            {/* No opening rule. Tested with the accent bar the site uses to
+                close its arguments, and it read as UI chrome above a masthead
+                that is already the loudest thing on the page — the name earns
+                the top of the composition on its own. The accent is spent
+                where it does work: the chapter rail. */}
             <Reveal delay={60}>
-              <h1 className={cn(MASTHEAD_TYPE, "mt-7")}>
+              <h1 className={MASTHEAD_TYPE}>
                 {SUMMIT.nameLines.map((line) => (
                   <span key={line} className="block whitespace-nowrap">
                     {line}
@@ -540,12 +539,15 @@ function Hero() {
                 <span className="block">the Gulf's money.</span>
               </p>
             </Reveal>
-            <Reveal delay={190} className="mt-9 border-t border-hairline-invert pt-6 lg:mt-10">
-              <p className="display-sm opacity-90">{SUMMIT.dateline}</p>
+            {/* THE ACTION AREA. One rule opens it, and the date and the two
+                doors sit inside that one block — the rule reads as the top of
+                a single group rather than a divider between two. */}
+            <Reveal delay={190} className="mt-11 border-t border-hairline-invert pt-7 lg:mt-14">
+              <p className="display-sm opacity-95">{SUMMIT.dateline}</p>
             </Reveal>
             {/* One solid door; the second is a quiet text door, related but
                 clearly subordinate. */}
-            <Reveal delay={240} className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-5">
+            <Reveal delay={240} className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-5">
               <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
                 {CTA.prospectus}
               </Btn>
@@ -564,16 +566,29 @@ function Hero() {
               </button>
             </Reveal>
             <Reveal delay={280}>
-              <p className="mt-9 text-base leading-relaxed opacity-70">{SUMMIT.trustLine}</p>
+              <p className="mt-10 max-w-[42ch] text-[17px] leading-relaxed opacity-75">
+                {SUMMIT.trustLine}
+              </p>
             </Reveal>
           </div>
 
-          {/* THE ROOM, STANDING. Desktop only. The frame escapes the canvas
-              to the viewport's right edge and, below, overhangs the film —
-              still and footage as one right-anchored object, not a column
-              with an attachment. */}
-          <Reveal delay={150} className="hidden min-w-0 lg:col-span-5 lg:block">
-            <figure className="relative z-10 aspect-[4/5] w-full overflow-hidden bg-ink lg:-mr-16 lg:mb-[-84px] lg:w-[calc(100%+4rem)]">
+          {/* THE ROOM. Desktop only, and a landscape frame rather than the
+              portrait it was: the tall crop ran the photograph down to the
+              film and the two media read as one continuous block. Shorter and
+              wider gives the room its own proportion, keeps the delegates and
+              the table in shot, and leaves the ground between the two media
+              genuinely empty. It still escapes the canvas to the viewport's
+              right edge — the bleed is what stops it reading as a card — and
+              it sits slightly below the masthead's first line so the two
+              columns start on different beats.
+
+              The RATIO is per-breakpoint because the height is what matters:
+              a fixed 7:5 collapsed to a 264px strip in the narrower column at
+              1024. Square there, landscape from xl, holds the frame at
+              370-390px at both — one proportion for the eye, two for the
+              grid. */}
+          <Reveal delay={150} className="hidden min-w-0 lg:col-span-5 lg:block lg:pt-3">
+            <figure className="relative aspect-square w-full overflow-hidden bg-ink lg:-mr-16 lg:w-[calc(100%+4rem)] xl:aspect-[7/5]">
               <SummitPhoto
                 photo={PHOTO_HERO}
                 sizes="(min-width:1024px) calc(41.6vw - 60px), 100vw"
@@ -584,10 +599,10 @@ function Hero() {
           </Reveal>
         </div>
 
-        {/* THE FILM. Full-bleed to the right at lg (meeting the photograph's
-            own bleed), edge-to-edge on smaller screens. The photograph's
-            overhang laps its top-right corner. */}
-        <Reveal delay={200} className="relative z-0 mt-10 lg:mt-8">
+        {/* THE FILM, after a deliberate hold. The gap above it is the point:
+            ground the eye crosses before the cinematic frame arrives, so the
+            still and the footage are two moments rather than one block. */}
+        <Reveal delay={200} className="relative mt-14 lg:mt-20 xl:mt-24">
           <figure className="relative -mx-6 aspect-[16/9] overflow-hidden bg-ink md:-mx-12 lg:mx-0 lg:-mr-16 lg:aspect-[21/8]">
             <SummitFilm />
             <img
