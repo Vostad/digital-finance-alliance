@@ -8,6 +8,8 @@ import {
   SUMMIT,
   CTA,
   SUMMIT_NAV,
+  GAP,
+  ROOM,
   FOOTER,
   submitLead,
   type LeadPayload,
@@ -32,6 +34,14 @@ import {
 /* The hero proposition — the page's largest typographic moment. */
 const HERO_TYPE =
   "font-display text-[clamp(1.55rem,7vw,3.3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] lg:text-[clamp(2.3rem,3.7vw,3.3rem)]";
+
+/* Every section headline sits one confident step below the hero. */
+const SECTION_TYPE =
+  "font-display text-[clamp(1.5rem,5.4vw,2.1rem)] font-extrabold uppercase leading-[0.94] tracking-[-0.028em] lg:text-[clamp(1.8rem,2.9vw,2.6rem)]";
+
+/* Statement stacks — the page's loudest device after the hero. */
+const STATEMENT_TYPE =
+  "font-display text-[clamp(1.55rem,5.8vw,2.2rem)] font-extrabold uppercase leading-[1.06] tracking-[-0.028em] lg:text-[clamp(1.9rem,3.1vw,2.9rem)]";
 
 /* Body copy: 17px on mobile, 18px from lg — the V4 floors, exactly. */
 const BODY = "text-[17px] leading-[1.6] lg:text-lg";
@@ -123,6 +133,16 @@ function Btn({
         →
       </span>
     </button>
+  );
+}
+
+/** Numbered in-canvas eyebrow: the site's rail label is lg-only, and V4
+    wants every section's number legible at every width. */
+function Eyebrow({ index, label, invert }: { index: string; label: string; invert?: boolean }) {
+  return (
+    <p className={cn("label-lg", invert ? "accord-signal-invert" : "accord-signal")}>
+      {index} — {label}
+    </p>
   );
 }
 
@@ -478,11 +498,96 @@ function Hero() {
 
 /* -------------------------------------------------- sections 02–11 follow */
 
+/* 02 · THE GAP — pure market evidence. No photograph: the three statistics
+   are the visual, set as three tall columns whose numerals carry the band. */
 function TheGap() {
-  return null;
+  return (
+    <SummitSection id="the-gap">
+      <Reveal>
+        <Eyebrow index="02" label="The Gap" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8")}>
+          <span className="block max-w-[24ch]">{GAP.headline[0]}</span>
+          <span className="block max-w-[26ch]">{GAP.headline[1]}</span>
+        </h2>
+      </Reveal>
+
+      <Reveal delay={140}>
+        <div className="mt-14 grid grid-cols-1 gap-y-10 border-t border-hairline pt-0 sm:grid-cols-3 sm:gap-x-8 lg:mt-16 lg:gap-x-12">
+          {GAP.stats.map((stat) => (
+            <div
+              key={stat.value}
+              className="border-b border-hairline pb-10 pt-10 sm:border-b-0 sm:pb-0"
+            >
+              <p className="font-display text-[clamp(3.4rem,11vw,4.6rem)] font-extrabold leading-[0.82] tracking-[-0.04em] lg:text-[clamp(4rem,6.4vw,6rem)]">
+                {stat.value}
+              </p>
+              <p className={cn(BODY, "mt-5 max-w-[26ch] opacity-75")}>{stat.line}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <Reveal delay={200}>
+        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-20">
+          {GAP.closing.map((line) => (
+            <p key={line} className={cn(STATEMENT_TYPE, "max-w-[26ch]")}>
+              {line}
+            </p>
+          ))}
+        </div>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* 03 · THE ROOM — pure typography, and deliberately the inverse of 02: the
+   numbers drop to a quiet horizontal rail and the three refusals become the
+   dominant element. The heavier top rule is the seam between two same-ground
+   sections. */
 function TheRoom() {
-  return null;
+  return (
+    <SummitSection id="the-room" className="border-t-2">
+      <Reveal>
+        <Eyebrow index="03" label="The Room" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{ROOM.headline}</h2>
+      </Reveal>
+
+      {/* The proof rail: one slim band, four figures, no ceremony. */}
+      <Reveal delay={140}>
+        <div className="mt-12 grid grid-cols-2 gap-y-8 border-y border-hairline py-7 lg:mt-14 lg:grid-cols-4 lg:gap-x-10">
+          {ROOM.proofRail.map((item) => (
+            <div
+              key={item.value}
+              className="min-w-0 border-hairline pr-4 [&:nth-child(even)]:border-l [&:nth-child(even)]:pl-6 lg:border-l lg:pl-8 lg:first:border-l-0 lg:first:pl-0"
+            >
+              <p className="font-display text-[clamp(1.5rem,4.4vw,1.9rem)] font-extrabold leading-none tracking-[-0.03em] lg:text-[clamp(1.6rem,2vw,2rem)]">
+                {item.value}
+              </p>
+              <p className="mt-3 max-w-[22ch] text-base leading-normal opacity-75">{item.line}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      {/* The philosophy — the section's loudest voice, on the accent rule. */}
+      <Reveal delay={200}>
+        <div className="accord-hairline mt-14 border-l-2 pl-7 lg:mt-20 lg:pl-12">
+          {ROOM.philosophy.map((line) => (
+            <p key={line} className={cn(STATEMENT_TYPE, "py-1")}>
+              {line}
+            </p>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={250}>
+        <p className={cn(BODY, "mt-10 max-w-[52ch] opacity-80")}>{ROOM.support}</p>
+      </Reveal>
+    </SummitSection>
+  );
 }
 function WhoIsInIt() {
   return null;
