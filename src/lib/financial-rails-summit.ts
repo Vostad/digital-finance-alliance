@@ -85,8 +85,10 @@ export const MARKET = {
 export const ROOM = {
   label: "The Room",
   headline: "The room was designed before the seats were sold.",
-  proofRail: [
-    { value: "400", line: "Seats, capped" },
+  /* Same shape as MARKET's: one lead figure, then a supporting pair. The
+     section reuses 02's grammar, so it reuses 02's data model. */
+  primaryStat: { value: "400", line: "Seats, capped" },
+  supportingStats: [
     { value: "~220", line: "Institutional decision-makers" },
     { value: "370+", line: "Pre-scheduled meetings" },
   ],

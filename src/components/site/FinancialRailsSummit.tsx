@@ -729,22 +729,25 @@ function TheMarket() {
   );
 }
 
-/* 03 · THE ROOM — content LEFT, room anchored RIGHT: the mirror of 02.
-   THE WHOLE ARGUMENT LIVES IN THE LEFT COLUMN — headline, specification and
-   policy. An earlier build put the refusals below the spread, which ended
-   the photograph's column before the argument ended: by the last line the
-   frame had scrolled away and the right half was empty. Inside one column,
-   the sticky frame holds beside every line from the claim to the policy.
+/* 03 · THE ROOM — Section 02's grammar, mirrored. Same grid, same gutters,
+   same rule language, same sticky logic, same numeral and descriptor
+   treatment; the sides swap and the internal hierarchy is re-pointed at this
+   section's argument. Content LEFT, room RIGHT.
 
-   Differentiated from 02 by internal hierarchy, not by mirroring. In 02 the
-   figure is the loudest thing on the page and the closing is quieter; here
-   that inverts — the figures are a quiet specification and the refusals are
-   the largest type in the section. Same family, same weight, same 17-18px
-   descriptors, same hairlines: one system, opposite emphasis. */
+   The whole argument stays inside the left column so the frame's container
+   spans it end to end — an earlier build put the refusals below the spread,
+   which ended the photograph before the argument did and left the lower half
+   of the section with an empty right side.
+
+   The one deliberate departure from 02's scale: there the lead figure is the
+   loudest thing on the page, because the market's size IS that section's
+   point. Here the point is the policy, so the refusals hold the voice and
+   the figures sit under them. Same language, re-pointed emphasis. */
 function TheRoom() {
   return (
     <SummitSection id="the-room" chapter="03 — The Room">
       <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-16">
+        {/* THE ARGUMENT — first in the DOM, so mobile opens on the claim. */}
         <div className="min-w-0 lg:col-span-7">
           <Reveal>
             <Eyebrow index="03" label={ROOM.label} />
@@ -762,34 +765,43 @@ function TheRoom() {
             </h2>
           </Reveal>
 
-          {/* THE SPECIFICATION. Quiet by design: the number sits in a fixed
-              track with its descriptor beside it, so three facts read as one
-              scannable rail rather than three stacked announcements — and
-              nothing here competes with the policy below. The last row drops
-              its rule: the accent rule under it already closes the block,
-              and two hairlines 40px apart read as rule-noise. */}
+          {/* THE CAP. The lead figure, full measure, on its own rules —
+              02's primary-statistic block exactly, one scale step down. */}
           <Reveal delay={120}>
-            <div className="mt-12 border-t border-hairline lg:mt-14">
-              {ROOM.proofRail.map((item) => (
+            <div className="mt-12 border-y border-hairline py-9 lg:mt-14 lg:py-10">
+              <p className="font-display text-[clamp(3rem,13vw,4rem)] font-extrabold leading-[0.8] tracking-[-0.045em] lg:text-[clamp(3.2rem,4.6vw,4.6rem)]">
+                {ROOM.primaryStat.value}
+              </p>
+              <p className="mt-5 text-[17px] leading-relaxed opacity-75 lg:text-lg">
+                {ROOM.primaryStat.line}
+              </p>
+            </div>
+          </Reveal>
+
+          {/* THE COMPOSITION OF IT. 02's supporting pair, verbatim structure:
+              one row, two tracks, a rule between them at sm and up. */}
+          <Reveal delay={170}>
+            <div className="grid grid-cols-1 border-b border-hairline sm:grid-cols-2">
+              {ROOM.supportingStats.map((stat) => (
                 <div
-                  key={item.value}
-                  className="grid grid-cols-1 gap-x-8 gap-y-1 border-b border-hairline py-6 last:border-b-0 sm:grid-cols-[6.5rem_1fr] sm:items-baseline lg:py-7"
+                  key={stat.value}
+                  className="border-b border-hairline py-8 last:border-b-0 sm:border-b-0 sm:pr-8 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-8 lg:py-9"
                 >
-                  <p className="font-display text-[clamp(1.3rem,5.6vw,1.9rem)] font-extrabold leading-[0.9] tracking-[-0.04em] lg:text-[clamp(1.6rem,2vw,2.1rem)]">
-                    {item.value}
+                  <p className="font-display text-[clamp(1.9rem,7.4vw,2.4rem)] font-extrabold leading-[0.85] tracking-[-0.04em] lg:text-[clamp(2rem,2.7vw,2.8rem)]">
+                    {stat.value}
                   </p>
-                  <p className="max-w-[34ch] text-[17px] leading-relaxed opacity-75 lg:text-lg">
-                    {item.line}
+                  <p className="mt-4 max-w-[30ch] text-[17px] leading-relaxed opacity-75 lg:text-lg">
+                    {stat.line}
                   </p>
                 </div>
               ))}
             </div>
           </Reveal>
 
-          {/* THE POLICY — the largest type in the section, inside the column
-              so the room stays beside it. */}
-          <Reveal delay={180}>
-            <div className="accord-hairline mt-14 border-t-2 pt-10 lg:mt-16 lg:pt-12">
+          {/* THE POLICY — 02's closing block: one accent rule, then the
+              statement. Three operating principles, generous rhythm. */}
+          <Reveal delay={220}>
+            <div className="accord-hairline mt-14 border-t-2 pt-9 lg:mt-16 lg:pt-10">
               {ROOM.philosophy.map((line) => (
                 <p
                   key={line}
@@ -802,13 +814,19 @@ function TheRoom() {
           </Reveal>
         </div>
 
-        {/* THE ROOM ITSELF. Portrait at lg — the landscape frame was 352px
-            against a column now well past a thousand, which left it looking
-            stranded rather than anchored. The Reveal is the grid item so the
-            figure has the full column to travel in, and `self-start` keeps
-            the sticky box from stretching. Native 4:3 below lg, uncropped. */}
+        {/* THE ROOM ITSELF. 02's sticky logic exactly — the Reveal is the
+            grid item, so the figure has a containing block taller than
+            itself. Taller than 02's square because this column is taller:
+            3:4 covers the argument rather than stranding above it.
+
+            The min-height is the floor the ratio cannot give: the right
+            column is only 296px wide at 1024, where 3:4 collapses to 395px
+            against a 764px argument — 52% coverage, the same premature end
+            this section was rebuilt to fix. 520px holds it past two-thirds
+            at that width and never binds at 1440, where the ratio already
+            gives 626px. */}
         <Reveal delay={140} className="min-w-0 lg:col-span-5">
-          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone sm:aspect-[16/10] lg:sticky lg:top-28 lg:aspect-[4/5]">
+          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone sm:aspect-[16/10] lg:sticky lg:top-28 lg:aspect-[3/4] lg:min-h-[520px]">
             <SummitPhoto
               photo={PHOTO_ROOM}
               sizes="(min-width:1024px) calc(38vw - 96px), 100vw"
