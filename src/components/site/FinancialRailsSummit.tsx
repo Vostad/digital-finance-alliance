@@ -10,6 +10,8 @@ import {
   SUMMIT_NAV,
   GAP,
   ROOM,
+  AUDIENCE,
+  PROCESS,
   FOOTER,
   submitLead,
   type LeadPayload,
@@ -50,6 +52,16 @@ const BODY = "text-[17px] leading-[1.6] lg:text-lg";
 
 type Photo = { base: string; widths: number[]; alt: string };
 
+const PHOTO_NETWORKING: Photo = {
+  base: "/media/financial-rails-v2/experience/networking",
+  widths: [480, 768, 1280, 1920],
+  alt: "Two senior delegates in conversation between sessions at a Vostad event",
+};
+const PHOTO_MEETING: Photo = {
+  base: "/media/microsite/why-attend",
+  widths: [480, 768, 1280, 1888],
+  alt: "Two executives talking one-to-one at a Vostad event",
+};
 const PHOTO_HERO: Photo = {
   base: "/media/microsite/closing-frame",
   widths: [768, 1280, 1920, 2560, 3840],
@@ -589,11 +601,132 @@ function TheRoom() {
     </SummitSection>
   );
 }
+/* 04 · WHO IS IN IT — the strongest buyer-facing band. A numbered
+   institutional taxonomy against a tall networking photograph, then the
+   qualification bar stated in public, then the one buyer door. */
 function WhoIsInIt() {
-  return null;
+  const open = useModals();
+  return (
+    <SummitSection id="who-is-in-it" tone="ink">
+      <Reveal>
+        <Eyebrow index="04" label="Who Is in It" invert />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[30ch]")}>{AUDIENCE.headline}</h2>
+      </Reveal>
+
+      <div className="mt-14 grid gap-y-12 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
+        {/* The taxonomy: five constituencies as a ledger, not five cards. */}
+        <div className="min-w-0 lg:col-span-7">
+          <div className="border-t border-hairline-invert">
+            {AUDIENCE.groups.map((group, i) => (
+              <Reveal key={group.role} delay={100 + i * 40}>
+                <div className="grid grid-cols-[2.6rem_1fr] items-baseline gap-x-5 border-b border-hairline-invert py-6 lg:py-7">
+                  <p className="label-lg accord-signal-invert">{String(i + 1).padStart(2, "0")}</p>
+                  <div className="min-w-0">
+                    <h3 className="display-sm">{group.role}</h3>
+                    <p className={cn(BODY, "mt-2 max-w-[44ch] opacity-75")}>{group.line}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          {/* The bar, in public — hairline-bordered, as specified. */}
+          <Reveal delay={160}>
+            <div className="mt-12 border border-hairline-invert p-7 lg:p-9">
+              <p className="label-lg accord-signal-invert">{AUDIENCE.qualificationHeading}</p>
+              <p className={cn(BODY, "mt-4 opacity-85")}>{AUDIENCE.qualification}</p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="mt-10">
+              <p className="label-lg opacity-60">{AUDIENCE.compositionLabel}</p>
+              <p className={cn(BODY, "mt-3 max-w-[56ch] opacity-85")}>{AUDIENCE.composition}</p>
+              <p className="mt-2 text-[15px] leading-relaxed opacity-60">
+                {AUDIENCE.compositionNote}
+              </p>
+            </div>
+          </Reveal>
+        </div>
+
+        {/* The room's people, at column height. */}
+        <Reveal delay={140} className="min-w-0 lg:col-span-5">
+          <figure className="relative aspect-[4/5] w-full overflow-hidden bg-ink lg:sticky lg:top-28">
+            <SummitPhoto
+              photo={PHOTO_NETWORKING}
+              sizes="(min-width:1024px) calc(41.6vw - 120px), 100vw"
+            />
+          </figure>
+        </Reveal>
+      </div>
+
+      {/* The buyer door. */}
+      <Reveal delay={220}>
+        <div className="accord-hairline mt-16 border-t pt-9 lg:mt-20">
+          <p className={cn(STATEMENT_TYPE, "max-w-[24ch]")}>{AUDIENCE.buyerHeadline}</p>
+          <p className={cn(BODY, "mt-5 max-w-[44ch] opacity-80")}>{AUDIENCE.buyerLine}</p>
+          <div className="mt-8">
+            <Btn tone="solidOnDark" onClick={() => open("apply")}>
+              {CTA.apply}
+            </Btn>
+          </div>
+          <p className="mt-6 max-w-[62ch] text-[15px] leading-relaxed opacity-65">
+            {AUDIENCE.buyerNote}
+          </p>
+        </div>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* 05 · HOW IT WORKS — the machinery: four steps on one rail, numerals and
+   hairline connectors, no cards and no icons. The guarantee closes the band
+   beside a deliberately small 1:1 meeting frame. */
 function HowItWorks() {
-  return null;
+  return (
+    <SummitSection id="how-it-works">
+      <Reveal>
+        <Eyebrow index="05" label="How It Works" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[26ch]")}>{PROCESS.headline}</h2>
+      </Reveal>
+
+      <Reveal delay={140}>
+        <div className="mt-14 grid grid-cols-1 border-t border-hairline sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
+          {PROCESS.steps.map((step, i) => (
+            <div
+              key={step.title}
+              className="border-b border-hairline px-0 py-8 sm:border-b-0 sm:py-10 sm:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8 lg:border-l lg:border-hairline lg:pl-8 lg:first:border-l-0 lg:first:pl-0"
+            >
+              <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
+              <h3 className="display-sm mt-5 min-h-0 lg:min-h-[3.2em]">{step.title}</h3>
+              <p className={cn(BODY, "mt-4 opacity-75")}>{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <div className="mt-14 grid items-center gap-y-10 border-t border-hairline pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
+        <Reveal delay={180} className="min-w-0 lg:col-span-7">
+          <p className={cn(STATEMENT_TYPE, "accord-signal")}>{PROCESS.guarantee}</p>
+          <p className={cn(BODY, "mt-6 max-w-[44ch] opacity-75")}>{PROCESS.footer}</p>
+        </Reveal>
+        {/* Visibly smaller than 04's photograph, by instruction: a square
+            inset, not a column-height frame. */}
+        <Reveal delay={220} className="min-w-0 lg:col-span-4 lg:col-start-9">
+          <figure className="relative mx-auto aspect-square w-full max-w-[340px] overflow-hidden bg-bone lg:mx-0">
+            <SummitPhoto
+              photo={PHOTO_MEETING}
+              sizes="(min-width:1024px) 340px, calc(100vw - 48px)"
+            />
+          </figure>
+        </Reveal>
+      </div>
+    </SummitSection>
+  );
 }
 function TheDifference() {
   return null;
