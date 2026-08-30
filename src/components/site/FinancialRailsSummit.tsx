@@ -61,6 +61,11 @@ const BODY = "text-[17px] leading-[1.6] lg:text-lg";
 
 type Photo = { base: string; widths: number[]; alt: string };
 
+const PHOTO_ROOM: Photo = {
+  base: "/media/microsite/attend",
+  widths: [480, 768, 1280, 1888],
+  alt: "A senior delegate seated at a working table during a Vostad finance event session",
+};
 const PHOTO_MARKET: Photo = {
   base: "/media/microsite/who-in-room",
   widths: [480, 768, 1280, 1888],
@@ -724,53 +729,86 @@ function TheMarket() {
   );
 }
 
-/* 03 · THE ROOM — pure typography, and deliberately the inverse of 02: the
-   numbers drop to a quiet horizontal rail and the three refusals become the
-   dominant element. The heavier top rule is the seam between two same-ground
-   sections. */
+/* 03 · THE ROOM — content LEFT, photograph RIGHT: the mirror of 02, and the
+   alternation is the page's rhythm. The spread carries the specification —
+   headline and the three figures against the room itself — and the three
+   refusals then break the grid and run the full measure beneath it. That
+   change of track is what makes the refusals read as policy rather than as
+   a fourth statistic.
+
+   The figures are set well below 02's: that section spent its scale on
+   market evidence, and this one spends it on the headline and the refusals.
+   Same family, same weight, same descriptor scale, same hairlines — one
+   information system, two priorities. */
 function TheRoom() {
   return (
-    <SummitSection id="the-room" chapter="03 — The Room" className="border-t-2">
-      <Reveal>
-        <Eyebrow index="03" label="The Room" />
-      </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{ROOM.headline}</h2>
-      </Reveal>
+    <SummitSection id="the-room" chapter="03 — The Room">
+      <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-16">
+        <div className="min-w-0 lg:col-span-7">
+          <Reveal>
+            <Eyebrow index="03" label={ROOM.label} />
+          </Reveal>
+          <Reveal delay={60}>
+            {/* Three authored lines, not two. The two-line reading needs
+                "before the seats were sold." — 27 characters — to hold one
+                line, and the seven-column track is 403px at 1024: that
+                demands a 26px headline, smaller than the figures beneath it.
+                Broken into 12/15/20 characters the longest line clears every
+                width and the type stays authoritative, with no orphan. */}
+            <h2 className="font-display mt-7 text-[clamp(1.75rem,7.2vw,2.2rem)] font-extrabold uppercase leading-[0.96] tracking-[-0.028em] lg:mt-0 lg:text-[clamp(1.9rem,3.2vw,3.2rem)]">
+              <span className="block">The room was</span>
+              <span className="block">designed before</span>
+              <span className="block">the seats were sold.</span>
+            </h2>
+          </Reveal>
 
-      {/* The proof rail: one slim band, four figures, no ceremony. */}
-      <Reveal delay={140}>
-        <div className="mt-12 grid grid-cols-1 gap-y-7 border-y border-hairline py-7 sm:grid-cols-3 sm:gap-x-8 lg:mt-14 lg:gap-x-12">
-          {ROOM.proofRail.map((item) => (
-            <div
-              key={item.value}
-              className="min-w-0 border-hairline sm:border-l sm:pl-8 sm:first:border-l-0 sm:first:pl-0"
-            >
-              <p className="font-display text-[clamp(1.5rem,4.4vw,1.9rem)] font-extrabold leading-none tracking-[-0.03em] lg:text-[clamp(1.6rem,2vw,2rem)]">
-                {item.value}
-              </p>
-              <p className="mt-3 max-w-[22ch] text-base leading-normal opacity-75">{item.line}</p>
+          {/* THE SPECIFICATION. Three figures, stacked on hairlines. */}
+          <Reveal delay={120}>
+            <div className="mt-12 border-t border-hairline lg:mt-14">
+              {ROOM.proofRail.map((item) => (
+                <div key={item.value} className="border-b border-hairline py-7 lg:py-8">
+                  <p className="font-display text-[clamp(1.3rem,5.6vw,2.2rem)] font-extrabold leading-[0.85] tracking-[-0.04em] lg:text-[clamp(1.9rem,2.5vw,2.4rem)]">
+                    {item.value}
+                  </p>
+                  <p className="mt-3 text-[17px] leading-relaxed opacity-75 lg:text-lg">
+                    {item.line}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
+          </Reveal>
         </div>
-      </Reveal>
 
-      {/* The philosophy — the section's loudest voice, on the accent rule. */}
-      <Reveal delay={200}>
-        <div className="accord-hairline mt-14 border-l-2 pl-7 lg:mt-20 lg:pl-12">
+        {/* THE ROOM ITSELF, ANCHORED. The Reveal is the grid item so the
+            figure has a column taller than itself to travel in. Native 4:3,
+            uncropped — and landscape where 02 is square, so the two anchors
+            never read as the same device. */}
+        <Reveal delay={140} className="min-w-0 lg:col-span-5">
+          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone lg:sticky lg:top-28">
+            <SummitPhoto photo={PHOTO_ROOM} sizes="(min-width:1024px) calc(38vw - 96px), 100vw" />
+          </figure>
+        </Reveal>
+      </div>
+
+      {/* THE POLICY. Full measure, off the spread's grid, under the one
+          accent rule this section spends. Three lines, generous rhythm, and
+          the section stops here. */}
+      <Reveal delay={180}>
+        <div className="accord-hairline mt-16 border-t-2 pt-10 lg:mt-20 lg:pt-12">
           {ROOM.philosophy.map((line) => (
-            <p key={line} className={cn(STATEMENT_TYPE, "py-1")}>
+            <p
+              key={line}
+              className="font-display py-2 text-[clamp(1.5rem,6.2vw,2.3rem)] font-extrabold uppercase leading-[1.06] tracking-[-0.03em] lg:py-3 lg:text-[clamp(2rem,3.6vw,3.3rem)]"
+            >
               {line}
             </p>
           ))}
         </div>
       </Reveal>
-      <Reveal delay={250}>
-        <p className={cn(BODY, "mt-10 max-w-[52ch] opacity-80")}>{ROOM.support}</p>
-      </Reveal>
     </SummitSection>
   );
 }
+
 /* 04 · WHO IS IN IT — the strongest buyer-facing band. A numbered
    institutional taxonomy against a tall networking photograph, then the
    qualification bar stated in public, then the one buyer door. */
