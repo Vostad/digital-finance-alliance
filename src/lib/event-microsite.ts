@@ -39,14 +39,67 @@ export type EventMicrositeData = {
    * note in EventMicrosite. Not a style choice: a fit.
    */
   heroTitleClass: string;
+  /**
+   * The hero's doors. OPTIONAL, and the default is the shared one — omit it
+   * and the hero renders the single "Request an Invitation" button it has
+   * always rendered, unchanged. An edition that runs a different admission
+   * process states its own doors here rather than forcing the shared
+   * component to know about editions.
+   */
+  heroActions?: { label: string; to?: string }[];
+  /**
+   * A single line of provenance under the hero's doors. OPTIONAL; omit it and
+   * nothing renders, which is what every edition did before one needed it.
+   */
+  heroNote?: string;
 
   nav: { label: string; id: string }[];
   heroFilm: { src: string; poster: string };
   heroImage: MicrositePhoto;
 
-  why: { heading: string; couplet: string[]; close: string };
+  /**
+   * Chapter 02. `couplet` and `close` are the original shape and remain the
+   * default; the three optional fields below let one edition state the
+   * chapter as a market argument instead of a room argument WITHOUT changing
+   * what any other edition renders. Omit them all and the chapter is exactly
+   * what it has always been.
+   */
+  why: {
+    heading: string;
+    couplet: string[];
+    close: string;
+    /** Rail label override. Defaults to "Why Be in the Room". */
+    label?: string;
+    /**
+     * The heading set as authored sentences rather than one run of type. The
+     * second and later lines carry the turn, and are set back so the first
+     * lands first. Falls back to `heading` when absent.
+     */
+    headingLines?: string[];
+    /** Figures in place of the couplet, in the site's own figure/caption pair. */
+    stats?: { value: string; label: string }[];
+    /** A close set as separate lines rather than one sentence. */
+    closeLines?: string[];
+    /** Drops the chapter's partner door — for an edition that converts later. */
+    omitCta?: boolean;
+  };
   whyImage: MicrositePhoto;
 
+  /**
+   * Chapter 03's fits, when an edition's copy needs different ones. Same
+   * principle as `heroTitleClass`: not a style choice, a fit. The defaults
+   * are the master's, and an edition that omits this renders exactly what it
+   * always rendered. Supply a COMPLETE class string — these replace, they do
+   * not merge.
+   */
+  roomType?: {
+    /** The chapter heading. Default: `display-lg max-w-[20ch]`. */
+    heading?: string;
+    /** A figure's caption. Default: `text-sm`. */
+    figureLine?: string;
+    /** One refusal in the filter stack. Default: `display-lg`. */
+    filters?: string;
+  };
   roomHeading: string;
   roomFigures: { value: string; line: string }[];
   roomImage: MicrositePhoto;

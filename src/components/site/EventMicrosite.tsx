@@ -513,9 +513,32 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
                 <p className="display-sm">{V2_EVENT.dates}</p>
                 <p className="label mt-2 opacity-65">{V2_EVENT.city}</p>
               </Reveal>
-              <Reveal delay={240} className="mt-10">
-                <Cta>Request an Invitation</Cta>
+              {/* The doors. An edition that declares `heroActions` states its
+                  own; every edition that does not renders exactly the single
+                  button this hero has always rendered. `flex-wrap` so a second
+                  door wraps rather than compressing the pair on a narrow
+                  column — the buttons themselves are untouched. */}
+              <Reveal delay={240} className="mt-10 flex flex-wrap items-center gap-4">
+                {event.heroActions?.length ? (
+                  event.heroActions.map((action, i) => (
+                    <Cta
+                      key={action.label}
+                      {...(action.to ? { to: action.to } : {})}
+                      tone={i === 0 ? "onDark" : "quietDark"}
+                    >
+                      {action.label}
+                    </Cta>
+                  ))
+                ) : (
+                  <Cta>Request an Invitation</Cta>
+                )}
               </Reveal>
+              {/* One line of provenance, only when an edition states one. */}
+              {event.heroNote ? (
+                <Reveal delay={300}>
+                  <p className="label mt-8 opacity-55">{event.heroNote}</p>
+                </Reveal>
+              ) : null}
             </div>
 
             {/* THE PROOF. Desktop only — the mobile hero is text, then the
@@ -552,29 +575,85 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
           the frame landscape at 1920 (1:0.94, throwing away a quarter of a
           portrait photograph). Sticky keeps it portrait at every width and
           still leaves no pool of empty margin. */}
-      <Chapter id="why" index="02" label="Why Be in the Room">
+      <Chapter id="why" index="02" label={V2_WHY.label ?? "Why Be in the Room"}>
         <div className="grid gap-y-14 lg:grid-cols-12 lg:gap-x-12">
           <div className="min-w-0 lg:col-span-6">
+            {/* The argument, set one step down from the page's headline scale.
+                It introduces the case; the figures below are the case. An
+                edition that authors its heading as sentences breaks it at the
+                sentence, which is a better rag than any measure would find —
+                still one <h2>, because it is one heading. */}
             <Reveal>
-              <h2 className="display-lg max-w-[22ch]">{V2_WHY.heading}</h2>
+              <h2 className="font-display max-w-[26ch] text-[clamp(1.6rem,3vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-[-0.02em]">
+                {V2_WHY.headingLines?.length ? (
+                  V2_WHY.headingLines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))
+                ) : (
+                  <span className="block max-w-[22ch]">{V2_WHY.heading}</span>
+                )}
+              </h2>
             </Reveal>
-            <Reveal delay={100}>
-              <div className="mt-12 border-t border-hairline">
-                {V2_WHY.couplet.map((line) => (
-                  <p key={line} className="display-md max-w-[24ch] border-b border-hairline py-9">
+
+            {/* The proof. The figure carries the chapter, so it is set above
+                the heading's scale rather than beneath it — the number is the
+                thing being read, and the line under it is written to be read
+                too, not filed as a footnote. Number over caption rather than
+                beside it: at this size a side-by-side track would leave the
+                longest caption a gutter to live in. */}
+            {V2_WHY.stats?.length ? (
+              <Reveal delay={100}>
+                <div className="mt-16 border-t border-hairline">
+                  {V2_WHY.stats.map((stat) => (
+                    <div key={stat.value} className="border-b border-hairline py-10">
+                      <p className="font-display text-[clamp(3rem,5.4vw,4.75rem)] font-extrabold leading-[0.82] tracking-[-0.04em]">
+                        {stat.value}
+                      </p>
+                      <p className="mt-5 max-w-[34ch] text-base leading-relaxed opacity-75 lg:text-lg">
+                        {stat.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            ) : (
+              <Reveal delay={100}>
+                <div className="mt-12 border-t border-hairline">
+                  {V2_WHY.couplet.map((line) => (
+                    <p key={line} className="display-md max-w-[24ch] border-b border-hairline py-9">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              </Reveal>
+            )}
+
+            {/* The conclusion, under the one accent rule this chapter carries.
+                Pitched between the site's display-sm and display-md so it
+                reads as a verdict without contesting the figures above it. */}
+            <Reveal delay={200}>
+              <div className="accord-hairline mt-16 border-t pt-9">
+                {(V2_WHY.closeLines ?? [V2_WHY.close]).map((line, i) => (
+                  <p
+                    key={line}
+                    className={cn(
+                      "font-display max-w-[30ch] text-[clamp(1.35rem,2.1vw,1.9rem)] font-bold uppercase leading-[1.06] tracking-[-0.02em]",
+                      i > 0 && "mt-6",
+                    )}
+                  >
                     {line}
                   </p>
                 ))}
               </div>
             </Reveal>
-            <Reveal delay={200}>
-              <p className="accord-hairline display-md mt-14 max-w-[22ch] border-t pt-9">
-                {V2_WHY.close}
-              </p>
-            </Reveal>
-            <Reveal delay={260} className="mt-12">
-              <Cta tone="quietLight">Become Our Partner</Cta>
-            </Reveal>
+
+            {V2_WHY.omitCta ? null : (
+              <Reveal delay={260} className="mt-12">
+                <Cta tone="quietLight">Become Our Partner</Cta>
+              </Reveal>
+            )}
           </div>
 
           <Reveal delay={160} className="min-w-0 lg:col-span-6 lg:col-start-7">
@@ -602,7 +681,9 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
           leaving the accent to the one rule beside the refusals. */}
       <Chapter id="the-room" index="03" label="The Room" tone="surface">
         <Reveal>
-          <h2 className="display-lg max-w-[20ch]">{event.roomHeading}</h2>
+          <h2 className={event.roomType?.heading ?? "display-lg max-w-[20ch]"}>
+            {event.roomHeading}
+          </h2>
         </Reveal>
 
         {/* One rule over the row, one under it, and a hairline between each
@@ -619,7 +700,18 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
                 <p className="font-display text-[clamp(2.5rem,5vw,5rem)] font-extrabold leading-[0.85] tracking-[-0.04em]">
                   {figure.value}
                 </p>
-                <p className="mt-5 text-sm leading-relaxed opacity-80">{figure.line}</p>
+                {/* The leading travels WITH the size, never before it:
+                    tailwind-merge reads a font-size as owning line-height and
+                    drops a leading-* that precedes it, which silently stripped
+                    leading-relaxed from every edition's captions. */}
+                <p
+                  className={cn(
+                    "mt-5 opacity-80",
+                    event.roomType?.figureLine ?? "text-sm leading-relaxed",
+                  )}
+                >
+                  {figure.line}
+                </p>
               </div>
             ))}
           </div>
@@ -635,7 +727,7 @@ export function EventMicrosite({ event }: { event: EventMicrositeData }) {
             <Reveal delay={160}>
               <div className="accord-hairline border-l-2 pl-8 lg:pl-12">
                 {V2_ROOM_FILTERS.map((line) => (
-                  <p key={line} className="display-lg py-2">
+                  <p key={line} className={cn("py-2", event.roomType?.filters ?? "display-lg")}>
                     {line}
                   </p>
                 ))}

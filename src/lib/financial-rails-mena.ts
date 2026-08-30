@@ -8,7 +8,6 @@ import {
   FR_HERO_IMAGE,
   FR_WHY_IMAGE,
   FR_ROOM_IMAGE,
-  FR_ROOM_FILTERS,
   FR_PARTNERS_STATEMENT,
   FR_EXPERIENCE_FRAMES,
 } from "@/lib/financial-rails";
@@ -31,10 +30,10 @@ import {
  */
 
 /**
- * The lockup's fitted size. "Rails MENA" is the wide line, and it is shorter
- * than the "Rails Summit" the master was fitted for — so the master's own
- * 4.7vw carries more margin than it needs and holds at every width from
- * 1024 up.
+ * The lockup's fitted size, unchanged. "Rails Summit" is the wide line and it
+ * is the exact line the master's 4.7vw was measured against — 7.23em on the
+ * six-column track, tightest at 376px on a 1024 viewport, where it leaves 8%
+ * of margin. Nothing here needed refitting.
  */
 const HERO_TITLE_CLASS = "text-[clamp(2.2rem,11vw,6rem)] lg:text-[clamp(2.6rem,4.7vw,7.5rem)]";
 
@@ -43,41 +42,79 @@ export const FINANCIAL_RAILS_MENA: EventMicrositeData = {
     name: "Financial Rails MENA",
     descriptor: FINANCIAL_RAILS.descriptor,
     footerLine: FINANCIAL_RAILS.positioning,
-    positioning: "The institutions building the rails are already moving.",
-    dates: "5 November 2026",
+    positioning: "The people who move the Gulf's money. One room. Two days.",
+    dates: "18\u201319 November 2026",
     city: "Dubai, UAE",
     capacity: "250 curated decision-makers. Invitation only.",
   },
 
   heroLabel: "Financial Rails",
-  heroTitle: ["Financial", "Rails MENA"],
+  heroTitle: ["Financial", "Rails Summit"],
   heroTitleClass: HERO_TITLE_CLASS,
+  heroActions: [{ label: "Request the Prospectus" }, { label: "Apply to Attend" }],
+  heroNote: "Vostad's 14th finance event. The first Financial Rails.",
 
   nav: FR_NAV,
   heroFilm: FR_HERO_FILM,
   heroImage: FR_HERO_IMAGE,
 
+  /**
+   * Chapter 02, stated as the market rather than as the room. The rail reads
+   * "The Gap" — the site's rail labels are title-case noun phrases ("The
+   * Room", "The Platform"), so the article form fits the system where a bare
+   * "Market" would not. `couplet` and `close` stay populated because the type
+   * requires them; `stats` and `closeLines` are what render.
+   */
   why: {
-    heading: "This is where the next financial system gets built.",
-    couplet: ["You won't be told what might happen.", "You'll meet the people making it happen."],
-    close: "That is the only reason to be here.",
+    label: "The Gap",
+    heading: "$58 billion leaves the UAE every year. The people moving it have nowhere to meet.",
+    headingLines: [
+      "$58 billion leaves the UAE every year.",
+      "The people moving it have nowhere to meet.",
+    ],
+    couplet: [],
+    close:
+      "A market this important deserves a room built for the people making the decisions \u2014 not the crowd.",
+    stats: [
+      { value: "$58B", label: "Outbound remittances" },
+      {
+        value: "40%",
+        label: "Growth in the UAE's licensed payment-institution register, sixteen months",
+      },
+      { value: "61", label: "Licensed banks" },
+    ],
+    omitCta: true,
   },
   whyImage: FR_WHY_IMAGE,
 
-  roomHeading: "250 decision-makers. No spectators.",
+  /* This edition's chapter-03 fits. The heading is a three-clause sentence
+     rather than the master's short one, so it takes a wider measure and a
+     smaller size — five lines at the master's scale, three at this one. The
+     figures stay the heroes, so the heading is set well beneath them, and the
+     refusals come down far enough that each holds one line at every width:
+     "No passive delegation." is the long one, and its binding case is lg,
+     where the column is 326px after the rule's pl-12 — not the 534px it gets
+     at 1440. 2.3vw clears it there with margin. */
+  roomType: {
+    heading:
+      "font-display max-w-[30ch] text-[clamp(1.6rem,2.9vw,2.75rem)] font-extrabold uppercase leading-[0.92] tracking-[-0.028em]",
+    figureLine: "text-base leading-relaxed xl:text-lg",
+    filters:
+      "font-display text-[clamp(1.25rem,2.3vw,2.35rem)] font-extrabold uppercase leading-[1.02] tracking-[-0.028em]",
+  },
+  roomHeading: "400 seats. ~220 institutional decision-makers. 370+ pre-scheduled meetings.",
   roomFigures: [
-    {
-      value: "200+",
-      line: "C-level executives from banking, payments, markets, and technology",
-    },
-    { value: "40+", line: "Speakers and contributors already building the rails" },
-    { value: "20+", line: "Selected partners with real infrastructure to show" },
-    { value: "1", line: "Day of closed-door working sessions" },
+    { value: "14", line: "Vostad finance events since 2018" },
+    { value: "400", line: "Seats, capped" },
+    { value: "~220", line: "Institutional decision-makers" },
+    { value: "370+", line: "Pre-scheduled meetings" },
   ],
   roomImage: FR_ROOM_IMAGE,
-  roomFilters: FR_ROOM_FILTERS,
+  /* This edition states its own refusals rather than the shared three: the
+     filter here is about how a seat is earned, not about what the room lacks. */
+  roomFilters: ["No mass audience.", "No passive delegation.", "No random access."],
   roomClose:
-    "A deliberately limited room for the institutions funding, building, regulating, and operating the next financial system.",
+    "A deliberately limited room for the institutions funding, building, regulating and operating the next financial system.",
 
   peopleHeading: "You will be in the room with the people who matter.",
   speakers: FINANCIAL_RAILS_LEADERS,

@@ -68,7 +68,7 @@ export const FR30_GLOBAL_PHOTO: Fr30Photo = {
 export const FR30_HERO = {
   label: "FR30",
   headline: ["The 30 people", "building the rails"],
-  lede: "An editorial index of the people designing, operating, financing and regulating the infrastructure through which money moves.",
+  lede: "An editorial index of the people building the infrastructure money moves through.",
   meta: "Money · Markets · Infrastructure · Rules",
 };
 

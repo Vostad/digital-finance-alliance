@@ -1,18 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
 import { Section } from "@/components/site/Section";
 import { Reveal } from "@/components/site/Reveal";
 import { Action } from "@/components/site/primitives";
 import {
   FR30_HERO,
-  FR30_HERO_PHOTO,
   FR30_FEATURED,
-  FR30_GLOBAL_PHOTO,
   FR30_EDITIONS,
   FR30_METHOD,
   FR30_PRINCIPLES,
   FR30_CLOSE,
-  type Fr30Photo,
 } from "@/lib/fr30";
 
 /**
@@ -62,119 +58,73 @@ export const Route = createFileRoute("/fr30")({
 
 /* ----------------------------------------------------------------- pieces -- */
 
-/**
- * FR30's own photo delivery. Same AVIF-first, JPEG-behind shape the rest of
- * the site uses, and the same no-layout-shift construction: the image is
- * absolutely positioned inside a parent that already reserves its height, so
- * space exists before a byte arrives.
- *
- * The reveal class lands on the <img>, which fills its frame, so colour
- * returns under the photograph and nowhere else. Tailwind gates `hover:`
- * behind (hover: hover), so a touch device never enters the colour state, and
- * only the filter moves — no zoom, no scale.
- */
-function Fr30Photo({ photo, className }: { photo: Fr30Photo; className?: string }) {
-  const set = (ext: "avif" | "jpg") =>
-    photo.widths.map((w) => `${photo.base}-${w}.${ext} ${w}w`).join(", ");
-  return (
-    <picture className="contents">
-      <source type="image/avif" srcSet={set("avif")} sizes={photo.sizes} />
-      <img
-        src={`${photo.base}-768.jpg`}
-        srcSet={set("jpg")}
-        sizes={photo.sizes}
-        alt={photo.alt}
-        width={photo.intrinsic.width}
-        height={photo.intrinsic.height}
-        loading="lazy"
-        decoding="async"
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover",
-          "grayscale transition-[filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:grayscale-0 motion-reduce:transition-none",
-          className,
-        )}
-      />
-    </picture>
-  );
-}
-
 /* ------------------------------------------------------------------- page -- */
 
 function Fr30() {
   return (
     <>
-      {/* 01 — HERO · the cover. The property's name at label scale, the
-          statement at full scale, one sentence, one line of metadata, and one
-          photograph as the counterweight. No CTA: a cover does not sell.
-          pt-20 is the clearance the fixed nav needs, carried by whichever
-          section opens a page — the same device the other pages use. */}
-      <Section label="FR30">
-        <div className="grid gap-y-12 pt-20 lg:grid-cols-12 lg:items-center lg:gap-x-12 lg:pt-24">
-          <div className="min-w-0 lg:col-span-6">
-            <Reveal>
-              <p className="label accord-signal">{FR30_HERO.label}</p>
-            </Reveal>
-            <Reveal delay={80}>
-              {/* The statement is specified as two lines, so the type is sized
-                  from the column rather than from the viewport: "the Future of
-                  Finance" measures 12.59em, and a plain vw clamp that held at
-                  1920 overflowed the six-column half at 1024 and wrapped the
-                  headline onto four lines. Dividing the measured column by
-                  12.9 — the widest line plus a margin — keeps it on exactly two
-                  lines from 320px up. */}
-              <h1 className="mt-8 font-display text-[clamp(1.25rem,calc((100vw-48px)/12.9),4.1rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] md:text-[clamp(1.25rem,calc((100vw-96px)/12.9),4.1rem)] lg:text-[clamp(1.25rem,calc((50vw-136px)/12.9),4.1rem)]">
-                {FR30_HERO.headline[0]}
-                <br />
-                {FR30_HERO.headline[1]}
-              </h1>
-            </Reveal>
-            <Reveal delay={150}>
-              <p className="lede mt-8 max-w-[46ch] opacity-75">{FR30_HERO.lede}</p>
-            </Reveal>
-            <Reveal delay={210} className="mt-10 border-t border-hairline pt-6">
-              <p className="label opacity-55">{FR30_HERO.meta}</p>
-            </Reveal>
-          </div>
-
-          <Reveal delay={120} className="min-w-0 lg:col-span-6">
-            <figure className="relative aspect-[8/5] w-full overflow-hidden bg-bone">
-              <Fr30Photo photo={FR30_HERO_PHOTO} />
-            </figure>
+      {/* 01 — THE MASTHEAD · a property page, not a landing page, so the
+          cover is set as a masthead: name, statement, one sentence, one line
+          of metadata. No photograph and no counterweight column — the
+          statement holds the page on its own, and the first edition arrives
+          immediately below rather than a screen down. `flush` because the band
+          sets its own measure: enough head to clear the fixed nav, a short
+          foot so nothing floats. */}
+      <Section label="FR30" flush>
+        <div className="px-6 pt-28 pb-14 md:px-12 md:pt-32 md:pb-16 lg:px-16 lg:pt-36 lg:pb-20">
+          <Reveal>
+            <p className="label accord-signal">{FR30_HERO.label}</p>
+          </Reveal>
+          <Reveal delay={80}>
+            {/* Two lines by construction, authored with the break. The column
+                is the full content width now that no photograph shares the
+                row, so the size tracks the page rather than a six-column half
+                and settles on the 4.1rem ceiling from roughly 1000px up. */}
+            <h1 className="mt-8 font-display text-[clamp(1.75rem,calc((100vw-48px)/12.9),4.1rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] md:text-[clamp(1.75rem,calc((100vw-96px)/12.9),4.1rem)]">
+              {FR30_HERO.headline[0]}
+              <br />
+              {FR30_HERO.headline[1]}
+            </h1>
+          </Reveal>
+          <Reveal delay={150}>
+            <p className="lede mt-7 max-w-[52ch] opacity-75">{FR30_HERO.lede}</p>
+          </Reveal>
+          <Reveal delay={210} className="mt-9 border-t border-hairline pt-6">
+            <p className="label opacity-55">{FR30_HERO.meta}</p>
           </Reveal>
         </div>
       </Section>
 
-      {/* 02 — FEATURED FR30 · the first edition presented. Image left, the
-          masthead and its date right, one door. Everything that would make it
-          read as a product page — counts, tags, a second button — is absent by
-          instruction and by intent. */}
+      {/* 02 — FEATURED FR30 · the first edition, set editorially. The
+          photograph is gone with the cover's: this page states the edition
+          rather than illustrating it, and the masthead — title, statement,
+          date, paragraph, one door — carries it. Two columns of type on the
+          site's twelve-column track: the masthead left, the argument right,
+          so the band stays a band and does not become a stacked screen. */}
       <Section label="Featured FR30" tone="bone">
-        <div className="grid gap-y-10 lg:grid-cols-12 lg:items-center lg:gap-x-12">
-          <Reveal className="min-w-0 lg:col-span-6">
-            <figure className="relative aspect-[8/5] w-full overflow-hidden bg-paper">
-              <Fr30Photo photo={FR30_GLOBAL_PHOTO} />
-            </figure>
-          </Reveal>
-
+        <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-12">
           <div className="min-w-0 lg:col-span-6">
-            <Reveal delay={110}>
+            <Reveal>
               <p className="label accord-signal">{FR30_FEATURED.label}</p>
             </Reveal>
-            <Reveal delay={160}>
+            <Reveal delay={60}>
               <h2 className="display-lg mt-6 max-w-[16ch]">{FR30_FEATURED.title}</h2>
             </Reveal>
-            <Reveal delay={210}>
+            <Reveal delay={110}>
               <p className="display-sm mt-6 max-w-[28ch]">{FR30_FEATURED.line}</p>
             </Reveal>
-            <Reveal delay={250}>
-              <p className="label mt-6 opacity-55">{FR30_FEATURED.published}</p>
+          </div>
+
+          <div className="min-w-0 lg:col-span-6 lg:self-end">
+            <Reveal delay={160}>
+              <p className="label opacity-55">{FR30_FEATURED.published}</p>
             </Reveal>
-            <Reveal delay={290}>
-              <p className="mt-7 max-w-[54ch] text-base leading-relaxed opacity-75">
+            <Reveal delay={210} className="mt-6 border-t border-hairline pt-6">
+              <p className="max-w-[54ch] text-base leading-relaxed opacity-75">
                 {FR30_FEATURED.body}
               </p>
             </Reveal>
-            <Reveal delay={340} className="mt-9">
+            <Reveal delay={260} className="mt-9">
               <Action to={FR30_FEATURED.to}>{FR30_FEATURED.cta}</Action>
             </Reveal>
           </div>

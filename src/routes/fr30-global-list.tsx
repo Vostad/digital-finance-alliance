@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
 import { Section } from "@/components/site/Section";
 import { Reveal } from "@/components/site/Reveal";
-import { MicrositePhoto } from "@/components/site/MicrositePhoto";
-import { MICROSITE_PHOTOS } from "@/lib/microsite-photography";
 import {
   FR30_DOMAINS,
   FR30_GLOBAL_META,
@@ -120,83 +117,36 @@ function ProfileCard({ person, delay }: { person: Fr30Person; delay: number }) {
 function Fr30GlobalList() {
   return (
     <>
-      {/* 01 — THE COVER · dark, typographic, one photograph. The masthead
-          carries the property, the headline carries the claim, and the frame
-          is a room of many faces — the audience the list is drawn from — so
-          no single honouree is elevated onto the cover. Published date on the
-          floor, no CTA: covers do not sell. */}
-      <Section label="FR30" tone="ink">
-        <div className="grid gap-y-12 pt-20 lg:grid-cols-12 lg:items-center lg:gap-x-12 lg:pt-24">
-          <div className="min-w-0 lg:col-span-6">
-            <Reveal>
-              <p className="label accord-signal-invert">{FR30_GLOBAL_META.label}</p>
-            </Reveal>
-            <Reveal delay={80}>
-              {/* Two lines by construction: "the Future of Finance" measures
-                  12.59em in this face, so the size is the column over 12.9
-                  rather than a viewport guess. */}
-              <h1 className="mt-8 font-display text-[clamp(1.25rem,calc((100vw-48px)/12.9),4.1rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] md:text-[clamp(1.25rem,calc((100vw-96px)/12.9),4.1rem)] lg:text-[clamp(1.25rem,calc((50vw-136px)/12.9),4.1rem)]">
-                {FR30_GLOBAL_META.headline[0]}
-                <br />
-                {FR30_GLOBAL_META.headline[1]}
-              </h1>
-            </Reveal>
-            <Reveal delay={150}>
-              <p className="display-sm mt-8">{FR30_GLOBAL_META.edition}</p>
-            </Reveal>
-            <Reveal delay={210} className="mt-10 border-t border-hairline-invert pt-6">
-              <p className="label opacity-55">{FR30_GLOBAL_META.published}</p>
-            </Reveal>
-          </div>
-
-          {/* The cover photograph: delegates seated in a summit audience, from
-              the platform's own record — many faces, no favourite. Eager and
-              full-priority: it is the page's opening image. */}
-          <Reveal delay={120} className="min-w-0 lg:col-span-6">
-            <figure className="relative aspect-[4/3] w-full overflow-hidden bg-ink/40">
-              <MicrositePhoto
-                photo={{
-                  ...MICROSITE_PHOTOS.attend,
-                  sizes:
-                    "(min-width: 1024px) calc(50vw - 136px), (min-width: 768px) calc(100vw - 96px), calc(100vw - 48px)",
-                }}
-                loading="eager"
-                className="grayscale"
-              />
-            </figure>
+      {/* 01 — THE MASTHEAD · this is a list, not a landing page, so the cover
+          is a masthead and nothing more: property, title, edition, date. No
+          photograph and no second screen of argument before the names — the
+          list itself is the reason the page exists, and it starts immediately
+          below. `flush` because the band needs its own measure: enough top
+          padding to clear the fixed nav, and a short foot so the first domain
+          divider arrives without a scroll. */}
+      <Section label="FR30" tone="ink" flush>
+        <div className="px-6 pt-28 pb-14 md:px-12 md:pt-32 md:pb-16 lg:px-16 lg:pt-36 lg:pb-20">
+          <Reveal>
+            <p className="label accord-signal-invert">{FR30_GLOBAL_META.label}</p>
           </Reveal>
-        </div>
-      </Section>
-
-      {/* 02 — THE ARGUMENT · why the list exists, before anyone appears. One
-          heading, one paragraph, one line of data on a rule. */}
-      <Section label={FR30_GLOBAL_META.introLabel}>
-        <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-12">
-          <div className="min-w-0 lg:col-span-6">
-            <Reveal>
-              <p className="label accord-signal">{FR30_GLOBAL_META.introLabel}</p>
-            </Reveal>
-            <Reveal delay={80}>
-              <h2 className="display-lg mt-7 max-w-[14ch]">{FR30_GLOBAL_META.introHeading}</h2>
-            </Reveal>
-          </div>
-          <div className="min-w-0 lg:col-span-6 lg:self-end">
-            <Reveal delay={140}>
-              <p className="lede max-w-[56ch] opacity-80">{FR30_GLOBAL_META.intro}</p>
-            </Reveal>
-            <Reveal delay={200} className="mt-9 border-t border-hairline pt-6">
-              <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                {FR30_GLOBAL_META.introMeta.map((item, i) => (
-                  <li
-                    key={item}
-                    className={cn("label opacity-55", i > 0 && "border-l border-ink/20 pl-5")}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
+          <Reveal delay={80}>
+            {/* Two lines by construction, authored with the break rather than
+                left to the measure. The column is the full content width now
+                that no photograph shares the row, so the size tracks the page
+                rather than a six-column half — the 4.1rem ceiling is what it
+                sits at from roughly 1000px up. */}
+            <h1 className="mt-8 font-display text-[clamp(1.75rem,calc((100vw-48px)/12.9),4.1rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] md:text-[clamp(1.75rem,calc((100vw-96px)/12.9),4.1rem)]">
+              {FR30_GLOBAL_META.headline[0]}
+              <br />
+              {FR30_GLOBAL_META.headline[1]}
+            </h1>
+          </Reveal>
+          <Reveal delay={150}>
+            <p className="display-sm mt-7">{FR30_GLOBAL_META.edition}</p>
+          </Reveal>
+          <Reveal delay={210} className="mt-9 border-t border-hairline-invert pt-6">
+            <p className="label opacity-55">{FR30_GLOBAL_META.published}</p>
+          </Reveal>
         </div>
       </Section>
 
