@@ -12,6 +12,8 @@ import {
   ROOM,
   AUDIENCE,
   PROCESS,
+  DIFFERENCE,
+  AGENDA,
   FOOTER,
   submitLead,
   type LeadPayload,
@@ -61,6 +63,11 @@ const PHOTO_MEETING: Photo = {
   base: "/media/microsite/why-attend",
   widths: [480, 768, 1280, 1888],
   alt: "Two executives talking one-to-one at a Vostad event",
+};
+const PHOTO_STAGE: Photo = {
+  base: "/media/financial-rails-v2/experience/keynote",
+  widths: [480, 768, 1280, 1920],
+  alt: "A speaker delivering opening remarks from a Vostad-branded summit stage",
 };
 const PHOTO_HERO: Photo = {
   base: "/media/microsite/closing-frame",
@@ -728,11 +735,132 @@ function HowItWorks() {
     </SummitSection>
   );
 }
+/* 06 · THE DIFFERENCE — pure comparison, no photograph. Five paired rows;
+   the Financial Rails side carries the typographic weight. On mobile each
+   pair stacks with its own small column labels, so a row never scrolls. */
 function TheDifference() {
-  return null;
+  return (
+    <SummitSection id="the-difference" tone="ink">
+      <Reveal>
+        <Eyebrow index="06" label="The Difference" invert />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8")}>
+          <span className="block max-w-[30ch]">{DIFFERENCE.headline[0]}</span>
+          <span className="block max-w-[30ch] opacity-60">{DIFFERENCE.headline[1]}</span>
+        </h2>
+      </Reveal>
+
+      <Reveal delay={140}>
+        <div className="mt-14 lg:mt-16">
+          {/* Column heads, desktop only — mobile rows carry their own. */}
+          <div className="hidden border-b border-hairline-invert pb-4 lg:grid lg:grid-cols-2 lg:gap-x-12">
+            <p className="label-lg opacity-50">{DIFFERENCE.expoHeading}</p>
+            <p className="label-lg accord-signal-invert">{DIFFERENCE.railsHeading}</p>
+          </div>
+          {DIFFERENCE.rows.map((row) => (
+            <div
+              key={row.rails}
+              className="grid grid-cols-1 gap-y-3 border-b border-hairline-invert py-6 lg:grid-cols-2 lg:items-baseline lg:gap-x-12 lg:py-5"
+            >
+              <div className="min-w-0">
+                <p className="label-lg mb-1 opacity-40 lg:hidden">{DIFFERENCE.expoHeading}</p>
+                <p className={cn(BODY, "opacity-60")}>{row.expo}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="label-lg mb-1 accord-signal-invert lg:hidden">
+                  {DIFFERENCE.railsHeading}
+                </p>
+                <p className={cn(BODY, "font-semibold text-paper")}>{row.rails}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <Reveal delay={200}>
+        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-16">
+          {DIFFERENCE.closing.map((line) => (
+            <p key={line} className={STATEMENT_TYPE}>
+              {line}
+            </p>
+          ))}
+          <p className={cn(BODY, "mt-6 max-w-[48ch] opacity-70")}>{DIFFERENCE.support}</p>
+        </div>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* 07 · THE AGENDA — six tracks as a ledger against a tall stage photograph;
+   the format line runs as a full-width band, and the refusal triplet closes
+   the programme's borders. */
 function TheAgenda() {
-  return null;
+  return (
+    <SummitSection id="agenda">
+      <Reveal>
+        <Eyebrow index="07" label="The Agenda" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{AGENDA.headline}</h2>
+      </Reveal>
+
+      <div className="mt-14 grid gap-y-12 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
+        <div className="min-w-0 lg:col-span-6">
+          <div className="border-t border-hairline">
+            {AGENDA.tracks.map((track, i) => (
+              <Reveal key={track.title} delay={100 + i * 40}>
+                <div className="grid grid-cols-[2.6rem_1fr] items-baseline gap-x-5 border-b border-hairline py-6 lg:py-7">
+                  <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
+                  <div className="min-w-0">
+                    <h3 className="display-sm">{track.title}</h3>
+                    <p className={cn(BODY, "mt-2 opacity-75")}>{track.line}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        <Reveal delay={140} className="min-w-0 lg:col-span-6">
+          <figure className="relative aspect-[4/5] w-full overflow-hidden bg-bone lg:sticky lg:top-28 lg:h-full lg:max-h-[720px]">
+            {/* The master is 16:9 with the speaker at frame-left; a centred 4:5
+                crop keeps only the screen. Weight the crop toward the podium
+                so the photograph proves a person on a stage, not a logo. */}
+            <SummitPhoto
+              photo={PHOTO_STAGE}
+              sizes="(min-width:1024px) calc(50vw - 136px), 100vw"
+              className="object-[18%_center]"
+            />
+          </figure>
+        </Reveal>
+      </div>
+
+      {/* The programme's shape, at band scale — structure, not footnote. */}
+      <Reveal delay={180}>
+        <p className="mt-14 border-y border-hairline py-6 font-display text-[clamp(1rem,2.6vw,1.2rem)] font-bold uppercase leading-[1.4] tracking-[-0.01em] lg:mt-16 lg:text-[clamp(1.05rem,1.5vw,1.4rem)]">
+          {AGENDA.format}
+        </p>
+      </Reveal>
+
+      <Reveal delay={220}>
+        <div className="mt-12">
+          {AGENDA.refusals.map((line) => (
+            <p key={line} className={STATEMENT_TYPE}>
+              {line}
+            </p>
+          ))}
+          <p
+            className={cn(
+              "accord-signal mt-6 font-display text-[clamp(1.05rem,2.6vw,1.3rem)] font-bold uppercase tracking-[-0.01em] lg:text-[clamp(1.1rem,1.6vw,1.5rem)]",
+            )}
+          >
+            {AGENDA.refusalClose}
+          </p>
+        </div>
+      </Reveal>
+    </SummitSection>
+  );
 }
 function TheVoices() {
   return null;
