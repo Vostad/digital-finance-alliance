@@ -26,7 +26,9 @@
 export const SUMMIT = {
   brand: "Financial Rails",
   name: "Financial Rails Summit",
-  proposition: "The people who move the Gulf's money. One room. Two days.",
+  /** The masthead, authored as its two lines. */
+  nameLines: ["Financial Rails", "Summit MENA"],
+  proposition: "The people who move the Gulf's money.",
   dateline: "Dubai · 18–19 November 2026",
   dates: "18–19 November 2026",
   city: "Dubai, UAE",

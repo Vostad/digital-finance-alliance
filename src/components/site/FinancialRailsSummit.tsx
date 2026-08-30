@@ -497,64 +497,98 @@ function SummitFilm() {
 
 /* ------------------------------------------------------------- 01 · hero */
 
+/* The masthead — the event name, sized to own the page. Fitted to the
+   seven-column track the way the site fits every lockup: "FINANCIAL RAILS"
+   is the wide line at 15 characters, so the size tracks the column
+   (0.583vw − 158px at lg) divided by that measure rather than guessing
+   from the viewport. Below lg the single column carries it at 8.8vw. */
+const MASTHEAD_TYPE =
+  "font-display text-[clamp(2.15rem,8.8vw,4.5rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.032em] lg:text-[clamp(2.4rem,calc(6.25vw-17px),4.6rem)]";
+
+/* The proposition — substantial, and unmistakably second. Roughly half the
+   masthead at every width. */
+const PROPOSITION_TYPE =
+  "font-display text-[clamp(1.25rem,4.9vw,2.1rem)] font-bold uppercase leading-[1.04] tracking-[-0.022em] lg:text-[clamp(1.35rem,calc(2.7vw-5px),2.2rem)]";
+
 function Hero() {
   const open = useModals();
   return (
     <SummitSection id="top" chapter="01 — Financial Rails" tone="ink">
-      <div className="pt-12 lg:pt-16">
-        <div className="grid gap-y-12 lg:grid-cols-12 lg:items-center lg:gap-x-12">
-          {/* Seven columns of text against five of photograph: the
-              proposition is the dominant element by instruction, and Archivo
-              caps need the width — at six columns the claim broke onto three
-              lines. The photo keeps a full five-column presence. */}
-          <div className="min-w-0 lg:col-span-7">
+      <div className="pt-4 lg:pt-8">
+        <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-12">
+          {/* THE IDENTITY. Reading order is the hierarchy: masthead, rule,
+              proposition, date, doors, trust. */}
+          <div className="min-w-0 lg:col-span-7 lg:pt-6">
+            {/* The one colour signal the composition spends: a short accent
+                rule above the masthead — the site's accord-hairline device,
+                opening the page the way it closes its arguments. */}
             <Reveal>
-              <p className="label-lg accord-signal-invert">{SUMMIT.name}</p>
+              <div className="accord-hairline w-12 border-t-2" aria-hidden />
             </Reveal>
-            <Reveal delay={70}>
-              {/* The proposition is the hero's dominant element — the event
-                  name above stays a label, by instruction. */}
-              {/* Authored break at the sentence boundary: the claim wraps on
-                  its own two lines, the cadence lands alone on the third —
-                  never "MONEY. ONE ROOM." sharing a line mid-sentence. */}
-              <h1 className={cn(HERO_TYPE, "mt-7")}>
-                <span className="block">The people who move the Gulf's money.</span>
-                <span className="block">One room. Two days.</span>
+            <Reveal delay={60}>
+              <h1 className={cn(MASTHEAD_TYPE, "mt-7")}>
+                {SUMMIT.nameLines.map((line) => (
+                  <span key={line} className="block whitespace-nowrap">
+                    {line}
+                  </span>
+                ))}
               </h1>
             </Reveal>
-            <Reveal delay={140} className="mt-9 border-t border-hairline-invert pt-7">
-              <p className="display-sm">{SUMMIT.dateline}</p>
+            <Reveal delay={130}>
+              <p className={cn(PROPOSITION_TYPE, "mt-8 lg:mt-9")}>
+                <span className="block">The people who move</span>
+                <span className="block">the Gulf's money.</span>
+              </p>
             </Reveal>
-            <Reveal delay={200} className="mt-9 flex flex-wrap items-center gap-4">
+            <Reveal delay={190} className="mt-9 border-t border-hairline-invert pt-6 lg:mt-10">
+              <p className="display-sm opacity-90">{SUMMIT.dateline}</p>
+            </Reveal>
+            {/* One solid door; the second is a quiet text door, related but
+                clearly subordinate. */}
+            <Reveal delay={240} className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-5">
               <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
                 {CTA.prospectus}
               </Btn>
-              <Btn tone="quietOnDark" onClick={() => open("apply")}>
-                {CTA.apply}
-              </Btn>
+              <button
+                type="button"
+                onClick={() => open("apply")}
+                className="group label-lg inline-flex items-center gap-3 opacity-75 transition-opacity duration-300 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+              >
+                <span>{CTA.apply}</span>
+                <span
+                  aria-hidden
+                  className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 motion-reduce:transition-none"
+                >
+                  →
+                </span>
+              </button>
             </Reveal>
-            <Reveal delay={250}>
-              <p className="mt-8 text-base leading-relaxed opacity-75">{SUMMIT.trustLine}</p>
+            <Reveal delay={280}>
+              <p className="mt-9 text-base leading-relaxed opacity-70">{SUMMIT.trustLine}</p>
             </Reveal>
           </div>
 
-          {/* The still: desktop only — on a phone the text goes straight to
-              the moving frame below. */}
-          <Reveal delay={140} className="hidden min-w-0 lg:col-span-5 lg:block">
-            <figure className="relative aspect-[4/5] w-full overflow-hidden bg-ink">
+          {/* THE ROOM, STANDING. Desktop only. The frame escapes the canvas
+              to the viewport's right edge and, below, overhangs the film —
+              still and footage as one right-anchored object, not a column
+              with an attachment. */}
+          <Reveal delay={150} className="hidden min-w-0 lg:col-span-5 lg:block">
+            <figure className="relative z-10 aspect-[4/5] w-full overflow-hidden bg-ink lg:-mr-16 lg:mb-[-84px] lg:w-[calc(100%+4rem)]">
               <SummitPhoto
                 photo={PHOTO_HERO}
-                sizes="(min-width:1024px) calc(41.6vw - 120px), 100vw"
+                sizes="(min-width:1024px) calc(41.6vw - 60px), 100vw"
                 loading="eager"
+                className="object-[46%_50%]"
               />
             </figure>
           </Reveal>
         </div>
 
-        {/* The plate: a real video. Poster serves phones and reduced-motion;
-            the film runs from lg up, muted, looping, controls-free. */}
-        <Reveal delay={180} className="mt-12 lg:mt-16">
-          <figure className="relative aspect-[16/9] w-full overflow-hidden bg-ink lg:aspect-[21/9]">
+        {/* THE FILM. Full-bleed to the right at lg (meeting the photograph's
+            own bleed), edge-to-edge on smaller screens. The photograph's
+            overhang laps its top-right corner. */}
+        <Reveal delay={200} className="relative z-0 mt-10 lg:mt-8">
+          <figure className="relative -mx-6 aspect-[16/9] overflow-hidden bg-ink md:-mx-12 lg:mx-0 lg:-mr-16 lg:aspect-[21/8]">
             <SummitFilm />
             <img
               src={FILM.poster}
@@ -569,8 +603,6 @@ function Hero() {
     </SummitSection>
   );
 }
-
-/* -------------------------------------------------- sections 02–11 follow */
 
 /* 02 · THE GAP — pure market evidence. No photograph: the three statistics
    are the visual, set as three tall columns whose numerals carry the band. */
