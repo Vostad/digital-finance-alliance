@@ -17,6 +17,10 @@ import {
   VOICES,
   PARTNER_LOGOS,
   WINDOW,
+  PARTNERSHIP,
+  COMMERCIAL_DEADLINES,
+  ABOUT,
+  FINAL_BAND,
   FOOTER,
   submitLead,
   type LeadPayload,
@@ -1006,14 +1010,225 @@ function TheWindow() {
     </SummitSection>
   );
 }
+/* 10 · PARTNERSHIP — the architecture, not the rate card. Seven positions
+   as a ledger, the public range as a bordered band, the deadline block
+   rendered only when real dates exist. */
 function Partnership() {
-  return null;
+  const open = useModals();
+  const deadlines = [
+    { label: "Programme locks", date: COMMERCIAL_DEADLINES.programmeLocks },
+    { label: "Meeting scheduling opens", date: COMMERCIAL_DEADLINES.schedulingOpens },
+    { label: "Final positions close", date: COMMERCIAL_DEADLINES.positionsClose },
+  ].filter((d): d is { label: string; date: string } => Boolean(d.date));
+  return (
+    <SummitSection id="partnership" tone="ink">
+      <Reveal>
+        <Eyebrow index="10" label="Partnership" invert />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[20ch]")}>{PARTNERSHIP.headline}</h2>
+      </Reveal>
+      <Reveal delay={120}>
+        <p className={cn(BODY, "mt-7 max-w-[58ch] opacity-80")}>{PARTNERSHIP.intro}</p>
+      </Reveal>
+
+      <Reveal delay={160}>
+        <p className="mt-12 border-y border-hairline-invert py-6 font-display text-[clamp(1.15rem,3.4vw,1.5rem)] font-extrabold uppercase leading-[1.3] tracking-[-0.015em] lg:text-[clamp(1.3rem,1.9vw,1.75rem)]">
+          {PARTNERSHIP.range}
+        </p>
+      </Reveal>
+      <Reveal delay={190}>
+        <p className={cn(BODY, "mt-7 max-w-[58ch] opacity-75")}>{PARTNERSHIP.rangeNote}</p>
+      </Reveal>
+
+      <div className="mt-12 border-t border-hairline-invert">
+        {PARTNERSHIP.architecture.map((item, i) => (
+          <Reveal key={item.tier} delay={100 + i * 30}>
+            <div className="grid grid-cols-1 gap-y-1 border-b border-hairline-invert py-5 lg:grid-cols-12 lg:items-baseline lg:gap-x-12">
+              <h3 className="display-sm lg:col-span-4">{item.tier}</h3>
+              <p className={cn(BODY, "opacity-75 lg:col-span-8")}>{item.line}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+
+      {deadlines.length > 0 ? (
+        <Reveal delay={200}>
+          <div className="mt-12 border border-hairline-invert p-7 lg:p-9">
+            {deadlines.map((d) => (
+              <p key={d.label} className="display-sm py-1">
+                {d.label} · {d.date}
+              </p>
+            ))}
+          </div>
+        </Reveal>
+      ) : null}
+
+      <Reveal delay={220}>
+        <div className="accord-hairline mt-14 border-t pt-9">
+          <p className="display-md max-w-[30ch]">{PARTNERSHIP.proofNote}</p>
+          <p className={cn(BODY, "mt-5 max-w-[52ch] opacity-70")}>{PARTNERSHIP.proofDetail}</p>
+        </div>
+      </Reveal>
+
+      <Reveal delay={250} className="mt-10">
+        <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
+          {CTA.prospectus}
+        </Btn>
+        <p className={cn(BODY, "mt-6 max-w-[52ch] opacity-75")}>{PARTNERSHIP.supporting}</p>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* 11 · ABOUT + CONTACT — track record, then the closing statement, then
+   the one human. The contact block is composed complete without a
+   portrait; when one is supplied it takes the reserved column without a
+   relayout. */
 function AboutContact() {
-  return null;
+  const open = useModals();
+  const { contact } = ABOUT;
+  return (
+    <SummitSection id="about">
+      <Reveal>
+        <Eyebrow index="11" label="About" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{ABOUT.headline}</h2>
+      </Reveal>
+
+      {/* Three finance platforms, then the record, one rail each. */}
+      <Reveal delay={130}>
+        <div className="mt-14 grid grid-cols-1 border-t border-hairline sm:grid-cols-3 lg:mt-16">
+          {ABOUT.platforms.map((p) => (
+            <div
+              key={p.name}
+              className="border-b border-hairline py-6 sm:border-b-0 sm:py-8 sm:pr-8 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-8"
+            >
+              <h3 className="display-sm max-w-[16ch]">{p.name}</h3>
+              <p className="label-lg mt-3 opacity-55">{p.years}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={170}>
+        <div className="grid grid-cols-1 border-y border-hairline sm:grid-cols-3">
+          {ABOUT.trackRecord.map((item) => (
+            <div
+              key={item.value}
+              className="border-b border-hairline py-6 last:border-b-0 sm:border-b-0 sm:py-8 sm:pr-8 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-8"
+            >
+              <p className="font-display text-[clamp(2rem,6vw,2.6rem)] font-extrabold leading-[0.85] tracking-[-0.035em] lg:text-[clamp(2.2rem,3vw,3rem)]">
+                {item.value}
+              </p>
+              <p className="mt-3 text-base opacity-75">{item.line}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={200}>
+        <p className={cn(BODY, "mt-10 max-w-[58ch] opacity-80")}>{ABOUT.body}</p>
+      </Reveal>
+      <Reveal delay={230}>
+        <div className="mt-10">
+          <h3 className="label-lg accord-signal">{ABOUT.sponsorsHeading}</h3>
+          <p className="mt-4 max-w-[72ch] text-[17px] leading-[1.9] opacity-85 lg:text-lg">
+            {ABOUT.sponsors.join(" · ")}
+          </p>
+        </div>
+      </Reveal>
+
+      {/* The closing statement. */}
+      <Reveal delay={250}>
+        <div className="accord-hairline mt-16 border-t pt-10 lg:mt-20">
+          {ABOUT.closing.map((line) => (
+            <p key={line} className={cn(STATEMENT_TYPE)}>
+              {line}
+            </p>
+          ))}
+          <p className="display-sm mt-8">
+            {SUMMIT.dates} · {SUMMIT.city}
+          </p>
+          <p className="label-lg mt-3 opacity-60">{ABOUT.closingMeta}</p>
+        </div>
+      </Reveal>
+
+      {/* The human. Portrait column engages the moment an asset exists. */}
+      <Reveal delay={280}>
+        <div className="mt-14 grid gap-y-8 border border-hairline p-7 lg:mt-16 lg:grid-cols-12 lg:gap-x-12 lg:p-10">
+          {contact.portrait ? (
+            <figure className="relative aspect-[4/5] w-full max-w-[300px] overflow-hidden bg-bone lg:col-span-4">
+              <img
+                src={contact.portrait}
+                alt={`Portrait of ${contact.name}`}
+                className="absolute inset-0 h-full w-full object-cover grayscale"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+          ) : null}
+          <div className={cn("min-w-0", contact.portrait ? "lg:col-span-8" : "lg:col-span-12")}>
+            <h3 className="display-md">{contact.name}</h3>
+            <p className={cn(BODY, "mt-3 opacity-75")}>{contact.roles.join(" · ")}</p>
+            <p className="mt-6 text-[17px] font-medium lg:text-lg">
+              <a
+                href={`mailto:${contact.email}`}
+                className="underline decoration-ink/25 underline-offset-4 transition-opacity duration-300 hover:opacity-70"
+              >
+                {contact.email}
+              </a>
+            </p>
+            <p className="mt-2 text-[17px] font-medium lg:text-lg">
+              <a
+                href={`tel:${contact.phone.replace(/\s+/g, "")}`}
+                className="underline decoration-ink/25 underline-offset-4 transition-opacity duration-300 hover:opacity-70"
+              >
+                {contact.phone}
+              </a>
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Btn tone="solidOnLight" onClick={() => open("prospectus")}>
+                {CTA.prospectus}
+              </Btn>
+              <Btn tone="quietOnLight" onClick={() => open("apply")}>
+                {CTA.apply}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal delay={300}>
+        <p className="mt-10 border-t border-hairline pt-6 font-mono text-[15px] uppercase tracking-[0.14em] opacity-60">
+          {ABOUT.evidenceLine}
+        </p>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* FINAL CTA BAND — a closing plate, not a content section. */
 function FinalBand() {
-  return null;
+  const open = useModals();
+  return (
+    <Section tone="ink" className="border-t-2">
+      <div className="flex flex-col gap-y-8 py-2 lg:flex-row lg:items-center lg:justify-between lg:gap-x-12">
+        <Reveal>
+          <p className="font-display max-w-[30ch] text-[clamp(1.15rem,3.4vw,1.5rem)] font-extrabold uppercase leading-[1.25] tracking-[-0.015em] lg:text-[clamp(1.25rem,1.8vw,1.65rem)]">
+            {FINAL_BAND}
+          </p>
+        </Reveal>
+        <Reveal delay={90} className="flex shrink-0 flex-wrap items-center gap-4">
+          <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
+            {CTA.prospectus}
+          </Btn>
+          <Btn tone="quietOnDark" onClick={() => open("apply")}>
+            {CTA.apply}
+          </Btn>
+        </Reveal>
+      </div>
+    </Section>
+  );
 }
 
 /* ---------------------------------------------------------------- footer */
