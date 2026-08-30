@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { Section } from "@/components/site/Section";
@@ -44,7 +44,7 @@ import {
 
 /* The hero proposition — the page's largest typographic moment. */
 const HERO_TYPE =
-  "font-display text-[clamp(1.55rem,7vw,3.3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] lg:text-[clamp(2.3rem,3.7vw,3.3rem)]";
+  "font-display text-[clamp(1.55rem,7vw,3.3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] lg:text-[clamp(2.2rem,3.5vw,3.3rem)]";
 
 /* Every section headline sits one confident step below the hero. */
 const SECTION_TYPE =
@@ -437,6 +437,48 @@ function SummitNav() {
   );
 }
 
+/** The hero film. `autoplay` only fires at mount, and this element mounts
+    display:none below lg — so a viewport that crosses into lg (or a tab
+    restored there) would show a frozen first frame. The effect retries
+    play() whenever the element is actually visible; reduced-motion never
+    sees it (CSS keeps it hidden, and the effect respects the same query). */
+function SummitFilm() {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const tryPlay = () => {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduced && video.offsetParent !== null && video.paused) {
+        video.play().catch(() => {});
+      }
+    };
+    tryPlay();
+    const media = window.matchMedia("(min-width: 1024px)");
+    media.addEventListener("change", tryPlay);
+    const io = new IntersectionObserver(tryPlay, { threshold: 0.1 });
+    io.observe(video);
+    return () => {
+      media.removeEventListener("change", tryPlay);
+      io.disconnect();
+    };
+  }, []);
+  return (
+    <video
+      ref={ref}
+      className="absolute inset-0 hidden h-full w-full object-cover lg:motion-safe:block"
+      src={FILM.src}
+      poster={FILM.poster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      aria-label="Highlights from previous Vostad finance events"
+    />
+  );
+}
+
 /* ------------------------------------------------------------- 01 · hero */
 
 function Hero() {
@@ -497,17 +539,7 @@ function Hero() {
             the film runs from lg up, muted, looping, controls-free. */}
         <Reveal delay={180} className="mt-12 lg:mt-16">
           <figure className="relative aspect-[16/9] w-full overflow-hidden bg-ink lg:aspect-[21/9]">
-            <video
-              className="absolute inset-0 hidden h-full w-full object-cover lg:motion-safe:block"
-              src={FILM.src}
-              poster={FILM.poster}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-label="Highlights from previous Vostad finance events"
-            />
+            <SummitFilm />
             <img
               src={FILM.poster}
               alt="Highlights reel poster from previous Vostad finance events"
@@ -762,7 +794,7 @@ function TheDifference() {
         <div className="mt-14 lg:mt-16">
           {/* Column heads, desktop only — mobile rows carry their own. */}
           <div className="hidden border-b border-hairline-invert pb-4 lg:grid lg:grid-cols-2 lg:gap-x-12">
-            <p className="label-lg opacity-50">{DIFFERENCE.expoHeading}</p>
+            <p className="label-lg opacity-55">{DIFFERENCE.expoHeading}</p>
             <p className="label-lg accord-signal-invert">{DIFFERENCE.railsHeading}</p>
           </div>
           {DIFFERENCE.rows.map((row) => (
@@ -771,7 +803,7 @@ function TheDifference() {
               className="grid grid-cols-1 gap-y-3 border-b border-hairline-invert py-6 lg:grid-cols-2 lg:items-baseline lg:gap-x-12 lg:py-5"
             >
               <div className="min-w-0">
-                <p className="label-lg mb-1 opacity-40 lg:hidden">{DIFFERENCE.expoHeading}</p>
+                <p className="label-lg mb-1 opacity-55 lg:hidden">{DIFFERENCE.expoHeading}</p>
                 <p className={cn(BODY, "opacity-60")}>{row.expo}</p>
               </div>
               <div className="min-w-0">
