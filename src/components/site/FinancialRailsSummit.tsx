@@ -14,6 +14,9 @@ import {
   PROCESS,
   DIFFERENCE,
   AGENDA,
+  VOICES,
+  PARTNER_LOGOS,
+  WINDOW,
   FOOTER,
   submitLead,
   type LeadPayload,
@@ -862,11 +865,146 @@ function TheAgenda() {
     </SummitSection>
   );
 }
+/* 08 · THE VOICES — people first, logos as seasoning. Seven approved
+   portraits on a four-column grid whose eighth cell carries the footnote,
+   so the roster reads as a designed wall rather than a ten-grid with
+   holes. The institutions render as text, never as logos. */
 function TheVoices() {
-  return null;
+  return (
+    <SummitSection id="speakers" tone="ink">
+      <Reveal>
+        <Eyebrow index="08" label="The Voices" invert />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[26ch]")}>{VOICES.headline}</h2>
+      </Reveal>
+
+      <Reveal delay={130} className="mt-14 border-t border-hairline-invert pt-8 lg:mt-16">
+        <h3 className="label-lg accord-signal-invert">{VOICES.subhead}</h3>
+      </Reveal>
+
+      <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-8">
+        {VOICES.speakers.map((person, i) => (
+          <Reveal key={person.name} delay={120 + (i % 4) * 50}>
+            <figure className="group">
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink/60">
+                <picture className="contents">
+                  <source
+                    type="image/avif"
+                    srcSet={`${person.image}-400.avif 400w, ${person.image}-800.avif 800w`}
+                    sizes="(min-width:1024px) 22vw, (min-width:768px) 30vw, 45vw"
+                  />
+                  <img
+                    src={`${person.image}-400.jpg`}
+                    srcSet={`${person.image}-400.jpg 400w, ${person.image}-800.jpg 800w`}
+                    sizes="(min-width:1024px) 22vw, (min-width:768px) 30vw, 45vw"
+                    alt={`Portrait of ${person.name}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover grayscale transition-[filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:grayscale-0 motion-reduce:transition-none"
+                  />
+                </picture>
+              </div>
+              <figcaption className="mt-4">
+                <p className="display-sm leading-tight">{person.name}</p>
+                <p className="mt-1.5 text-[15px] leading-snug opacity-70">{person.title}</p>
+                <p className="accord-signal-invert mt-0.5 text-[15px] leading-snug">{person.org}</p>
+              </figcaption>
+            </figure>
+          </Reveal>
+        ))}
+        {/* The eighth cell: the roster's own footnote, set as part of the
+            wall rather than dropped beneath it. */}
+        <Reveal delay={320} className="col-span-2 self-end md:col-span-3 lg:col-span-1">
+          <p className="border-t border-hairline-invert pt-5 text-[15px] leading-relaxed opacity-65">
+            {VOICES.footnote}
+          </p>
+        </Reveal>
+      </div>
+
+      {/* Approved commercial partner logos only — the block does not exist
+          until an allowlist does. */}
+      {PARTNER_LOGOS.length > 0 ? (
+        <Reveal delay={200} className="mt-16 border-t border-hairline-invert pt-8">
+          <h3 className="label-lg accord-signal-invert">Partners Across Our Platforms</h3>
+          <div className="mt-8 flex flex-wrap items-center gap-10">
+            {PARTNER_LOGOS.map((logo) => (
+              <img key={logo.name} src={logo.src} alt={logo.name} className="h-8 w-auto" />
+            ))}
+          </div>
+        </Reveal>
+      ) : null}
+
+      <Reveal delay={220} className="mt-16 border-t border-hairline-invert pt-8 lg:mt-20">
+        <h3 className="label-lg accord-signal-invert">{VOICES.institutionsHeading}</h3>
+        <p className="mt-6 max-w-[72ch] text-[17px] leading-[1.9] opacity-85 lg:text-lg">
+          {VOICES.institutions.join(" · ")}
+        </p>
+        <p className="mt-5 max-w-[64ch] text-[15px] leading-relaxed opacity-55">
+          {VOICES.institutionsFootnote}
+        </p>
+      </Reveal>
+    </SummitSection>
+  );
 }
+
+/* 09 · THE WINDOW — editorial two-column: the clock against the city,
+   heights deliberately unequal, no photograph. */
 function TheWindow() {
-  return null;
+  return (
+    <SummitSection id="the-window">
+      <Reveal>
+        <Eyebrow index="09" label="The Window" />
+      </Reveal>
+      <Reveal delay={70}>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{WINDOW.headline}</h2>
+      </Reveal>
+
+      <div className="mt-14 grid gap-y-14 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
+        <div className="min-w-0 lg:col-span-7">
+          <Reveal delay={100}>
+            <h3 className="label-lg accord-signal border-b border-hairline pb-4">
+              {WINDOW.clockHeading}
+            </h3>
+          </Reveal>
+          {WINDOW.clock.map((item, i) => (
+            <Reveal key={item.title} delay={130 + i * 35}>
+              <div className="border-b border-hairline py-6">
+                <h4 className="display-sm">{item.title}</h4>
+                <p className={cn(BODY, "mt-2 max-w-[48ch] opacity-75")}>{item.line}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="min-w-0 lg:col-span-4 lg:col-start-9">
+          <Reveal delay={140}>
+            <h3 className="label-lg accord-signal border-b border-hairline pb-4">
+              {WINDOW.cityHeading}
+            </h3>
+          </Reveal>
+          {WINDOW.city.map((item, i) => (
+            <Reveal key={item.title} delay={170 + i * 35}>
+              <div className="border-b border-hairline py-6">
+                <h4 className="display-sm">{item.title}</h4>
+                <p className={cn(BODY, "mt-2 opacity-75")}>{item.line}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      <Reveal delay={220}>
+        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-16">
+          {WINDOW.closing.map((line) => (
+            <p key={line} className={STATEMENT_TYPE}>
+              {line}
+            </p>
+          ))}
+        </div>
+      </Reveal>
+    </SummitSection>
+  );
 }
 function Partnership() {
   return null;
