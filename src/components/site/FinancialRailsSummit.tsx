@@ -11,14 +11,10 @@ import {
   MARKET,
   ROOM,
   AUDIENCE,
-  PROCESS,
-  DIFFERENCE,
   AGENDA,
   VOICES,
   PARTNER_LOGOS,
   WINDOW,
-  PARTNERSHIP,
-  COMMERCIAL_DEADLINES,
   ABOUT,
   FINAL_BAND,
   FOOTER,
@@ -75,11 +71,6 @@ const PHOTO_NETWORKING: Photo = {
   base: "/media/financial-rails-v2/experience/networking",
   widths: [480, 768, 1280, 1920],
   alt: "Two senior delegates in conversation between sessions at a Vostad event",
-};
-const PHOTO_MEETING: Photo = {
-  base: "/media/microsite/why-attend",
-  widths: [480, 768, 1280, 1888],
-  alt: "Two executives talking one-to-one at a Vostad event",
 };
 const PHOTO_STAGE: Photo = {
   base: "/media/financial-rails-v2/experience/keynote",
@@ -369,12 +360,17 @@ function SummitNav() {
             </span>
           </a>
 
-          <nav aria-label="Summit" className="hidden items-center gap-7 xl:flex">
+          {/* Seven destinations, not six: at the old xl breakpoint and 28px
+              gaps, four of the labels broke onto two lines. The links no
+              longer wrap and the inline nav appears only where all seven
+              actually fit; below that the existing menu button carries them,
+              unchanged. */}
+          <nav aria-label="Summit" className="hidden items-center gap-6 min-[1400px]:flex">
             {SUMMIT_NAV.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="label-lg opacity-70 transition-opacity duration-300 hover:opacity-100"
+                className="label-lg whitespace-nowrap opacity-70 transition-opacity duration-300 hover:opacity-100"
               >
                 {item.label}
               </a>
@@ -407,7 +403,7 @@ function SummitNav() {
               onClick={() => setMenu((v) => !v)}
               aria-expanded={menu}
               aria-label={menu ? "Close menu" : "Open menu"}
-              className="label-lg border border-hairline-invert px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink xl:hidden"
+              className="label-lg border border-hairline-invert px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink min-[1400px]:hidden"
             >
               {menu ? "Close" : "Menu"}
             </button>
@@ -419,7 +415,7 @@ function SummitNav() {
           the 20px floor. */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-ink text-paper transition-[opacity,visibility] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] xl:hidden motion-reduce:transition-none",
+          "fixed inset-0 z-40 bg-ink text-paper transition-[opacity,visibility] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] min-[1400px]:hidden motion-reduce:transition-none",
           menu ? "visible opacity-100" : "invisible opacity-0",
         )}
       >
@@ -851,7 +847,7 @@ function TheRoom() {
 function ThePeople() {
   const open = useModals();
   return (
-    <SummitSection id="who-is-in-it" chapter="04 — The People" tone="ink">
+    <SummitSection id="the-people" chapter="04 — The People" tone="ink">
       <Reveal>
         <Eyebrow index="04" label={AUDIENCE.label} invert />
       </Reveal>
@@ -914,118 +910,14 @@ function ThePeople() {
   );
 }
 
-/* 05 · HOW IT WORKS — the machinery: four steps on one rail, numerals and
-   hairline connectors, no cards and no icons. The guarantee closes the band
-   beside a deliberately small 1:1 meeting frame. */
-function HowItWorks() {
-  return (
-    <SummitSection id="how-it-works" chapter="05 — How It Works">
-      <Reveal>
-        <Eyebrow index="05" label="How It Works" />
-      </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[26ch]")}>{PROCESS.headline}</h2>
-      </Reveal>
-
-      <Reveal delay={140}>
-        <div className="mt-14 grid grid-cols-1 border-t border-hairline sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
-          {PROCESS.steps.map((step, i) => (
-            <div
-              key={step.title}
-              className="border-b border-hairline px-0 py-8 sm:border-b-0 sm:py-10 sm:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8 lg:border-l lg:border-hairline lg:pl-8 lg:first:border-l-0 lg:first:pl-0"
-            >
-              <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
-              <h3 className="display-sm mt-5 min-h-0 lg:min-h-[3.2em]">{step.title}</h3>
-              <p className={cn(BODY, "mt-4 opacity-75")}>{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </Reveal>
-
-      <div className="mt-14 grid items-center gap-y-10 border-t border-hairline pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
-        <Reveal delay={180} className="min-w-0 lg:col-span-7">
-          <p className={cn(STATEMENT_TYPE, "accord-signal")}>{PROCESS.guarantee}</p>
-          <p className={cn(BODY, "mt-6 max-w-[44ch] opacity-75")}>{PROCESS.footer}</p>
-        </Reveal>
-        {/* Visibly smaller than 04's photograph, by instruction: a square
-            inset, not a column-height frame. */}
-        <Reveal delay={220} className="min-w-0 lg:col-span-4 lg:col-start-9">
-          <figure className="relative mx-auto aspect-square w-full max-w-[340px] overflow-hidden bg-bone lg:mx-0">
-            <SummitPhoto
-              photo={PHOTO_MEETING}
-              sizes="(min-width:1024px) 340px, calc(100vw - 48px)"
-            />
-          </figure>
-        </Reveal>
-      </div>
-    </SummitSection>
-  );
-}
-/* 06 · THE DIFFERENCE — pure comparison, no photograph. Five paired rows;
-   the Financial Rails side carries the typographic weight. On mobile each
-   pair stacks with its own small column labels, so a row never scrolls. */
-function TheDifference() {
-  return (
-    <SummitSection id="the-difference" chapter="06 — The Difference" tone="ink">
-      <Reveal>
-        <Eyebrow index="06" label="The Difference" invert />
-      </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8")}>
-          <span className="block max-w-[30ch]">{DIFFERENCE.headline[0]}</span>
-          <span className="block max-w-[30ch] opacity-60">{DIFFERENCE.headline[1]}</span>
-        </h2>
-      </Reveal>
-
-      <Reveal delay={140}>
-        <div className="mt-14 lg:mt-16">
-          {/* Column heads, desktop only — mobile rows carry their own. */}
-          <div className="hidden border-b border-hairline-invert pb-4 lg:grid lg:grid-cols-2 lg:gap-x-12">
-            <p className="label-lg opacity-55">{DIFFERENCE.expoHeading}</p>
-            <p className="label-lg accord-signal-invert">{DIFFERENCE.railsHeading}</p>
-          </div>
-          {DIFFERENCE.rows.map((row) => (
-            <div
-              key={row.rails}
-              className="grid grid-cols-1 gap-y-3 border-b border-hairline-invert py-6 lg:grid-cols-2 lg:items-baseline lg:gap-x-12 lg:py-5"
-            >
-              <div className="min-w-0">
-                <p className="label-lg mb-1 opacity-55 lg:hidden">{DIFFERENCE.expoHeading}</p>
-                <p className={cn(BODY, "opacity-60")}>{row.expo}</p>
-              </div>
-              <div className="min-w-0">
-                <p className="label-lg mb-1 accord-signal-invert lg:hidden">
-                  {DIFFERENCE.railsHeading}
-                </p>
-                <p className={cn(BODY, "font-semibold text-paper")}>{row.rails}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Reveal>
-
-      <Reveal delay={200}>
-        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-16">
-          {DIFFERENCE.closing.map((line) => (
-            <p key={line} className={STATEMENT_TYPE}>
-              {line}
-            </p>
-          ))}
-          <p className={cn(BODY, "mt-6 max-w-[48ch] opacity-70")}>{DIFFERENCE.support}</p>
-        </div>
-      </Reveal>
-    </SummitSection>
-  );
-}
-
 /* 07 · THE AGENDA — six tracks as a ledger against a tall stage photograph;
    the format line runs as a full-width band, and the refusal triplet closes
    the programme's borders. */
 function TheAgenda() {
   return (
-    <SummitSection id="agenda" chapter="07 — The Agenda">
+    <SummitSection id="agenda" chapter="05 — The Agenda">
       <Reveal>
-        <Eyebrow index="07" label="The Agenda" />
+        <Eyebrow index="05" label="The Agenda" />
       </Reveal>
       <Reveal delay={70}>
         <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{AGENDA.headline}</h2>
@@ -1094,9 +986,9 @@ function TheAgenda() {
    holes. The institutions render as text, never as logos. */
 function TheVoices() {
   return (
-    <SummitSection id="speakers" chapter="08 — The Voices" tone="ink">
+    <SummitSection id="speakers" chapter="06 — The Voices" tone="ink">
       <Reveal>
-        <Eyebrow index="08" label="The Voices" invert />
+        <Eyebrow index="06" label="The Voices" invert />
       </Reveal>
       <Reveal delay={70}>
         <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[26ch]")}>{VOICES.headline}</h2>
@@ -1175,9 +1067,9 @@ function TheVoices() {
    heights deliberately unequal, no photograph. */
 function TheWindow() {
   return (
-    <SummitSection id="the-window" chapter="09 — The Window">
+    <SummitSection id="the-window" chapter="07 — The Window">
       <Reveal>
-        <Eyebrow index="09" label="The Window" />
+        <Eyebrow index="07" label="The Window" />
       </Reveal>
       <Reveal delay={70}>
         <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{WINDOW.headline}</h2>
@@ -1229,77 +1121,6 @@ function TheWindow() {
     </SummitSection>
   );
 }
-/* 10 · PARTNERSHIP — the architecture, not the rate card. Seven positions
-   as a ledger, the public range as a bordered band, the deadline block
-   rendered only when real dates exist. */
-function Partnership() {
-  const open = useModals();
-  const deadlines = [
-    { label: "Programme locks", date: COMMERCIAL_DEADLINES.programmeLocks },
-    { label: "Meeting scheduling opens", date: COMMERCIAL_DEADLINES.schedulingOpens },
-    { label: "Final positions close", date: COMMERCIAL_DEADLINES.positionsClose },
-  ].filter((d): d is { label: string; date: string } => Boolean(d.date));
-  return (
-    <SummitSection id="partnership" chapter="10 — Partnership" tone="ink">
-      <Reveal>
-        <Eyebrow index="10" label="Partnership" invert />
-      </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[20ch]")}>{PARTNERSHIP.headline}</h2>
-      </Reveal>
-      <Reveal delay={120}>
-        <p className={cn(BODY, "mt-7 max-w-[58ch] opacity-80")}>{PARTNERSHIP.intro}</p>
-      </Reveal>
-
-      <Reveal delay={160}>
-        <p className="mt-12 border-y border-hairline-invert py-6 font-display text-[clamp(1.15rem,3.4vw,1.5rem)] font-extrabold uppercase leading-[1.3] tracking-[-0.015em] lg:text-[clamp(1.3rem,1.9vw,1.75rem)]">
-          {PARTNERSHIP.range}
-        </p>
-      </Reveal>
-      <Reveal delay={190}>
-        <p className={cn(BODY, "mt-7 max-w-[58ch] opacity-75")}>{PARTNERSHIP.rangeNote}</p>
-      </Reveal>
-
-      <div className="mt-12 border-t border-hairline-invert">
-        {PARTNERSHIP.architecture.map((item, i) => (
-          <Reveal key={item.tier} delay={100 + i * 30}>
-            <div className="grid grid-cols-1 gap-y-1 border-b border-hairline-invert py-5 lg:grid-cols-12 lg:items-baseline lg:gap-x-12">
-              <h3 className="display-sm lg:col-span-4">{item.tier}</h3>
-              <p className={cn(BODY, "opacity-75 lg:col-span-8")}>{item.line}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-
-      {deadlines.length > 0 ? (
-        <Reveal delay={200}>
-          <div className="mt-12 border border-hairline-invert p-7 lg:p-9">
-            {deadlines.map((d) => (
-              <p key={d.label} className="display-sm py-1">
-                {d.label} · {d.date}
-              </p>
-            ))}
-          </div>
-        </Reveal>
-      ) : null}
-
-      <Reveal delay={220}>
-        <div className="accord-hairline mt-14 border-t pt-9">
-          <p className="display-md max-w-[30ch]">{PARTNERSHIP.proofNote}</p>
-          <p className={cn(BODY, "mt-5 max-w-[52ch] opacity-70")}>{PARTNERSHIP.proofDetail}</p>
-        </div>
-      </Reveal>
-
-      <Reveal delay={250} className="mt-10">
-        <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
-          {CTA.prospectus}
-        </Btn>
-        <p className={cn(BODY, "mt-6 max-w-[52ch] opacity-75")}>{PARTNERSHIP.supporting}</p>
-      </Reveal>
-    </SummitSection>
-  );
-}
-
 /* 11 · ABOUT + CONTACT — track record, then the closing statement, then
    the one human. The contact block is composed complete without a
    portrait; when one is supplied it takes the reserved column without a
@@ -1308,9 +1129,9 @@ function AboutContact() {
   const open = useModals();
   const { contact } = ABOUT;
   return (
-    <SummitSection id="about" chapter="11 — About">
+    <SummitSection id="about" chapter="08 — About">
       <Reveal>
-        <Eyebrow index="11" label="About" />
+        <Eyebrow index="08" label="About" />
       </Reveal>
       <Reveal delay={70}>
         <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{ABOUT.headline}</h2>
@@ -1521,12 +1342,9 @@ export function FinancialRailsSummit() {
           <TheMarket />
           <TheRoom />
           <ThePeople />
-          <HowItWorks />
-          <TheDifference />
           <TheAgenda />
           <TheVoices />
           <TheWindow />
-          <Partnership />
           <AboutContact />
           <FinalBand />
         </main>

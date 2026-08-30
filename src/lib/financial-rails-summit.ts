@@ -44,11 +44,12 @@ export const CTA = {
 } as const;
 
 export const SUMMIT_NAV = [
+  { label: "The Market", id: "the-market" },
   { label: "The Room", id: "the-room" },
-  { label: "How It Works", id: "how-it-works" },
+  { label: "The People", id: "the-people" },
   { label: "Agenda", id: "agenda" },
   { label: "Speakers", id: "speakers" },
-  { label: "Partnership", id: "partnership" },
+  { label: "The Window", id: "the-window" },
   { label: "About", id: "about" },
 ] as const;
 
@@ -125,54 +126,6 @@ export const AUDIENCE = {
      outside it. */
   closingHeadline: "Qualify to join the room.",
   closingLine: "Qualified delegates attend as our guest.",
-} as const;
-
-/* -------------------------------------------------------- 05 how it works */
-
-export const PROCESS = {
-  label: "How It Works",
-  headline: "Meetings are the product. Here's the machinery.",
-  steps: [
-    {
-      title: "You name your targets.",
-      body: "Partners give us the organisations and titles they need in their pipeline. Buyers tell us what they're evaluating.",
-    },
-    {
-      title: "We match. Both sides opt in.",
-      body: "No ambushes. A meeting happens only when both parties accept it.",
-    },
-    {
-      title: "Your schedule lands before you do.",
-      body: "Names, titles, table, time — in your hands before day one. Your two days are planned before your flight.",
-    },
-    {
-      title: "You leave with a record.",
-      body: "A meeting-outcome report for your pipeline review. Not a stack of scanned badges.",
-    },
-  ],
-  guarantee: "A no-show is replaced.",
-  footer: "Built and operated by the team behind fourteen finance-sector events.",
-} as const;
-
-/* ------------------------------------------------------- 06 the difference */
-
-export const DIFFERENCE = {
-  label: "The Difference",
-  headline: ["You already sponsor events with 30,000 visitors.", "How many became pipeline?"],
-  expoHeading: "The Mega-Expo Model",
-  railsHeading: "Financial Rails",
-  rows: [
-    { expo: "28K–38K claimed audience", rails: "400 people, capped" },
-    {
-      expo: "Free registration, open to anyone",
-      rails: "Buyers verified against the licence register",
-    },
-    { expo: "On-site lead capture", rails: "Up to 20 contracted meetings, booked before you land" },
-    { expo: "Badge scanning", rails: "The decision-maker, across the table" },
-    { expo: "Broad brand visibility", rails: "A meeting report you can hand your CFO" },
-  ],
-  closing: ["Scale creates reach.", "Curation creates access."],
-  support: "Many partners do both: the expo for brand, Financial Rails for pipeline.",
 } as const;
 
 /* ------------------------------------------------------------ 07 the agenda */
@@ -312,47 +265,6 @@ export const WINDOW = {
   ],
   closing: ["The window is 2027–2029.", "The room is in Dubai."],
 } as const;
-
-/* ---------------------------------------------------------- 10 partnership */
-
-export const PARTNERSHIP = {
-  label: "Partnership",
-  headline: "Put your brand in the room.",
-  intro:
-    "Financial Rails partnerships are built around executive access, thought leadership, business development, visibility and strategic positioning.",
-  range: "33 partner positions · $7,000–$85,000",
-  rangeNote:
-    "From Title Partner to focused partnership opportunities, the full architecture is built around the commercial goals of each partner.",
-  architecture: [
-    { tier: "Title", line: "The event carries your name · 1 position, exclusive" },
-    { tier: "Strategic / Banking", line: "Stage and volume · 2 positions each" },
-    { tier: "Category", line: "Own your category outright · 6 positions, one per category" },
-    { tier: "Meetings", line: "Pipeline, undiluted" },
-    { tier: "Roundtable", line: "Your closed-door room" },
-    { tier: "Networking", line: "Own a hospitality moment" },
-    { tier: "Exhibitor", line: "Presence, priced to enter" },
-  ],
-  proofNote: "Every number in the prospectus is a contract term, not a projection.",
-  proofDetail:
-    "Figures describe the room as designed and capped. Meeting counts are contracted per partnership.",
-  supporting:
-    "Bring your target list to the call. We'll map it against the room and tell you honestly if we can't deliver your buyers.",
-} as const;
-
-/**
- * Commercial deadlines. NULL until real dates are supplied — while any value
- * is null the page hides the entire deadline block. Never render a
- * placeholder in its place.
- */
-export const COMMERCIAL_DEADLINES: {
-  programmeLocks: string | null;
-  schedulingOpens: string | null;
-  positionsClose: string | null;
-} = {
-  programmeLocks: null,
-  schedulingOpens: null,
-  positionsClose: null,
-};
 
 /* -------------------------------------------------------------- 11 about */
 
