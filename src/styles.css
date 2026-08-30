@@ -258,6 +258,18 @@
   text-transform: uppercase;
 }
 
+/* The Summit page's label scale. A NEW utility, not a change to `label`:
+   the 11px class is load-bearing on every other page, and the Summit page's
+   floor is 13px. Same mono voice, slightly relaxed tracking for the size. */
+@utility label-lg {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
 @utility lede {
   font-size: clamp(1.05rem, 1.35vw, 1.375rem);
   line-height: 1.55;
@@ -278,6 +290,14 @@
 @utility reveal-in {
   opacity: 1;
   transform: none;
+}
+
+/* Summit-scoped motion: the page's one permitted entry animation is a fade-up
+   capped at 280ms, against the site default of 900ms. Unlayered, so it wins
+   over the layered utility without touching any other page. */
+.summit-scope .reveal {
+  transform: translate3d(0, 14px, 0);
+  transition-duration: 0.28s, 0.28s;
 }
 
 @utility marquee-track {

@@ -1,57 +1,89 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { EventMicrosite } from "@/components/site/EventMicrosite";
-import { FINANCIAL_RAILS_MENA } from "@/lib/financial-rails-mena";
-import { EVENT_PORTFOLIO } from "@/lib/event-portfolio";
-import { eventGraph, jsonLd } from "@/lib/structured-data";
+import { FinancialRailsSummit } from "@/components/site/FinancialRailsSummit";
+import { SUMMIT } from "@/lib/financial-rails-summit";
+import { ORG_ID, absolute, jsonLd } from "@/lib/structured-data";
 
 /**
- * Financial Rails MENA — an edition of the Financial Rails event micro-site.
- * Composition from EventMicrosite, content from the edition's data module,
- * media inherited from the shared Financial Rails library.
+ * Financial Rails Summit — Dubai · 18–19 November 2026. The V4 microsite.
+ *
+ * The route keeps its /forums/financial-rails-mena address — MENA is the
+ * regional identity in the platform's calendar — while the page itself
+ * carries the formal event name, Financial Rails Summit.
+ *
+ * The Event graph is written here rather than through the shared
+ * eventGraph() helper because this page's claims are its own: a two-day
+ * range, the Summit name, and a CITY-LEVEL location only — the venue is
+ * shared with confirmed delegates and partners, so no venue is emitted.
  */
+
+const URL = "https://financialrails.org/forums/financial-rails-mena";
+
+const SUMMIT_GRAPH = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Event",
+      "@id": `${URL}#event`,
+      name: SUMMIT.name,
+      startDate: SUMMIT.startDateISO,
+      endDate: SUMMIT.endDateISO,
+      eventStatus: "https://schema.org/EventScheduled",
+      url: URL,
+      description:
+        "The people who move the Gulf's money. One room. Two days. 400 seats, capped; ~220 institutional decision-makers; 370+ pre-scheduled meetings.",
+      image: absolute("/media/microsite/closing-frame-1280.jpg"),
+      location: {
+        "@type": "Place",
+        name: "Dubai",
+        address: { "@type": "PostalAddress", addressLocality: "Dubai", addressCountry: "AE" },
+      },
+      organizer: { "@id": ORG_ID },
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${URL}#breadcrumbs`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://financialrails.org" },
+        { "@type": "ListItem", position: 2, name: "Forums", item: absolute("/forums") },
+        { "@type": "ListItem", position: 3, name: SUMMIT.name, item: URL },
+      ],
+    },
+  ],
+};
 
 export const Route = createFileRoute("/forums/financial-rails-mena")({
   head: () => ({
     meta: [
-      {
-        title:
-          "Financial Rails MENA — The Infrastructure of the Next Financial System | Financial Rails",
-      },
+      { title: "Financial Rails Summit — Dubai, 18–19 November 2026 | Financial Rails" },
       {
         name: "description",
         content:
-          "5 November 2026, Dubai, UAE. A closed-door gathering of 250 curated decision-makers shaping the infrastructure of the next financial system. Invitation only.",
+          "18–19 November 2026, Dubai, UAE. The people who move the Gulf's money — 400 seats, capped, ~220 institutional decision-makers, 370+ pre-scheduled meetings. Vostad's 14th finance event.",
       },
-      { property: "og:title", content: "Financial Rails MENA — Financial Rails" },
+      { property: "og:title", content: "Financial Rails Summit — Dubai · 18–19 November 2026" },
       {
         property: "og:description",
-        content: "5 November 2026 · Dubai, UAE. 250 curated decision-makers. Invitation only.",
+        content:
+          "The people who move the Gulf's money. One room. Two days. 400 seats, capped · ~220 institutional decision-makers · 370+ pre-scheduled meetings.",
       },
-      { property: "og:url", content: "https://financialrails.org/forums/financial-rails-mena" },
+      { property: "og:url", content: URL },
     ],
     links: [
-      { rel: "canonical", href: "https://financialrails.org/forums/financial-rails-mena" },
+      { rel: "canonical", href: URL },
       { rel: "preload", as: "image", href: "/media/financial-rails-v2-hero-poster.jpg" },
     ],
   }),
-  component: EditionRoute,
+  component: SummitRoute,
 });
 
-/* The edition's Event + BreadcrumbList graph, rendered into the document
-   rather than declared in head(): TanStack emits head scripts through
-   <Scripts /> at the end of <body>, and JSON-LD that a crawler must find is
-   not worth routing through a mechanism whose placement the page does not
-   control. Google reads ld+json anywhere in the document. */
-const EDITION = EVENT_PORTFOLIO.find((e) => e.id === "financial-rails-mena")!;
-
-function EditionRoute() {
+function SummitRoute() {
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(eventGraph(EDITION)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(SUMMIT_GRAPH) }}
       />
-      <EventMicrosite event={FINANCIAL_RAILS_MENA} />
+      <FinancialRailsSummit />
     </>
   );
 }

@@ -1,0 +1,600 @@
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { cn } from "@/lib/utils";
+import { Section } from "@/components/site/Section";
+import { Reveal } from "@/components/site/Reveal";
+import { FinancialRailsIcon } from "@/components/site/FinancialRailsIcon";
+import {
+  SUMMIT,
+  CTA,
+  SUMMIT_NAV,
+  FOOTER,
+  submitLead,
+  type LeadPayload,
+} from "@/lib/financial-rails-summit";
+
+/**
+ * FINANCIAL RAILS SUMMIT — the V4 microsite, page-scoped.
+ *
+ * Composition only: every sentence lives in financial-rails-summit.ts. The
+ * page is built in the site's own identity — Archivo display, IBM Plex
+ * body and mono, paper/ink grounds, hairline rules, the periwinkle accent
+ * pair — with this page's two deviations, both deliberate: labels sit at
+ * 13px (`label-lg`, the V4 floor) instead of the site's 11px `label`, and
+ * the entry animation is capped at 280ms via the `summit-scope` override.
+ *
+ * Exactly two CTA phrasings exist anywhere on this page, and both open
+ * modals rather than navigating: the conversion is the form, not a page.
+ */
+
+/* ------------------------------------------------------------ type scale */
+
+/* The hero proposition — the page's largest typographic moment. */
+const HERO_TYPE =
+  "font-display text-[clamp(1.55rem,7vw,3.3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] lg:text-[clamp(2.3rem,3.7vw,3.3rem)]";
+
+/* Body copy: 17px on mobile, 18px from lg — the V4 floors, exactly. */
+const BODY = "text-[17px] leading-[1.6] lg:text-lg";
+
+/* ------------------------------------------------------------ photography */
+
+type Photo = { base: string; widths: number[]; alt: string };
+
+const PHOTO_HERO: Photo = {
+  base: "/media/microsite/closing-frame",
+  widths: [768, 1280, 1920, 2560, 3840],
+  alt: "Delegates seated at round tables during a Vostad summit session in Dubai",
+};
+
+const FILM = {
+  src: "/media/financial-rails-v2-hero.mp4",
+  poster: "/media/financial-rails-v2-hero-poster.jpg",
+};
+
+function SummitPhoto({
+  photo,
+  sizes,
+  className,
+  loading = "lazy",
+}: {
+  photo: Photo;
+  sizes: string;
+  className?: string;
+  loading?: "lazy" | "eager";
+}) {
+  const set = (ext: "avif" | "jpg") =>
+    photo.widths.map((w) => `${photo.base}-${w}.${ext} ${w}w`).join(", ");
+  const mid = photo.widths[Math.min(1, photo.widths.length - 1)];
+  return (
+    <picture className="contents">
+      <source type="image/avif" srcSet={set("avif")} sizes={sizes} />
+      <img
+        src={`${photo.base}-${mid}.jpg`}
+        srcSet={set("jpg")}
+        sizes={sizes}
+        alt={photo.alt}
+        loading={loading}
+        decoding="async"
+        className={cn(
+          "absolute inset-0 h-full w-full object-cover grayscale transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:grayscale-0 motion-reduce:transition-none",
+          className,
+        )}
+      />
+    </picture>
+  );
+}
+
+/* -------------------------------------------------------------- controls */
+
+function Btn({
+  children,
+  onClick,
+  tone,
+  className,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  tone: "solidOnDark" | "quietOnDark" | "solidOnLight" | "quietOnLight";
+  className?: string;
+}) {
+  const tones = {
+    solidOnDark: "bg-paper text-ink hover:bg-ink hover:text-accent focus-visible:outline-accent",
+    quietOnDark:
+      "border border-hairline-invert text-paper hover:border-accent hover:text-accent focus-visible:outline-accent",
+    solidOnLight: "bg-ink text-paper hover:bg-accent hover:text-ink focus-visible:outline-ink",
+    quietOnLight:
+      "border border-ink/25 text-ink hover:border-[var(--accord-orange-deep)] hover:text-[var(--accord-orange-deep)] focus-visible:outline-ink",
+  } as const;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "group label-lg inline-flex items-center gap-4 px-7 py-4 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 motion-reduce:transition-none",
+        tones[tone],
+        className,
+      )}
+    >
+      <span>{children}</span>
+      <span
+        aria-hidden
+        className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 motion-reduce:transition-none"
+      >
+        →
+      </span>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------- lead modals */
+
+type ModalKind = "prospectus" | "apply" | null;
+const ModalCtx = createContext<(kind: Exclude<ModalKind, null>) => void>(() => {});
+const useModals = () => useContext(ModalCtx);
+
+const FIELD =
+  "w-full border-0 border-b border-ink/20 bg-transparent py-3 text-base text-ink outline-none transition-colors duration-300 placeholder:text-ink/35 focus:border-ink";
+
+function Field({
+  label,
+  name,
+  type = "text",
+  textarea = false,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  textarea?: boolean;
+}) {
+  const id = `summit-${name}`;
+  return (
+    <label htmlFor={id} className="block">
+      <span className="label-lg block opacity-60">{label}</span>
+      {textarea ? (
+        <textarea id={id} name={name} required rows={3} className={cn(FIELD, "resize-none")} />
+      ) : (
+        <input id={id} name={name} type={type} required className={FIELD} />
+      )}
+    </label>
+  );
+}
+
+function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose: () => void }) {
+  const [done, setDone] = useState(false);
+  const isProspectus = kind === "prospectus";
+  const heading = isProspectus ? CTA.prospectus : CTA.apply;
+  const note = isProspectus
+    ? "The prospectus arrives the same day, with the full grid and current availability."
+    : "Applications are reviewed within five working days, in order received.";
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const v = (k: string) => String(data.get(k) ?? "").trim();
+    const payload: LeadPayload = isProspectus
+      ? { kind, name: v("name"), company: v("company"), role: v("role"), email: v("email") }
+      : {
+          kind,
+          name: v("name"),
+          organisation: v("organisation"),
+          title: v("title"),
+          email: v("email"),
+          evaluating: v("evaluating"),
+        };
+    await submitLead(payload);
+    setDone(true);
+  }
+
+  return (
+    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[90] bg-ink/75" />
+        <Dialog.Content
+          aria-modal="true"
+          aria-describedby={undefined}
+          className="fixed left-1/2 top-1/2 z-[100] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[540px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-ink/15 bg-paper p-8 text-ink outline-none md:p-10"
+        >
+          <div className="flex items-start justify-between gap-6">
+            <Dialog.Title className="display-sm max-w-[16ch]">{heading}</Dialog.Title>
+            <Dialog.Close className="label-lg opacity-50 transition-opacity duration-300 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
+              Close
+            </Dialog.Close>
+          </div>
+
+          {done ? (
+            <div className="mt-8 border-t border-ink/15 pt-8">
+              <p className="display-sm">Received.</p>
+              <p className={cn(BODY, "mt-4 opacity-80")}>{note}</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+              <Field label="Name" name="name" />
+              {isProspectus ? (
+                <>
+                  <Field label="Company" name="company" />
+                  <Field label="Role" name="role" />
+                </>
+              ) : (
+                <>
+                  <Field label="Organisation" name="organisation" />
+                  <Field label="Title" name="title" />
+                </>
+              )}
+              <Field label="Work email" name="email" type="email" />
+              {isProspectus ? null : (
+                <Field label="What you're evaluating" name="evaluating" textarea />
+              )}
+              <div className="pt-2">
+                <SubmitBtn>{heading}</SubmitBtn>
+              </div>
+              <p className="text-[15px] leading-relaxed opacity-70">{note}</p>
+            </form>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+/* The submit button must submit; Btn renders a plain button. Wire it via CSS-free
+   trick is worse than honesty: swap Btn for a real submit control. */
+function SubmitBtn({ children }: { children: ReactNode }) {
+  return (
+    <button
+      type="submit"
+      className="group label-lg inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:transition-none"
+    >
+      <span>{children}</span>
+      <span
+        aria-hidden
+        className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 motion-reduce:transition-none"
+      >
+        →
+      </span>
+    </button>
+  );
+}
+
+/* ----------------------------------------------------------------- shell */
+
+function SummitSection({
+  id,
+  tone = "paper",
+  className,
+  children,
+}: {
+  id?: string;
+  tone?: "paper" | "bone" | "ink";
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Section {...(id ? { id } : {})} tone={tone} className={cn("scroll-mt-20", className)}>
+      {children}
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------- nav */
+
+function SummitNav() {
+  const open = useModals();
+  const [menu, setMenu] = useState(false);
+  return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-hairline-invert bg-ink/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-6 px-6 py-4 text-paper md:px-10">
+          <a
+            href="#top"
+            className="flex shrink-0 items-center gap-3"
+            onClick={() => setMenu(false)}
+          >
+            <FinancialRailsIcon className="h-9 w-9" />
+            <span className="font-display text-sm font-extrabold uppercase leading-[0.95] tracking-tight">
+              Financial
+              <br />
+              Rails
+            </span>
+          </a>
+
+          <nav aria-label="Summit" className="hidden items-center gap-7 xl:flex">
+            {SUMMIT_NAV.map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className="label-lg opacity-70 transition-opacity duration-300 hover:opacity-100"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={() => open("apply")}
+              className="group label-lg hidden items-center gap-3 opacity-80 transition-opacity duration-300 hover:opacity-100 md:inline-flex"
+            >
+              <span>{CTA.apply}</span>
+              <span
+                aria-hidden
+                className="inline-block transition-transform duration-500 group-hover:translate-x-1.5 motion-reduce:transition-none"
+              >
+                →
+              </span>
+            </button>
+            <Btn
+              tone="solidOnDark"
+              onClick={() => open("prospectus")}
+              className="hidden md:inline-flex px-5 py-3"
+            >
+              {CTA.prospectus}
+            </Btn>
+            <button
+              type="button"
+              onClick={() => setMenu((v) => !v)}
+              aria-expanded={menu}
+              aria-label={menu ? "Close menu" : "Open menu"}
+              className="label-lg border border-hairline-invert px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-paper hover:text-ink xl:hidden"
+            >
+              {menu ? "Close" : "Menu"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Full-screen mobile navigation; items land at display-md, far above
+          the 20px floor. */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-ink text-paper transition-[opacity,visibility] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] xl:hidden motion-reduce:transition-none",
+          menu ? "visible opacity-100" : "invisible opacity-0",
+        )}
+      >
+        <nav
+          aria-label="Summit sections"
+          className="flex h-full flex-col justify-center px-6 md:px-10"
+        >
+          {SUMMIT_NAV.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              onClick={() => setMenu(false)}
+              className="display-md border-b border-hairline-invert py-4 transition-opacity duration-300 hover:opacity-60"
+            >
+              {item.label}
+            </a>
+          ))}
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Btn
+              tone="solidOnDark"
+              onClick={() => {
+                setMenu(false);
+                open("prospectus");
+              }}
+            >
+              {CTA.prospectus}
+            </Btn>
+            <Btn
+              tone="quietOnDark"
+              onClick={() => {
+                setMenu(false);
+                open("apply");
+              }}
+            >
+              {CTA.apply}
+            </Btn>
+          </div>
+        </nav>
+      </div>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------- 01 · hero */
+
+function Hero() {
+  const open = useModals();
+  return (
+    <SummitSection id="top" tone="ink">
+      <div className="pt-12 lg:pt-16">
+        <div className="grid gap-y-12 lg:grid-cols-12 lg:items-center lg:gap-x-12">
+          {/* Seven columns of text against five of photograph: the
+              proposition is the dominant element by instruction, and Archivo
+              caps need the width — at six columns the claim broke onto three
+              lines. The photo keeps a full five-column presence. */}
+          <div className="min-w-0 lg:col-span-7">
+            <Reveal>
+              <p className="label-lg accord-signal-invert">{SUMMIT.name}</p>
+            </Reveal>
+            <Reveal delay={70}>
+              {/* The proposition is the hero's dominant element — the event
+                  name above stays a label, by instruction. */}
+              {/* Authored break at the sentence boundary: the claim wraps on
+                  its own two lines, the cadence lands alone on the third —
+                  never "MONEY. ONE ROOM." sharing a line mid-sentence. */}
+              <h1 className={cn(HERO_TYPE, "mt-7")}>
+                <span className="block">The people who move the Gulf's money.</span>
+                <span className="block">One room. Two days.</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={140} className="mt-9 border-t border-hairline-invert pt-7">
+              <p className="display-sm">{SUMMIT.dateline}</p>
+            </Reveal>
+            <Reveal delay={200} className="mt-9 flex flex-wrap items-center gap-4">
+              <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
+                {CTA.prospectus}
+              </Btn>
+              <Btn tone="quietOnDark" onClick={() => open("apply")}>
+                {CTA.apply}
+              </Btn>
+            </Reveal>
+            <Reveal delay={250}>
+              <p className="mt-8 text-base leading-relaxed opacity-75">{SUMMIT.trustLine}</p>
+            </Reveal>
+          </div>
+
+          {/* The still: desktop only — on a phone the text goes straight to
+              the moving frame below. */}
+          <Reveal delay={140} className="hidden min-w-0 lg:col-span-5 lg:block">
+            <figure className="relative aspect-[4/5] w-full overflow-hidden bg-ink">
+              <SummitPhoto
+                photo={PHOTO_HERO}
+                sizes="(min-width:1024px) calc(41.6vw - 120px), 100vw"
+                loading="eager"
+              />
+            </figure>
+          </Reveal>
+        </div>
+
+        {/* The plate: a real video. Poster serves phones and reduced-motion;
+            the film runs from lg up, muted, looping, controls-free. */}
+        <Reveal delay={180} className="mt-12 lg:mt-16">
+          <figure className="relative aspect-[16/9] w-full overflow-hidden bg-ink lg:aspect-[21/9]">
+            <video
+              className="absolute inset-0 hidden h-full w-full object-cover lg:motion-safe:block"
+              src={FILM.src}
+              poster={FILM.poster}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="Highlights from previous Vostad finance events"
+            />
+            <img
+              src={FILM.poster}
+              alt="Highlights reel poster from previous Vostad finance events"
+              className="absolute inset-0 block h-full w-full object-cover lg:motion-safe:hidden"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </Reveal>
+      </div>
+    </SummitSection>
+  );
+}
+
+/* -------------------------------------------------- sections 02–11 follow */
+
+function TheGap() {
+  return null;
+}
+function TheRoom() {
+  return null;
+}
+function WhoIsInIt() {
+  return null;
+}
+function HowItWorks() {
+  return null;
+}
+function TheDifference() {
+  return null;
+}
+function TheAgenda() {
+  return null;
+}
+function TheVoices() {
+  return null;
+}
+function TheWindow() {
+  return null;
+}
+function Partnership() {
+  return null;
+}
+function AboutContact() {
+  return null;
+}
+function FinalBand() {
+  return null;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+function SummitFooter() {
+  return (
+    <footer className="border-t border-hairline-invert bg-ink text-paper">
+      <div className="px-6 py-16 md:px-10 lg:px-16">
+        <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-12">
+          <div className="lg:col-span-5">
+            <div className="flex items-center gap-3">
+              <FinancialRailsIcon className="h-9 w-9" />
+              <span className="font-display text-sm font-extrabold uppercase leading-[0.95] tracking-tight">
+                Financial
+                <br />
+                Rails
+              </span>
+            </div>
+            <p className="mt-6 max-w-[38ch] text-base leading-relaxed opacity-75">{FOOTER.line}</p>
+          </div>
+          <div className="lg:col-span-7">
+            <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-3">
+              {SUMMIT_NAV.map((item) => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className="font-mono text-[14px] uppercase tracking-[0.16em] opacity-70 transition-opacity duration-300 hover:opacity-100"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+            <p className="mt-8 text-base opacity-75">
+              <a
+                href={`mailto:${FOOTER.email}`}
+                className="transition-opacity duration-300 hover:opacity-70"
+              >
+                {FOOTER.email}
+              </a>
+              {" · "}
+              {FOOTER.location}
+            </p>
+          </div>
+        </div>
+        <div className="mt-12 flex flex-col gap-3 border-t border-hairline-invert pt-7 md:flex-row md:items-center md:justify-between">
+          {/* Privacy and Terms have no routes yet, so they are inert text —
+              a link that 404s would be worse than a word that waits. */}
+          <p className="text-sm opacity-60">Privacy · Terms · {FOOTER.legal}</p>
+          <p className="font-mono text-[14px] uppercase tracking-[0.16em] opacity-60">
+            {FOOTER.evidence}
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ------------------------------------------------------------------ page */
+
+export function FinancialRailsSummit() {
+  const [modal, setModal] = useState<ModalKind>(null);
+  const openRef = useRef<(k: Exclude<ModalKind, null>) => void>(() => {});
+  openRef.current = (k) => setModal(k);
+
+  return (
+    <ModalCtx.Provider value={(k) => openRef.current(k)}>
+      <div className="summit-scope">
+        <SummitNav />
+        <main>
+          <Hero />
+          <TheGap />
+          <TheRoom />
+          <WhoIsInIt />
+          <HowItWorks />
+          <TheDifference />
+          <TheAgenda />
+          <TheVoices />
+          <TheWindow />
+          <Partnership />
+          <AboutContact />
+          <FinalBand />
+        </main>
+        <SummitFooter />
+        {modal ? <LeadModal kind={modal} onClose={() => setModal(null)} /> : null}
+      </div>
+    </ModalCtx.Provider>
+  );
+}
