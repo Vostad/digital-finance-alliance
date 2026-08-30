@@ -105,19 +105,19 @@ export const AUDIENCE = {
   headline: "The audience you'd build by hand, if you had six months and a licence register.",
   groups: [
     {
-      role: "Heads of Payments & Transaction Banking",
+      role: "Heads of payments & transaction banking",
       line: "From the UAE's 61 licensed banks and their GCC peers.",
     },
-    { role: "Group Treasurers", line: "The region's flagship corporates." },
+    { role: "Group treasurers", line: "The region's flagship corporates." },
     {
-      role: "CEOs of Licensed Payment Institutions",
+      role: "CEOs of licensed payment institutions",
       line: "30+ PSPs, 60+ exchange houses and stored-value licensees.",
     },
     {
-      role: "Infrastructure Fintech Founders",
+      role: "Infrastructure fintech founders",
       line: "Scaling out of DIFC and ADGM — 1,900+ firms.",
     },
-    { role: "Scheme & FMI Leadership", line: "The operators of the rails themselves." },
+    { role: "Scheme & FMI leadership", line: "The operators of the rails themselves." },
   ],
   /* The section closes on an invitation, not an application process. The
      qualification bar, the target-composition split, the review window and
@@ -134,12 +134,12 @@ export const AGENDA = {
   label: "The Agenda",
   headline: "Two days on the systems that move money. Nothing else.",
   tracks: [
-    { title: "Cross-Border & Corridors", line: "The $58bn question" },
-    { title: "Instant & National Rails", line: "Aani, Jaywan, Buna, UPI" },
-    { title: "The Correspondent Stack", line: "ISO 20022, Swift, bank-to-bank" },
-    { title: "Corporate Treasury", line: "Cash, liquidity, FX" },
-    { title: "Open Finance & Embedded Rails", line: "The UAE framework, A2A" },
-    { title: "Regulated Digital Money", line: "Dirham stablecoins, tokenised settlement" },
+    { title: "Cross-border & corridors", line: "The $58bn question" },
+    { title: "Instant & national rails", line: "Aani, Jaywan, Buna, UPI" },
+    { title: "The correspondent stack", line: "ISO 20022, Swift, bank-to-bank" },
+    { title: "Corporate treasury", line: "Cash, liquidity, FX" },
+    { title: "Open finance & embedded rails", line: "The UAE framework, A2A" },
+    { title: "Regulated digital money", line: "Dirham stablecoins, tokenised settlement" },
   ],
   format: "22 curated sessions · 6 closed-door roundtables · 2 private dinners · Two days",
   refusals: ["No consumer fintech.", "No crypto trading.", "No AI theatre."],
@@ -158,7 +158,7 @@ export const AGENDA = {
 export const VOICES = {
   label: "The Voices",
   headline: "You will be in the room with the people who matter.",
-  subhead: "Previous Speakers",
+  subhead: "Previous speakers",
   speakers: [
     {
       name: "Dr. Marwan Alzarouni",
@@ -205,7 +205,7 @@ export const VOICES = {
   ],
   footnote:
     "Selected speakers from previous Vostad finance-sector events. Titles reflect roles at the time of participation. Financial Rails 2026 faculty will be announced separately.",
-  institutionsHeading: "Institutions Represented on Our Stages",
+  institutionsHeading: "Institutions represented on our stages",
   institutions: [
     "JPMorgan Chase",
     "QNB",
@@ -247,19 +247,19 @@ export const WINDOW = {
       title: "ISO 20022",
       line: "Hard deadlines in 2026, 2027 and 2028. Every bank mid-migration.",
     },
-    { title: "Open Finance", line: "Framework live. First banks licensed." },
-    { title: "UPI · Buna · Dirham Stablecoins", line: "Three new cross-border rails." },
+    { title: "Open finance", line: "Framework live. First banks licensed." },
+    { title: "UPI · Buna · dirham stablecoins", line: "Three new cross-border rails." },
     { title: "Sibos Dubai 2029", line: "Swift is coming. We convene first." },
   ],
   cityHeading: "The City",
   city: [
-    { title: "The Licensed Base", line: "61 banks. 30+ PSPs. 60+ exchange houses." },
+    { title: "The licensed base", line: "61 banks. 30+ PSPs. 60+ exchange houses." },
     {
-      title: "The Decision-Makers",
+      title: "The decision-makers",
       line: "Vendor regional headquarters, the region's largest acquirer and the treasury community.",
     },
     {
-      title: "The Reach",
+      title: "The reach",
       line: "DXB. One of the world's busiest international airports. 270+ destinations.",
     },
   ],
@@ -282,7 +282,7 @@ export const ABOUT = {
     { value: "55+", line: "Countries" },
   ],
   body: "Vostad has convened conferences, forums and executive programmes across finance, technology, energy and industry since 2014.",
-  sponsorsHeading: "Selected Series Sponsors",
+  sponsorsHeading: "Selected series sponsors",
   sponsors: [
     "HSBC",
     "Visa",

@@ -296,8 +296,8 @@
    capped at 280ms, against the site default of 900ms. Unlayered, so it wins
    over the layered utility without touching any other page. */
 .summit-scope .reveal {
-  transform: translate3d(0, 14px, 0);
-  transition-duration: 0.28s, 0.28s;
+  transform: translate3d(0, 24px, 0);
+  transition-duration: 0.7s, 0.7s;
 }
 
 /* And the rest state must out-specify that override, or the page never
@@ -306,6 +306,32 @@
    kills `position: sticky` inside it. */
 .summit-scope .reveal-in {
   transform: none;
+}
+
+/* The hero's slow zoom. One-way and very slow — the frame is never still,
+   but it never appears to move either. `forwards` holds the end state so it
+   settles rather than snapping back. Reduced motion drops it entirely. */
+@keyframes summit-slow-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.085);
+  }
+}
+
+.summit-zoom {
+  animation: summit-slow-zoom 30s cubic-bezier(0.33, 0, 0.15, 1) forwards;
+  transform-origin: 50% 45%;
+}
+
+/* Portrait dissolve: the roster's boxy crop, removed. The image is masked
+   to nothing at its lower edge so it bleeds into the ink ground instead of
+   ending on a hard line. Mask, not a gradient overlay, so it works over the
+   section's own background rather than needing to match it. */
+.summit-portrait-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
 }
 
 @utility marquee-track {
@@ -331,6 +357,9 @@
     transition: none;
   }
   .marquee-track {
+    animation: none;
+  }
+  .summit-zoom {
     animation: none;
   }
 }

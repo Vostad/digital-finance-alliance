@@ -9,6 +9,13 @@ type SectionProps = {
    * floor passes its own. Additive only — nothing here changes without it.
    */
   labelClassName?: string;
+  /**
+   * Extra classes for the CONTENT column, merged after the default padding
+   * so a page can set its own rhythm. Additive: absent, every existing page
+   * keeps the shipped `px-6 py-20 …` exactly. `className` cannot do this —
+   * it lands on the <section>, and the padding lives one level in.
+   */
+  contentClassName?: string;
   children: ReactNode;
   tone?: "paper" | "bone" | "ink";
   className?: string;
@@ -23,6 +30,7 @@ type SectionProps = {
 export function Section({
   label,
   labelClassName = "label",
+  contentClassName,
   children,
   tone = "paper",
   className,
@@ -62,7 +70,11 @@ export function Section({
             without this the clipped marquee track inflates the column — and with
             it the page — at every breakpoint. */}
         <div
-          className={cn("min-w-0", flush ? "" : "px-6 py-20 md:px-12 md:py-28 lg:px-16 lg:py-32")}
+          className={cn(
+            "min-w-0",
+            flush ? "" : "px-6 py-20 md:px-12 md:py-28 lg:px-16 lg:py-32",
+            contentClassName,
+          )}
         >
           {children}
         </div>

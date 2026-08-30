@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { Section } from "@/components/site/Section";
@@ -38,9 +46,19 @@ import {
 
 /* ------------------------------------------------------------ type scale */
 
-/* The hero proposition — the page's largest typographic moment. */
-const HERO_TYPE =
-  "font-display text-[clamp(1.55rem,7vw,3.3rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.03em] lg:text-[clamp(2.2rem,3.5vw,3.3rem)]";
+/**
+ * THE CASE RULE, which is this page's whole readability strategy.
+ *
+ * Uppercase survives in exactly two roles: the DISPLAY VOICE — masthead,
+ * section headlines, statement stacks — and the MONO MARKERS that are read
+ * as position rather than as language: the chapter rail, section numerals,
+ * nav links and button labels, all set at 13px with 0.18em tracking.
+ *
+ * Everything a reader parses as a sentence is sentence case. Names, track
+ * titles, block subheads, descriptors, footnotes, captions, the whole of
+ * the body. Nothing else changes: same Archivo, same IBM Plex, same weights,
+ * same ink/paper/bone tokens, same hairlines, same periwinkle accent.
+ */
 
 /* Every section headline sits one confident step below the hero. */
 const SECTION_TYPE =
@@ -50,8 +68,40 @@ const SECTION_TYPE =
 const STATEMENT_TYPE =
   "font-display text-[clamp(1.55rem,5.8vw,2.2rem)] font-extrabold uppercase leading-[1.06] tracking-[-0.028em] lg:text-[clamp(1.9rem,3.1vw,2.9rem)]";
 
-/* Body copy: 17px on mobile, 18px from lg — the V4 floors, exactly. */
-const BODY = "text-[17px] leading-[1.6] lg:text-lg";
+/* Sentence-case display: the site's own Archivo at display weight with
+   `uppercase` withheld. Replaces `display-sm`/`display-md` everywhere those
+   were carrying language — a person's name, a track title, a block subhead.
+   Page-scoped constants, so the shared utilities are untouched and every
+   other page renders exactly as before. */
+const SUBHEAD =
+  "font-display text-[1.25rem] font-bold leading-[1.3] tracking-[-0.012em] lg:text-[1.35rem]";
+const SUBHEAD_LG =
+  "font-display text-[1.4rem] font-bold leading-[1.25] tracking-[-0.015em] lg:text-[1.65rem]";
+
+/* The mono block-label, one case down: introduces a block without shouting
+   at it. Same family, same 13px+ floor, tracking relaxed for sentence case. */
+const SUBLABEL = "font-mono text-[0.9375rem] font-medium tracking-[0.08em]";
+
+/* Body copy: 17px floor, 1.7 leading — comfortably past the brief's 16px
+   and 1.7 minimums at every width. */
+const BODY = "text-[17px] leading-[1.7] lg:text-lg";
+
+/* Secondary prose: footnotes, captions, meta. Never below the 16px floor. */
+const BODY_SM = "text-base leading-[1.7]";
+
+/* The measure: 60–70 actual characters per line, the band where the eye
+   finds the next line without hunting for it.
+
+   NOT `max-w-[66ch]`. The `ch` unit is the advance of "0", roughly 0.6em in
+   IBM Plex Sans, while an average lowercase character is nearer 0.5em — so
+   66ch sets about 79 characters, a fifth past the target. 56ch measures out
+   at 64–67, verified in the rendered DOM rather than assumed. */
+const MEASURE = "max-w-[56ch]";
+
+/* The page's vertical rhythm. 112px of padding at the narrowest width and
+   160px from lg, top and bottom, so no two sections are ever closer than
+   224px and every boundary is a genuine pause. */
+const SECTION_PAD = "px-6 py-28 md:px-14 md:py-32 lg:px-20 lg:py-40";
 
 /* ------------------------------------------------------------ photography */
 
@@ -118,6 +168,89 @@ function SummitPhoto({
         )}
       />
     </picture>
+  );
+}
+
+/* -------------------------------------------------------------- count-up */
+
+/* useLayoutEffect warns when React runs it on the server, and this one must
+   run before the browser paints. Same hook, chosen per environment. */
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/**
+ * A figure that counts up once, the first time it enters the viewport.
+ *
+ * The authored string is the source of truth — "$58B", "~220", "1,200+" —
+ * so the prefix and suffix are preserved verbatim and only the numeral
+ * moves. Grouping is re-applied every frame when the authored value carried
+ * a comma, so 1,200 never briefly reads as 1200.
+ *
+ * The FINAL value is what renders on the server and sits in the HTML, so the
+ * number is right with JavaScript off and right for a crawler. The zeroing
+ * happens in a layout effect — after hydration, before the first paint — so
+ * the reader never sees the answer flash before the count.
+ */
+function CountUp({ value, className }: { value: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(value);
+
+  useIsomorphicLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const match = value.match(/\d[\d,]*/);
+    if (!match) return;
+    const digits = match[0];
+    const at = match.index ?? 0;
+    const target = Number(digits.replace(/,/g, ""));
+    if (!Number.isFinite(target) || target === 0) return;
+
+    const prefix = value.slice(0, at);
+    const suffix = value.slice(at + digits.length);
+    const grouped = digits.includes(",");
+    const render = (n: number) =>
+      `${prefix}${grouped ? n.toLocaleString("en-US") : String(n)}${suffix}`;
+
+    setShown(render(0));
+
+    let frame = 0;
+    let start = 0;
+    const DURATION = 1400;
+    const step = (now: number) => {
+      if (!start) start = now;
+      const t = Math.min(1, (now - start) / DURATION);
+      /* easeOutExpo: most of the distance early, then a long settle, so the
+         final figure is legible well before the motion actually stops. */
+      const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      setShown(render(Math.round(target * eased)));
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            observer.disconnect();
+            frame = requestAnimationFrame(step);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.2 },
+    );
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [value]);
+
+  /* tabular-nums: proportional digits change width as they climb, and a
+     figure this large would visibly jitter for the whole 1.4 seconds. */
+  return (
+    <span ref={ref} className={cn("tabular-nums", className)}>
+      {shown}
+    </span>
   );
 }
 
@@ -242,7 +375,7 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
           className="fixed left-1/2 top-1/2 z-[100] max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[540px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-ink/15 bg-paper p-8 text-ink outline-none md:p-10"
         >
           <div className="flex items-start justify-between gap-6">
-            <Dialog.Title className="display-sm max-w-[16ch]">{heading}</Dialog.Title>
+            <Dialog.Title className={cn(SUBHEAD_LG, "max-w-[16ch]")}>{heading}</Dialog.Title>
             <Dialog.Close className="label-lg opacity-50 transition-opacity duration-300 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
               Close
             </Dialog.Close>
@@ -250,8 +383,8 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
 
           {done ? (
             <div className="mt-8 border-t border-ink/15 pt-8">
-              <p className="display-sm">Received.</p>
-              <p className={cn(BODY, "mt-4 opacity-80")}>{note}</p>
+              <p className={SUBHEAD_LG}>Received.</p>
+              <p className={cn(BODY, MEASURE, "mt-5 opacity-80")}>{note}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -274,7 +407,7 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
               <div className="pt-2">
                 <SubmitBtn>{heading}</SubmitBtn>
               </div>
-              <p className="text-[15px] leading-relaxed opacity-70">{note}</p>
+              <p className={cn(BODY_SM, MEASURE, "opacity-70")}>{note}</p>
             </form>
           )}
         </Dialog.Content>
@@ -330,6 +463,7 @@ function SummitSection({
       {...(id ? { id } : {})}
       label={chapter}
       labelClassName="label-lg"
+      contentClassName={SECTION_PAD}
       tone={tone}
       className={cn("scroll-mt-20", className)}
     >
@@ -381,7 +515,7 @@ function SummitNav() {
             <button
               type="button"
               onClick={() => open("apply")}
-              className="group label-lg hidden items-center gap-3 opacity-80 transition-opacity duration-300 hover:opacity-100 md:inline-flex"
+              className="group label-lg hidden items-center gap-3 whitespace-nowrap opacity-80 transition-opacity duration-300 hover:opacity-100 md:inline-flex"
             >
               <span>{CTA.apply}</span>
               <span
@@ -548,12 +682,12 @@ function Hero() {
             {/* THE ACTION AREA. One rule opens it, and the date and the two
                 doors sit inside that one block — the rule reads as the top of
                 a single group rather than a divider between two. */}
-            <Reveal delay={190} className="mt-11 border-t border-hairline-invert pt-7 lg:mt-14">
-              <p className="display-sm opacity-95">{SUMMIT.dateline}</p>
+            <Reveal delay={190} className="mt-14 border-t border-hairline-invert pt-9 lg:mt-16">
+              <p className={cn(SUBHEAD_LG, "opacity-95")}>{SUMMIT.dateline}</p>
             </Reveal>
             {/* One solid door; the second is a quiet text door, related but
                 clearly subordinate. */}
-            <Reveal delay={240} className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-5">
+            <Reveal delay={240} className="mt-8 flex flex-wrap items-center gap-5">
               <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
                 {CTA.prospectus}
               </Btn>
@@ -572,9 +706,7 @@ function Hero() {
               </button>
             </Reveal>
             <Reveal delay={280}>
-              <p className="mt-10 max-w-[42ch] text-[17px] leading-relaxed opacity-75">
-                {SUMMIT.trustLine}
-              </p>
+              <p className={cn(BODY, "mt-12 max-w-[46ch] opacity-75")}>{SUMMIT.trustLine}</p>
             </Reveal>
           </div>
 
@@ -599,7 +731,7 @@ function Hero() {
                 photo={PHOTO_HERO}
                 sizes="(min-width:1024px) calc(41.6vw - 60px), 100vw"
                 loading="eager"
-                className="object-[46%_50%]"
+                className="summit-zoom object-[46%_50%]"
               />
             </figure>
           </Reveal>
@@ -674,13 +806,11 @@ function TheMarket() {
 
           {/* THE SCALE. One figure, full measure, on its own rules. */}
           <Reveal delay={120}>
-            <div className="mt-12 border-y border-hairline py-9 lg:mt-14 lg:py-10">
+            <div className="mt-16 border-y border-hairline py-14 lg:mt-20 lg:py-16">
               <p className="font-display text-[clamp(3.4rem,15vw,4.75rem)] font-extrabold leading-[0.8] tracking-[-0.045em] lg:text-[clamp(4rem,7.6vw,6rem)]">
-                {MARKET.primaryStat.value}
+                <CountUp value={MARKET.primaryStat.value} />
               </p>
-              <p className="mt-5 text-[17px] leading-relaxed opacity-75 lg:text-lg">
-                {MARKET.primaryStat.line}
-              </p>
+              <p className={cn(BODY, MEASURE, "mt-7 opacity-70")}>{MARKET.primaryStat.line}</p>
             </div>
           </Reveal>
 
@@ -690,14 +820,12 @@ function TheMarket() {
               {MARKET.supportingStats.map((stat) => (
                 <div
                   key={stat.value}
-                  className="border-b border-hairline py-8 last:border-b-0 sm:border-b-0 sm:pr-8 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-8 lg:py-9"
+                  className="border-b border-hairline py-12 last:border-b-0 sm:border-b-0 sm:pr-12 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-12 lg:py-14"
                 >
                   <p className="font-display text-[clamp(2.1rem,8vw,2.8rem)] font-extrabold leading-[0.85] tracking-[-0.04em] lg:text-[clamp(2.25rem,4.2vw,3.4rem)]">
-                    {stat.value}
+                    <CountUp value={stat.value} />
                   </p>
-                  <p className="mt-4 max-w-[30ch] text-[17px] leading-relaxed opacity-75 lg:text-lg">
-                    {stat.line}
-                  </p>
+                  <p className={cn(BODY, "mt-6 max-w-[34ch] opacity-70")}>{stat.line}</p>
                 </div>
               ))}
             </div>
@@ -705,7 +833,7 @@ function TheMarket() {
 
           {/* THE CONCLUSION — momentum, and the hand-off to 03. */}
           <Reveal delay={220}>
-            <div className="accord-hairline mt-14 border-t-2 pt-9 lg:mt-16">
+            <div className="accord-hairline mt-20 border-t-2 pt-12 lg:mt-24 lg:pt-14">
               {MARKET.closing.map((line, i) => (
                 <p
                   key={line}
@@ -764,13 +892,11 @@ function TheRoom() {
           {/* THE CAP. The lead figure, full measure, on its own rules —
               02's primary-statistic block exactly, one scale step down. */}
           <Reveal delay={120}>
-            <div className="mt-12 border-y border-hairline py-9 lg:mt-14 lg:py-10">
+            <div className="mt-16 border-y border-hairline py-14 lg:mt-20 lg:py-16">
               <p className="font-display text-[clamp(3rem,13vw,4rem)] font-extrabold leading-[0.8] tracking-[-0.045em] lg:text-[clamp(3.2rem,4.6vw,4.6rem)]">
-                {ROOM.primaryStat.value}
+                <CountUp value={ROOM.primaryStat.value} />
               </p>
-              <p className="mt-5 text-[17px] leading-relaxed opacity-75 lg:text-lg">
-                {ROOM.primaryStat.line}
-              </p>
+              <p className={cn(BODY, MEASURE, "mt-7 opacity-70")}>{ROOM.primaryStat.line}</p>
             </div>
           </Reveal>
 
@@ -781,14 +907,12 @@ function TheRoom() {
               {ROOM.supportingStats.map((stat) => (
                 <div
                   key={stat.value}
-                  className="border-b border-hairline py-8 last:border-b-0 sm:border-b-0 sm:pr-8 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-8 lg:py-9"
+                  className="border-b border-hairline py-12 last:border-b-0 sm:border-b-0 sm:pr-12 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-12 lg:py-14"
                 >
                   <p className="font-display text-[clamp(1.9rem,7.4vw,2.4rem)] font-extrabold leading-[0.85] tracking-[-0.04em] lg:text-[clamp(2rem,2.7vw,2.8rem)]">
-                    {stat.value}
+                    <CountUp value={stat.value} />
                   </p>
-                  <p className="mt-4 max-w-[30ch] text-[17px] leading-relaxed opacity-75 lg:text-lg">
-                    {stat.line}
-                  </p>
+                  <p className={cn(BODY, "mt-6 max-w-[34ch] opacity-70")}>{stat.line}</p>
                 </div>
               ))}
             </div>
@@ -797,11 +921,11 @@ function TheRoom() {
           {/* THE POLICY — 02's closing block: one accent rule, then the
               statement. Three operating principles, generous rhythm. */}
           <Reveal delay={220}>
-            <div className="accord-hairline mt-14 border-t-2 pt-9 lg:mt-16 lg:pt-10">
+            <div className="accord-hairline mt-20 border-t-2 pt-12 lg:mt-24 lg:pt-14">
               {ROOM.philosophy.map((line) => (
                 <p
                   key={line}
-                  className="font-display py-2 text-[clamp(1.5rem,6.2vw,2.3rem)] font-extrabold uppercase leading-[1.06] tracking-[-0.03em] lg:py-2.5 lg:text-[clamp(1.9rem,3.1vw,2.9rem)]"
+                  className="font-display py-3 text-[clamp(1.5rem,6.2vw,2.3rem)] font-extrabold uppercase leading-[1.06] tracking-[-0.03em] lg:py-4 lg:text-[clamp(1.9rem,3.1vw,2.9rem)]"
                 >
                   {line}
                 </p>
@@ -864,7 +988,7 @@ function ThePeople() {
           content width, 16/9 at its native ratio so the two figures are
           uncropped, tightening toward the subjects on narrower screens. */}
       <Reveal delay={120}>
-        <figure className="relative mt-12 aspect-[4/3] w-full overflow-hidden bg-ink sm:aspect-[16/10] lg:mt-16 lg:aspect-[16/9]">
+        <figure className="relative mt-16 aspect-[4/3] w-full overflow-hidden bg-ink sm:aspect-[16/10] lg:mt-20 lg:aspect-[16/9]">
           <SummitPhoto
             photo={PHOTO_NETWORKING}
             sizes="(min-width:1024px) calc(100vw - 224px), 100vw"
@@ -874,21 +998,24 @@ function ThePeople() {
 
       {/* THE INDEX. */}
       <Reveal delay={170}>
-        <div className="mt-14 grid grid-cols-1 border-t border-hairline-invert sm:grid-cols-2 lg:mt-16">
+        <div className="mt-16 grid grid-cols-1 border-t border-hairline-invert sm:grid-cols-2 lg:mt-20">
           {AUDIENCE.groups.map((group, i) => (
             <div
               key={group.role}
               className={cn(
-                "min-w-0 border-b border-hairline-invert py-8 lg:py-10",
+                /* The five constituencies breathe: 48px of air above and
+                   below each entry at lg, against the 32px they had. A list
+                   this short can afford to be read slowly. */
+                "min-w-0 border-b border-hairline-invert py-10 lg:py-14",
                 /* The vertical rule falls between the two columns only, and
                    the fifth item spans both so it closes the register. */
-                "sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline-invert sm:[&:nth-child(even)]:pl-10 sm:[&:nth-child(odd)]:pr-10",
-                i === 4 && "sm:col-span-2 sm:pr-0",
+                "sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline-invert sm:[&:nth-child(even)]:pl-12 sm:[&:nth-child(odd)]:pr-12 lg:[&:nth-child(even)]:pl-16 lg:[&:nth-child(odd)]:pr-16",
+                i === 4 && "sm:col-span-2 sm:pr-0 lg:pr-0",
               )}
             >
               <p className="label-lg accord-signal-invert">{String(i + 1).padStart(2, "0")}</p>
-              <h3 className="display-sm mt-5 max-w-[26ch]">{group.role}</h3>
-              <p className={cn(BODY, "mt-3 max-w-[46ch] opacity-75")}>{group.line}</p>
+              <h3 className={cn(SUBHEAD, "mt-6 max-w-[30ch]")}>{group.role}</h3>
+              <p className={cn(BODY, MEASURE, "mt-4 opacity-70")}>{group.line}</p>
             </div>
           ))}
         </div>
@@ -896,10 +1023,10 @@ function ThePeople() {
 
       {/* THE INVITATION — a door, not a form. */}
       <Reveal delay={220}>
-        <div className="mt-14 lg:mt-16">
+        <div className="mt-20 lg:mt-24">
           <p className={cn(STATEMENT_TYPE, "max-w-[22ch]")}>{AUDIENCE.closingHeadline}</p>
-          <p className={cn(BODY, "mt-5 max-w-[42ch] opacity-80")}>{AUDIENCE.closingLine}</p>
-          <div className="mt-9">
+          <p className={cn(BODY, MEASURE, "mt-6 opacity-80")}>{AUDIENCE.closingLine}</p>
+          <div className="mt-10">
             <Btn tone="solidOnDark" onClick={() => open("apply")}>
               {CTA.apply}
             </Btn>
@@ -910,9 +1037,16 @@ function ThePeople() {
   );
 }
 
-/* 07 · THE AGENDA — six tracks as a ledger against a tall stage photograph;
-   the format line runs as a full-width band, and the refusal triplet closes
-   the programme's borders. */
+/* 05 · THE AGENDA — the programme as one vertical list.
+   ------------------------------------------------------------------------
+   It ran as a six-item column beside a sticky stage photograph, which is
+   two dense things fighting for the same band: the tracks got half the
+   measure, and every title-plus-line landed in a 24px row. The list now
+   takes the full width, one item per row, a hairline between and nothing
+   else — and the photograph moves BELOW it, where it reads as a held breath
+   between the programme and the terms it runs on rather than as a wall
+   beside the text. Titles go up a step so the hierarchy inside a row is
+   legible without a rule to enforce it. */
 function TheAgenda() {
   return (
     <SummitSection id="agenda" chapter="05 — The Agenda">
@@ -920,59 +1054,61 @@ function TheAgenda() {
         <Eyebrow index="05" label="The Agenda" />
       </Reveal>
       <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{AGENDA.headline}</h2>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[24ch]")}>{AGENDA.headline}</h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-y-12 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
-        <div className="min-w-0 lg:col-span-6">
-          <div className="border-t border-hairline">
-            {AGENDA.tracks.map((track, i) => (
-              <Reveal key={track.title} delay={100 + i * 40}>
-                <div className="grid grid-cols-[2.6rem_1fr] items-baseline gap-x-5 border-b border-hairline py-6 lg:py-7">
-                  <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
-                  <div className="min-w-0">
-                    <h3 className="display-sm">{track.title}</h3>
-                    <p className={cn(BODY, "mt-2 opacity-75")}>{track.line}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-
-        <Reveal delay={140} className="min-w-0 lg:col-span-6">
-          <figure className="relative aspect-[4/5] w-full overflow-hidden bg-bone lg:sticky lg:top-28 lg:h-full lg:max-h-[720px]">
-            {/* The master is 16:9 with the speaker at frame-left; a centred 4:5
-                crop keeps only the screen. Weight the crop toward the podium
-                so the photograph proves a person on a stage, not a logo. */}
-            <SummitPhoto
-              photo={PHOTO_STAGE}
-              sizes="(min-width:1024px) calc(50vw - 136px), 100vw"
-              className="object-[18%_center]"
-            />
-          </figure>
-        </Reveal>
+      <div className="mt-16 border-t border-hairline lg:mt-20">
+        {AGENDA.tracks.map((track, i) => (
+          <Reveal key={track.title} delay={80 + i * 45}>
+            {/* The numeral holds its own track from sm, so the titles align
+                on a single edge down the whole list. Below that it stacks —
+                a 4rem gutter on a 340px screen is a third of the measure. */}
+            <div className="grid grid-cols-1 gap-y-3 border-b border-hairline py-10 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-x-8 lg:grid-cols-[6rem_minmax(0,1fr)] lg:gap-x-12 lg:py-14">
+              <p className="label-lg accord-signal sm:pt-2">{String(i + 1).padStart(2, "0")}</p>
+              <div className="min-w-0">
+                <h3 className={SUBHEAD_LG}>{track.title}</h3>
+                <p className={cn(BODY, MEASURE, "mt-4 opacity-70")}>{track.line}</p>
+              </div>
+            </div>
+          </Reveal>
+        ))}
       </div>
 
-      {/* The programme's shape, at band scale — structure, not footnote. */}
+      <Reveal delay={140}>
+        {/* Full width and shallow: a band, not a block. The master is 16:9
+            with the speaker at frame-left, so a 21:9 crop only takes from
+            the top and bottom — the vertical bias keeps the podium and the
+            heads in shot rather than the ceiling. */}
+        <figure className="relative mt-16 aspect-[4/3] w-full overflow-hidden bg-bone sm:aspect-[16/10] lg:mt-20 lg:aspect-[21/9]">
+          <SummitPhoto
+            photo={PHOTO_STAGE}
+            sizes="(min-width:1024px) calc(100vw - 224px), 100vw"
+            className="object-[22%_38%]"
+          />
+        </figure>
+      </Reveal>
+
+      {/* The programme's shape. Sentence case at subhead scale: it is a
+          description of the format, and it was being shouted. */}
       <Reveal delay={180}>
-        <p className="mt-14 border-y border-hairline py-6 font-display text-[clamp(1rem,2.6vw,1.2rem)] font-bold uppercase leading-[1.4] tracking-[-0.01em] lg:mt-16 lg:text-[clamp(1.05rem,1.5vw,1.4rem)]">
+        <p
+          className={cn(
+            SUBHEAD,
+            "mt-16 max-w-[54ch] border-y border-hairline py-10 leading-[1.5] lg:mt-20 lg:py-12",
+          )}
+        >
           {AGENDA.format}
         </p>
       </Reveal>
 
       <Reveal delay={220}>
-        <div className="mt-12">
+        <div className="mt-16 lg:mt-20">
           {AGENDA.refusals.map((line) => (
-            <p key={line} className={STATEMENT_TYPE}>
+            <p key={line} className={cn(STATEMENT_TYPE, "py-1.5")}>
               {line}
             </p>
           ))}
-          <p
-            className={cn(
-              "accord-signal mt-6 font-display text-[clamp(1.05rem,2.6vw,1.3rem)] font-bold uppercase tracking-[-0.01em] lg:text-[clamp(1.1rem,1.6vw,1.5rem)]",
-            )}
-          >
+          <p className={cn(BODY, MEASURE, "accord-signal mt-8 text-lg lg:text-xl leading-[1.6]")}>
             {AGENDA.refusalClose}
           </p>
         </div>
@@ -980,6 +1116,7 @@ function TheAgenda() {
     </SummitSection>
   );
 }
+
 /* 08 · THE VOICES — people first, logos as seasoning. Seven approved
    portraits on a four-column grid whose eighth cell carries the footnote,
    so the roster reads as a designed wall rather than a ten-grid with
@@ -994,15 +1131,15 @@ function TheVoices() {
         <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[26ch]")}>{VOICES.headline}</h2>
       </Reveal>
 
-      <Reveal delay={130} className="mt-14 border-t border-hairline-invert pt-8 lg:mt-16">
-        <h3 className="label-lg accord-signal-invert">{VOICES.subhead}</h3>
+      <Reveal delay={130} className="mt-16 border-t border-hairline-invert pt-10 lg:mt-20">
+        <h3 className={cn(SUBLABEL, "accord-signal-invert")}>{VOICES.subhead}</h3>
       </Reveal>
 
-      <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-8">
+      <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-16 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-10">
         {VOICES.speakers.map((person, i) => (
           <Reveal key={person.name} delay={120 + (i % 4) * 50}>
             <figure className="group">
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink/60">
+              <div className="summit-portrait-fade relative aspect-[4/5] w-full overflow-hidden">
                 <picture className="contents">
                   <source
                     type="image/avif"
@@ -1020,10 +1157,13 @@ function TheVoices() {
                   />
                 </picture>
               </div>
-              <figcaption className="mt-4">
-                <p className="display-sm leading-tight">{person.name}</p>
-                <p className="mt-1.5 text-[15px] leading-snug opacity-70">{person.title}</p>
-                <p className="accord-signal-invert mt-0.5 text-[15px] leading-snug">{person.org}</p>
+              {/* The name is a name, not a headline: sentence case, and a
+                  real gap before the title so the two stop reading as one
+                  four-line block. */}
+              <figcaption className="mt-5">
+                <p className={SUBHEAD}>{person.name}</p>
+                <p className={cn(BODY_SM, "mt-4 opacity-70")}>{person.title}</p>
+                <p className={cn(BODY_SM, "accord-signal-invert mt-1.5")}>{person.org}</p>
               </figcaption>
             </figure>
           </Reveal>
@@ -1031,7 +1171,7 @@ function TheVoices() {
         {/* The eighth cell: the roster's own footnote, set as part of the
             wall rather than dropped beneath it. */}
         <Reveal delay={320} className="col-span-2 self-end md:col-span-3 lg:col-span-1">
-          <p className="border-t border-hairline-invert pt-5 text-[15px] leading-relaxed opacity-65">
+          <p className={cn(BODY_SM, "border-t border-hairline-invert pt-6 opacity-65")}>
             {VOICES.footnote}
           </p>
         </Reveal>
@@ -1040,9 +1180,9 @@ function TheVoices() {
       {/* Approved commercial partner logos only — the block does not exist
           until an allowlist does. */}
       {PARTNER_LOGOS.length > 0 ? (
-        <Reveal delay={200} className="mt-16 border-t border-hairline-invert pt-8">
-          <h3 className="label-lg accord-signal-invert">Partners Across Our Platforms</h3>
-          <div className="mt-8 flex flex-wrap items-center gap-10">
+        <Reveal delay={200} className="mt-20 border-t border-hairline-invert pt-10">
+          <h3 className={cn(SUBLABEL, "accord-signal-invert")}>Partners across our platforms</h3>
+          <div className="mt-10 flex flex-wrap items-center gap-10">
             {PARTNER_LOGOS.map((logo) => (
               <img key={logo.name} src={logo.src} alt={logo.name} className="h-8 w-auto" />
             ))}
@@ -1050,21 +1190,65 @@ function TheVoices() {
         </Reveal>
       ) : null}
 
-      <Reveal delay={220} className="mt-16 border-t border-hairline-invert pt-8 lg:mt-20">
-        <h3 className="label-lg accord-signal-invert">{VOICES.institutionsHeading}</h3>
-        <p className="mt-6 max-w-[72ch] text-[17px] leading-[1.9] opacity-85 lg:text-lg">
+      <Reveal delay={220} className="mt-20 border-t border-hairline-invert pt-10 lg:mt-24">
+        <h3 className={cn(SUBLABEL, "accord-signal-invert")}>{VOICES.institutionsHeading}</h3>
+        <p className={cn(BODY, MEASURE, "mt-8 leading-[1.9] opacity-85")}>
           {VOICES.institutions.join(" · ")}
         </p>
-        <p className="mt-5 max-w-[64ch] text-[15px] leading-relaxed opacity-55">
-          {VOICES.institutionsFootnote}
-        </p>
+        <p className={cn(BODY_SM, MEASURE, "mt-6 opacity-55")}>{VOICES.institutionsFootnote}</p>
       </Reveal>
     </SummitSection>
   );
 }
 
-/* 09 · THE WINDOW — editorial two-column: the clock against the city,
-   heights deliberately unequal, no photograph. */
+/* 07 · THE WINDOW — two dense text columns, rebuilt as a vertical timeline.
+   ------------------------------------------------------------------------
+   The clock and the city were set side by side at 7 and 4 columns, which
+   made two narrow measures the eye had to choose between and gave neither
+   any air. They now run as one column, stacked, both hung off a single
+   hairline rail: the entries descend, which is what a timeline is, and each
+   one gets its own band of silence. */
+
+/** One run of the timeline: a heading, a rail, and entries hung off it. */
+function TimelineRun({
+  heading,
+  items,
+  delay,
+}: {
+  heading: string;
+  items: readonly { title: string; line: string }[];
+  delay: number;
+}) {
+  return (
+    <div>
+      <Reveal delay={delay}>
+        <h3 className={cn(SUBLABEL, "accord-signal")}>{heading}</h3>
+      </Reveal>
+
+      {/* THE RAIL. A single hairline running the height of the run, with
+          each entry hung off it by a short connector — the same hairline
+          language the rest of the page is built from, turned ninety
+          degrees. No dots, no markers, no icons: the rule IS the device.
+          The connector widths match the padding exactly at each breakpoint,
+          so it meets the rail on one side and the type on the other. */}
+      <div className="mt-10 border-l border-hairline pl-8 md:pl-12 lg:pl-16">
+        {items.map((item, i) => (
+          <Reveal key={item.title} delay={delay + 40 + i * 45}>
+            <div className="relative py-9 lg:py-12">
+              <span
+                aria-hidden
+                className="absolute top-[1.1rem] right-full h-px w-8 bg-current opacity-20 md:w-12 lg:w-16"
+              />
+              <h4 className={SUBHEAD}>{item.title}</h4>
+              <p className={cn(BODY, MEASURE, "mt-4 opacity-70")}>{item.line}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TheWindow() {
   return (
     <SummitSection id="the-window" chapter="07 — The Window">
@@ -1072,47 +1256,18 @@ function TheWindow() {
         <Eyebrow index="07" label="The Window" />
       </Reveal>
       <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[28ch]")}>{WINDOW.headline}</h2>
+        <h2 className={cn(SECTION_TYPE, "mt-8 max-w-[24ch]")}>{WINDOW.headline}</h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-y-14 lg:mt-16 lg:grid-cols-12 lg:gap-x-12">
-        <div className="min-w-0 lg:col-span-7">
-          <Reveal delay={100}>
-            <h3 className="label-lg accord-signal border-b border-hairline pb-4">
-              {WINDOW.clockHeading}
-            </h3>
-          </Reveal>
-          {WINDOW.clock.map((item, i) => (
-            <Reveal key={item.title} delay={130 + i * 35}>
-              <div className="border-b border-hairline py-6">
-                <h4 className="display-sm">{item.title}</h4>
-                <p className={cn(BODY, "mt-2 max-w-[48ch] opacity-75")}>{item.line}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        <div className="min-w-0 lg:col-span-4 lg:col-start-9">
-          <Reveal delay={140}>
-            <h3 className="label-lg accord-signal border-b border-hairline pb-4">
-              {WINDOW.cityHeading}
-            </h3>
-          </Reveal>
-          {WINDOW.city.map((item, i) => (
-            <Reveal key={item.title} delay={170 + i * 35}>
-              <div className="border-b border-hairline py-6">
-                <h4 className="display-sm">{item.title}</h4>
-                <p className={cn(BODY, "mt-2 opacity-75")}>{item.line}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+      <div className="mt-16 space-y-20 lg:mt-20 lg:space-y-28">
+        <TimelineRun heading={WINDOW.clockHeading} items={WINDOW.clock} delay={100} />
+        <TimelineRun heading={WINDOW.cityHeading} items={WINDOW.city} delay={140} />
       </div>
 
-      <Reveal delay={220}>
-        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-16">
+      <Reveal delay={200}>
+        <div className="accord-hairline mt-20 border-t pt-12 lg:mt-24 lg:pt-14">
           {WINDOW.closing.map((line) => (
-            <p key={line} className={STATEMENT_TYPE}>
+            <p key={line} className={cn(STATEMENT_TYPE, "py-1.5")}>
               {line}
             </p>
           ))}
@@ -1121,6 +1276,7 @@ function TheWindow() {
     </SummitSection>
   );
 }
+
 /* 11 · ABOUT + CONTACT — track record, then the closing statement, then
    the one human. The contact block is composed complete without a
    portrait; when one is supplied it takes the reserved column without a
@@ -1139,14 +1295,14 @@ function AboutContact() {
 
       {/* Three finance platforms, then the record, one rail each. */}
       <Reveal delay={130}>
-        <div className="mt-14 grid grid-cols-1 border-t border-hairline sm:grid-cols-3 lg:mt-16">
+        <div className="mt-16 grid grid-cols-1 border-t border-hairline sm:grid-cols-3 lg:mt-20">
           {ABOUT.platforms.map((p) => (
             <div
               key={p.name}
-              className="border-b border-hairline py-6 sm:border-b-0 sm:py-8 sm:pr-8 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-8"
+              className="border-b border-hairline py-10 sm:border-b-0 sm:py-12 sm:pr-10 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-10 lg:py-14"
             >
-              <h3 className="display-sm max-w-[16ch]">{p.name}</h3>
-              <p className="label-lg mt-3 opacity-55">{p.years}</p>
+              <h3 className={cn(SUBHEAD, "max-w-[18ch]")}>{p.name}</h3>
+              <p className="label-lg mt-4 opacity-55">{p.years}</p>
             </div>
           ))}
         </div>
@@ -1156,23 +1312,23 @@ function AboutContact() {
           {ABOUT.trackRecord.map((item) => (
             <div
               key={item.value}
-              className="border-b border-hairline py-6 last:border-b-0 sm:border-b-0 sm:py-8 sm:pr-8 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-8"
+              className="border-b border-hairline py-12 last:border-b-0 sm:border-b-0 sm:py-14 sm:pr-10 sm:[&:nth-child(n+2)]:border-l sm:[&:nth-child(n+2)]:border-hairline sm:[&:nth-child(n+2)]:pl-10 lg:py-16 lg:pr-16 lg:[&:nth-child(n+2)]:pl-16"
             >
               <p className="font-display text-[clamp(2rem,6vw,2.6rem)] font-extrabold leading-[0.85] tracking-[-0.035em] lg:text-[clamp(2.2rem,3vw,3rem)]">
-                {item.value}
+                <CountUp value={item.value} />
               </p>
-              <p className="mt-3 text-base opacity-75">{item.line}</p>
+              <p className={cn(BODY, "mt-5 opacity-70")}>{item.line}</p>
             </div>
           ))}
         </div>
       </Reveal>
       <Reveal delay={200}>
-        <p className={cn(BODY, "mt-10 max-w-[58ch] opacity-80")}>{ABOUT.body}</p>
+        <p className={cn(BODY, MEASURE, "mt-14 opacity-80")}>{ABOUT.body}</p>
       </Reveal>
       <Reveal delay={230}>
-        <div className="mt-10">
-          <h3 className="label-lg accord-signal">{ABOUT.sponsorsHeading}</h3>
-          <p className="mt-4 max-w-[72ch] text-[17px] leading-[1.9] opacity-85 lg:text-lg">
+        <div className="mt-14">
+          <h3 className={cn(SUBLABEL, "accord-signal")}>{ABOUT.sponsorsHeading}</h3>
+          <p className={cn(BODY, MEASURE, "mt-6 leading-[1.9] opacity-85")}>
             {ABOUT.sponsors.join(" · ")}
           </p>
         </div>
@@ -1180,22 +1336,22 @@ function AboutContact() {
 
       {/* The closing statement. */}
       <Reveal delay={250}>
-        <div className="accord-hairline mt-16 border-t pt-10 lg:mt-20">
+        <div className="accord-hairline mt-20 border-t pt-12 lg:mt-24 lg:pt-14">
           {ABOUT.closing.map((line) => (
-            <p key={line} className={cn(STATEMENT_TYPE)}>
+            <p key={line} className={cn(STATEMENT_TYPE, "py-1.5")}>
               {line}
             </p>
           ))}
-          <p className="display-sm mt-8">
+          <p className={cn(SUBHEAD_LG, "mt-10")}>
             {SUMMIT.dates} · {SUMMIT.city}
           </p>
-          <p className="label-lg mt-3 opacity-60">{ABOUT.closingMeta}</p>
+          <p className={cn(BODY_SM, "mt-4 opacity-60")}>{ABOUT.closingMeta}</p>
         </div>
       </Reveal>
 
       {/* The human. Portrait column engages the moment an asset exists. */}
       <Reveal delay={280}>
-        <div className="mt-14 grid gap-y-8 border border-hairline p-7 lg:mt-16 lg:grid-cols-12 lg:gap-x-12 lg:p-10">
+        <div className="mt-20 grid gap-y-10 border border-hairline p-8 lg:mt-24 lg:grid-cols-12 lg:gap-x-16 lg:p-14">
           {contact.portrait ? (
             <figure className="relative aspect-[4/5] w-full max-w-[300px] overflow-hidden bg-bone lg:col-span-4">
               <img
@@ -1208,9 +1364,9 @@ function AboutContact() {
             </figure>
           ) : null}
           <div className={cn("min-w-0", contact.portrait ? "lg:col-span-8" : "lg:col-span-12")}>
-            <h3 className="display-md">{contact.name}</h3>
-            <p className={cn(BODY, "mt-3 opacity-75")}>{contact.roles.join(" · ")}</p>
-            <p className="mt-6 text-[17px] font-medium lg:text-lg">
+            <h3 className={SUBHEAD_LG}>{contact.name}</h3>
+            <p className={cn(BODY, "mt-4 opacity-70")}>{contact.roles.join(" · ")}</p>
+            <p className={cn(BODY, "mt-8 font-medium")}>
               <a
                 href={`mailto:${contact.email}`}
                 className="underline decoration-ink/25 underline-offset-4 transition-opacity duration-300 hover:opacity-70"
@@ -1218,7 +1374,7 @@ function AboutContact() {
                 {contact.email}
               </a>
             </p>
-            <p className="mt-2 text-[17px] font-medium lg:text-lg">
+            <p className={cn(BODY, "mt-3 font-medium")}>
               <a
                 href={`tel:${contact.phone.replace(/\s+/g, "")}`}
                 className="underline decoration-ink/25 underline-offset-4 transition-opacity duration-300 hover:opacity-70"
@@ -1226,7 +1382,7 @@ function AboutContact() {
                 {contact.phone}
               </a>
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-10 flex flex-wrap items-center gap-5">
               <Btn tone="solidOnLight" onClick={() => open("prospectus")}>
                 {CTA.prospectus}
               </Btn>
@@ -1237,12 +1393,6 @@ function AboutContact() {
           </div>
         </div>
       </Reveal>
-
-      <Reveal delay={300}>
-        <p className="mt-10 border-t border-hairline pt-6 font-mono text-[15px] uppercase tracking-[0.14em] opacity-60">
-          {ABOUT.evidenceLine}
-        </p>
-      </Reveal>
     </SummitSection>
   );
 }
@@ -1251,14 +1401,14 @@ function AboutContact() {
 function FinalBand() {
   const open = useModals();
   return (
-    <Section tone="ink" className="border-t-2">
-      <div className="flex flex-col gap-y-8 py-2 lg:flex-row lg:items-center lg:justify-between lg:gap-x-12">
+    <Section tone="ink" className="border-t-2" contentClassName={SECTION_PAD}>
+      <div className="flex flex-col gap-y-10 lg:flex-row lg:items-center lg:justify-between lg:gap-x-16">
         <Reveal>
           <p className="font-display max-w-[30ch] text-[clamp(1.15rem,3.4vw,1.5rem)] font-extrabold uppercase leading-[1.25] tracking-[-0.015em] lg:text-[clamp(1.25rem,1.8vw,1.65rem)]">
             {FINAL_BAND}
           </p>
         </Reveal>
-        <Reveal delay={90} className="flex shrink-0 flex-wrap items-center gap-4">
+        <Reveal delay={90} className="flex shrink-0 flex-wrap items-center gap-5">
           <Btn tone="solidOnDark" onClick={() => open("prospectus")}>
             {CTA.prospectus}
           </Btn>
@@ -1271,13 +1421,33 @@ function FinalBand() {
   );
 }
 
+/* THE EVIDENCE — its own plate, immediately above the footer.
+   ------------------------------------------------------------------------
+   This sentence spent the build as a 15px mono line tucked under the
+   contact card, which is where a caveat goes. It is not a caveat; it is the
+   page's standing offer, and the whole argument above it is made of
+   numbers. So it gets a band of its own, a tonal shift the eye cannot miss
+   between the two ink plates around it, and display type at statement
+   scale — sentence case, because it is a sentence. */
+function EvidenceBand() {
+  return (
+    <Section tone="bone" contentClassName={SECTION_PAD}>
+      <Reveal>
+        <p className="font-display max-w-[22ch] text-[clamp(1.5rem,5.6vw,2.1rem)] font-bold leading-[1.22] tracking-[-0.02em] lg:max-w-[28ch] lg:text-[clamp(1.8rem,2.9vw,2.7rem)]">
+          {ABOUT.evidenceLine}
+        </p>
+      </Reveal>
+    </Section>
+  );
+}
+
 /* ---------------------------------------------------------------- footer */
 
 function SummitFooter() {
   return (
     <footer className="border-t border-hairline-invert bg-ink text-paper">
-      <div className="px-6 py-16 md:px-10 lg:px-16">
-        <div className="grid gap-y-10 lg:grid-cols-12 lg:gap-x-12">
+      <div className="px-6 py-24 md:px-14 lg:px-20 lg:py-28">
+        <div className="grid gap-y-14 lg:grid-cols-12 lg:gap-x-16">
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3">
               <FinancialRailsIcon className="h-9 w-9" />
@@ -1287,21 +1457,21 @@ function SummitFooter() {
                 Rails
               </span>
             </div>
-            <p className="mt-6 max-w-[38ch] text-base leading-relaxed opacity-75">{FOOTER.line}</p>
+            <p className={cn(BODY_SM, "mt-8 max-w-[42ch] opacity-75")}>{FOOTER.line}</p>
           </div>
           <div className="lg:col-span-7">
-            <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-3">
+            <nav aria-label="Footer" className="flex flex-wrap gap-x-8 gap-y-4">
               {SUMMIT_NAV.map((item) => (
                 <a
                   key={item.id}
                   href={`#${item.id}`}
-                  className="font-mono text-[14px] uppercase tracking-[0.16em] opacity-70 transition-opacity duration-300 hover:opacity-100"
+                  className="label-lg opacity-70 transition-opacity duration-300 hover:opacity-100"
                 >
                   {item.label}
                 </a>
               ))}
             </nav>
-            <p className="mt-8 text-base opacity-75">
+            <p className={cn(BODY_SM, "mt-10 opacity-75")}>
               <a
                 href={`mailto:${FOOTER.email}`}
                 className="transition-opacity duration-300 hover:opacity-70"
@@ -1313,13 +1483,11 @@ function SummitFooter() {
             </p>
           </div>
         </div>
-        <div className="mt-12 flex flex-col gap-3 border-t border-hairline-invert pt-7 md:flex-row md:items-center md:justify-between">
+        <div className="mt-16 flex flex-col gap-4 border-t border-hairline-invert pt-10 md:flex-row md:items-center md:justify-between">
           {/* Privacy and Terms have no routes yet, so they are inert text —
               a link that 404s would be worse than a word that waits. */}
-          <p className="text-sm opacity-60">Privacy · Terms · {FOOTER.legal}</p>
-          <p className="font-mono text-[14px] uppercase tracking-[0.16em] opacity-60">
-            {FOOTER.evidence}
-          </p>
+          <p className={cn(BODY_SM, "opacity-60")}>Privacy · Terms · {FOOTER.legal}</p>
+          <p className={cn(BODY_SM, "opacity-60")}>{FOOTER.evidence}</p>
         </div>
       </div>
     </footer>
@@ -1347,6 +1515,7 @@ export function FinancialRailsSummit() {
           <TheWindow />
           <AboutContact />
           <FinalBand />
+          <EvidenceBand />
         </main>
         <SummitFooter />
         {modal ? <LeadModal kind={modal} onClose={() => setModal(null)} /> : null}
