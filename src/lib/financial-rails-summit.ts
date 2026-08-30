@@ -74,8 +74,11 @@ export const GAP = {
 export const ROOM = {
   label: "The Room",
   headline: "The room was designed before the seats were sold.",
+  /* The room's specification, and only that. The fourteen-event track
+     record is Vostad's, not this room's — it lives in the hero trust line
+     and in section 11, and mixing it in here made a specification read as a
+     CV. Three figures, deliberately. */
   proofRail: [
-    { value: "14", line: "Vostad finance events since 2018" },
     { value: "400", line: "Seats, capped" },
     { value: "~220", line: "Institutional decision-makers" },
     { value: "370+", line: "Pre-scheduled meetings" },

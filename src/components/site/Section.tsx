@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils";
 
 type SectionProps = {
   label?: string;
+  /**
+   * The rail label's type class. Defaults to the site's 11px `label`, so
+   * every existing page renders exactly as before; a page with a higher type
+   * floor passes its own. Additive only — nothing here changes without it.
+   */
+  labelClassName?: string;
   children: ReactNode;
   tone?: "paper" | "bone" | "ink";
   className?: string;
@@ -16,6 +22,7 @@ type SectionProps = {
  */
 export function Section({
   label,
+  labelClassName = "label",
   children,
   tone = "paper",
   className,
@@ -43,7 +50,7 @@ export function Section({
           {label ? (
             <div className="sticky top-32 flex justify-center py-10">
               <span
-                className="label opacity-40 whitespace-nowrap"
+                className={cn(labelClassName, "opacity-40 whitespace-nowrap")}
                 style={{ writingMode: "vertical-rl" }}
               >
                 {label}

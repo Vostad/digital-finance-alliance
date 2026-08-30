@@ -166,7 +166,7 @@ function Btn({
     wants every section's number legible at every width. */
 function Eyebrow({ index, label, invert }: { index: string; label: string; invert?: boolean }) {
   return (
-    <p className={cn("label-lg", invert ? "accord-signal-invert" : "accord-signal")}>
+    <p className={cn("label-lg lg:hidden", invert ? "accord-signal-invert" : "accord-signal")}>
       {index} — {label}
     </p>
   );
@@ -303,19 +303,35 @@ function SubmitBtn({ children }: { children: ReactNode }) {
 
 /* ----------------------------------------------------------------- shell */
 
+/**
+ * A Summit chapter. The chapter name is passed to Section's LEFT RAIL — the
+ * site's own device: a 6rem column with a hairline divider carrying a
+ * vertical, sticky label that holds while its section is in view and hands
+ * over as the next one arrives. That rail is the chapter indicator, so the
+ * in-canvas Eyebrow renders below lg only, where the rail is hidden: one
+ * indicator at every width, never two competing.
+ */
 function SummitSection({
   id,
+  chapter,
   tone = "paper",
   className,
   children,
 }: {
   id?: string;
+  chapter: string;
   tone?: "paper" | "bone" | "ink";
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <Section {...(id ? { id } : {})} tone={tone} className={cn("scroll-mt-20", className)}>
+    <Section
+      {...(id ? { id } : {})}
+      label={chapter}
+      labelClassName="label-lg"
+      tone={tone}
+      className={cn("scroll-mt-20", className)}
+    >
       {children}
     </Section>
   );
@@ -484,7 +500,7 @@ function SummitFilm() {
 function Hero() {
   const open = useModals();
   return (
-    <SummitSection id="top" tone="ink">
+    <SummitSection id="top" chapter="01 — Financial Rails" tone="ink">
       <div className="pt-12 lg:pt-16">
         <div className="grid gap-y-12 lg:grid-cols-12 lg:items-center lg:gap-x-12">
           {/* Seven columns of text against five of photograph: the
@@ -560,7 +576,7 @@ function Hero() {
    are the visual, set as three tall columns whose numerals carry the band. */
 function TheGap() {
   return (
-    <SummitSection id="the-gap">
+    <SummitSection id="the-gap" chapter="02 — The Gap">
       <Reveal>
         <Eyebrow index="02" label="The Gap" />
       </Reveal>
@@ -606,7 +622,7 @@ function TheGap() {
    sections. */
 function TheRoom() {
   return (
-    <SummitSection id="the-room" className="border-t-2">
+    <SummitSection id="the-room" chapter="03 — The Room" className="border-t-2">
       <Reveal>
         <Eyebrow index="03" label="The Room" />
       </Reveal>
@@ -616,11 +632,11 @@ function TheRoom() {
 
       {/* The proof rail: one slim band, four figures, no ceremony. */}
       <Reveal delay={140}>
-        <div className="mt-12 grid grid-cols-2 gap-y-8 border-y border-hairline py-7 lg:mt-14 lg:grid-cols-4 lg:gap-x-10">
+        <div className="mt-12 grid grid-cols-1 gap-y-7 border-y border-hairline py-7 sm:grid-cols-3 sm:gap-x-8 lg:mt-14 lg:gap-x-12">
           {ROOM.proofRail.map((item) => (
             <div
               key={item.value}
-              className="min-w-0 border-hairline pr-4 [&:nth-child(even)]:border-l [&:nth-child(even)]:pl-6 lg:border-l lg:pl-8 lg:first:border-l-0 lg:first:pl-0"
+              className="min-w-0 border-hairline sm:border-l sm:pl-8 sm:first:border-l-0 sm:first:pl-0"
             >
               <p className="font-display text-[clamp(1.5rem,4.4vw,1.9rem)] font-extrabold leading-none tracking-[-0.03em] lg:text-[clamp(1.6rem,2vw,2rem)]">
                 {item.value}
@@ -653,7 +669,7 @@ function TheRoom() {
 function WhoIsInIt() {
   const open = useModals();
   return (
-    <SummitSection id="who-is-in-it" tone="ink">
+    <SummitSection id="who-is-in-it" chapter="04 — The People" tone="ink">
       <Reveal>
         <Eyebrow index="04" label="Who Is in It" invert />
       </Reveal>
@@ -732,7 +748,7 @@ function WhoIsInIt() {
    beside a deliberately small 1:1 meeting frame. */
 function HowItWorks() {
   return (
-    <SummitSection id="how-it-works">
+    <SummitSection id="how-it-works" chapter="05 — How It Works">
       <Reveal>
         <Eyebrow index="05" label="How It Works" />
       </Reveal>
@@ -779,7 +795,7 @@ function HowItWorks() {
    pair stacks with its own small column labels, so a row never scrolls. */
 function TheDifference() {
   return (
-    <SummitSection id="the-difference" tone="ink">
+    <SummitSection id="the-difference" chapter="06 — The Difference" tone="ink">
       <Reveal>
         <Eyebrow index="06" label="The Difference" invert />
       </Reveal>
@@ -836,7 +852,7 @@ function TheDifference() {
    the programme's borders. */
 function TheAgenda() {
   return (
-    <SummitSection id="agenda">
+    <SummitSection id="agenda" chapter="07 — The Agenda">
       <Reveal>
         <Eyebrow index="07" label="The Agenda" />
       </Reveal>
@@ -907,7 +923,7 @@ function TheAgenda() {
    holes. The institutions render as text, never as logos. */
 function TheVoices() {
   return (
-    <SummitSection id="speakers" tone="ink">
+    <SummitSection id="speakers" chapter="08 — The Voices" tone="ink">
       <Reveal>
         <Eyebrow index="08" label="The Voices" invert />
       </Reveal>
@@ -988,7 +1004,7 @@ function TheVoices() {
    heights deliberately unequal, no photograph. */
 function TheWindow() {
   return (
-    <SummitSection id="the-window">
+    <SummitSection id="the-window" chapter="09 — The Window">
       <Reveal>
         <Eyebrow index="09" label="The Window" />
       </Reveal>
@@ -1053,7 +1069,7 @@ function Partnership() {
     { label: "Final positions close", date: COMMERCIAL_DEADLINES.positionsClose },
   ].filter((d): d is { label: string; date: string } => Boolean(d.date));
   return (
-    <SummitSection id="partnership" tone="ink">
+    <SummitSection id="partnership" chapter="10 — Partnership" tone="ink">
       <Reveal>
         <Eyebrow index="10" label="Partnership" invert />
       </Reveal>
@@ -1121,7 +1137,7 @@ function AboutContact() {
   const open = useModals();
   const { contact } = ABOUT;
   return (
-    <SummitSection id="about">
+    <SummitSection id="about" chapter="11 — About">
       <Reveal>
         <Eyebrow index="11" label="About" />
       </Reveal>
