@@ -8,7 +8,7 @@ import {
   SUMMIT,
   CTA,
   SUMMIT_NAV,
-  GAP,
+  MARKET,
   ROOM,
   AUDIENCE,
   PROCESS,
@@ -61,6 +61,11 @@ const BODY = "text-[17px] leading-[1.6] lg:text-lg";
 
 type Photo = { base: string; widths: number[]; alt: string };
 
+const PHOTO_MARKET: Photo = {
+  base: "/media/microsite/who-in-room",
+  widths: [480, 768, 1280, 1888],
+  alt: "Two senior delegates in conversation at a Vostad finance event in Dubai",
+};
 const PHOTO_NETWORKING: Photo = {
   base: "/media/financial-rails-v2/experience/networking",
   widths: [480, 768, 1280, 1920],
@@ -619,46 +624,102 @@ function Hero() {
   );
 }
 
-/* 02 · THE GAP — pure market evidence. No photograph: the three statistics
-   are the visual, set as three tall columns whose numerals carry the band. */
-function TheGap() {
+/* 02 · THE MARKET — the composition inverts the hero: photograph LEFT and
+   anchored, argument RIGHT and moving. The still holds while the evidence
+   scrolls past it, so the room is present for the whole read without ever
+   being the thing being read.
+
+   The three figures are not a row of equals. $58B carries the scale on its
+   own line at full width; 40% and 61 sit beneath it as a supporting pair on
+   one shared rule. That is the hierarchy the market actually has — one
+   number is the market's size, the other two describe its shape. */
+function TheMarket() {
   return (
-    <SummitSection id="the-gap" chapter="02 — The Gap">
-      <Reveal>
-        <Eyebrow index="02" label="The Gap" />
-      </Reveal>
-      <Reveal delay={70}>
-        <h2 className={cn(SECTION_TYPE, "mt-8")}>
-          <span className="block max-w-[24ch]">{GAP.headline[0]}</span>
-          <span className="block max-w-[26ch]">{GAP.headline[1]}</span>
-        </h2>
-      </Reveal>
+    <SummitSection id="the-market" chapter="02 — The Market">
+      <div className="grid gap-y-12 lg:grid-cols-12 lg:gap-x-16">
+        {/* THE ROOM, ANCHORED. First in the DOM, so mobile opens on the
+            photograph exactly as the desktop eye does. */}
+        {/* The Reveal IS the grid item, not a wrapper inside one: a sticky
+            child needs a containing block taller than itself, and an
+            auto-height wrapper gives it none — the frame simply scrolled
+            away. As the stretched column, it gives the figure the whole
+            section to travel in.
 
-      <Reveal delay={140}>
-        <div className="mt-14 grid grid-cols-1 gap-y-10 border-t border-hairline pt-0 sm:grid-cols-3 sm:gap-x-8 lg:mt-16 lg:gap-x-12">
-          {GAP.stats.map((stat) => (
-            <div
-              key={stat.value}
-              className="border-b border-hairline pb-10 pt-10 sm:border-b-0 sm:pb-0"
-            >
-              <p className="font-display text-[clamp(3.4rem,11vw,4.6rem)] font-extrabold leading-[0.82] tracking-[-0.04em] lg:text-[clamp(4rem,6.4vw,6rem)]">
-                {stat.value}
+            SQUARE at lg, not the source's native 4:5: the portrait left only
+            188px of slack in the column, so the anchor barely moved before
+            releasing. Square keeps both subjects in frame and roughly
+            doubles the travel, which is what makes the hold legible. Mobile
+            keeps the uncropped 4:5 — there is no sticky there to serve.
+            Between them the frame goes landscape: at 768 a full-width 4:5
+            stands 840px tall and pushes the entire argument below the fold,
+            which is not an anchor, it is a wall. */}
+        <Reveal className="min-w-0 lg:col-span-5">
+          <figure className="relative aspect-[4/5] w-full overflow-hidden bg-bone sm:aspect-[4/3] lg:sticky lg:top-28 lg:aspect-square">
+            <SummitPhoto photo={PHOTO_MARKET} sizes="(min-width:1024px) calc(38vw - 96px), 100vw" />
+          </figure>
+        </Reveal>
+
+        {/* THE ARGUMENT. */}
+        <div className="min-w-0 lg:col-span-7">
+          {/* Below lg the rail is hidden, so the eyebrow carries the chapter
+              there — the same one-indicator-at-every-width rule the rest of
+              the page follows. Above lg the heading opens the column alone. */}
+          <Reveal>
+            <Eyebrow index="02" label={MARKET.label} />
+          </Reveal>
+          <Reveal delay={60}>
+            <h2 className={cn(SECTION_TYPE, "max-w-[20ch] lg:mt-0", "mt-7")}>{MARKET.headline}</h2>
+          </Reveal>
+
+          {/* THE SCALE. One figure, full measure, on its own rules. */}
+          <Reveal delay={120}>
+            <div className="mt-12 border-y border-hairline py-9 lg:mt-14 lg:py-10">
+              <p className="font-display text-[clamp(3.4rem,15vw,4.75rem)] font-extrabold leading-[0.8] tracking-[-0.045em] lg:text-[clamp(4rem,7.6vw,6rem)]">
+                {MARKET.primaryStat.value}
               </p>
-              <p className={cn(BODY, "mt-5 max-w-[26ch] opacity-75")}>{stat.line}</p>
+              <p className="mt-5 text-[17px] leading-relaxed opacity-75 lg:text-lg">
+                {MARKET.primaryStat.line}
+              </p>
             </div>
-          ))}
-        </div>
-      </Reveal>
+          </Reveal>
 
-      <Reveal delay={200}>
-        <div className="accord-hairline mt-14 border-t pt-9 lg:mt-20">
-          {GAP.closing.map((line) => (
-            <p key={line} className={cn(STATEMENT_TYPE, "max-w-[26ch]")}>
-              {line}
-            </p>
-          ))}
+          {/* THE SHAPE. A supporting pair, set a clear step down. */}
+          <Reveal delay={170}>
+            <div className="grid grid-cols-1 border-b border-hairline sm:grid-cols-2">
+              {MARKET.supportingStats.map((stat) => (
+                <div
+                  key={stat.value}
+                  className="border-b border-hairline py-8 last:border-b-0 sm:border-b-0 sm:pr-8 sm:[&:nth-child(2)]:border-l sm:[&:nth-child(2)]:border-hairline sm:[&:nth-child(2)]:pl-8 lg:py-9"
+                >
+                  <p className="font-display text-[clamp(2.1rem,8vw,2.8rem)] font-extrabold leading-[0.85] tracking-[-0.04em] lg:text-[clamp(2.25rem,4.2vw,3.4rem)]">
+                    {stat.value}
+                  </p>
+                  <p className="mt-4 max-w-[30ch] text-[17px] leading-relaxed opacity-75 lg:text-lg">
+                    {stat.line}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* THE CONCLUSION — momentum, and the hand-off to 03. */}
+          <Reveal delay={220}>
+            <div className="accord-hairline mt-14 border-t-2 pt-9 lg:mt-16">
+              {MARKET.closing.map((line, i) => (
+                <p
+                  key={line}
+                  className={cn(
+                    "font-display max-w-[26ch] text-[clamp(1.45rem,5.6vw,1.9rem)] font-extrabold uppercase leading-[1.08] tracking-[-0.025em] lg:text-[clamp(1.6rem,2.5vw,2.3rem)]",
+                    i > 0 && "mt-5 opacity-70",
+                  )}
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+          </Reveal>
         </div>
-      </Reveal>
+      </div>
     </SummitSection>
   );
 }
@@ -1394,7 +1455,7 @@ export function FinancialRailsSummit() {
         <SummitNav />
         <main>
           <Hero />
-          <TheGap />
+          <TheMarket />
           <TheRoom />
           <WhoIsInIt />
           <HowItWorks />

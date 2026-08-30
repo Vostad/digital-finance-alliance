@@ -300,6 +300,14 @@
   transition-duration: 0.28s, 0.28s;
 }
 
+/* And the rest state must out-specify that override, or the page never
+   returns to transform:none — every revealed element stays 14px low, and the
+   lingering transform makes each Reveal a containing block, which silently
+   kills `position: sticky` inside it. */
+.summit-scope .reveal-in {
+  transform: none;
+}
+
 @utility marquee-track {
   animation: aa-marquee 42s linear infinite;
 }

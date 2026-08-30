@@ -52,23 +52,25 @@ export const SUMMIT_NAV = [
   { label: "About", id: "about" },
 ] as const;
 
-/* ------------------------------------------------------------- 02 the gap */
+/* ---------------------------------------------------------- 02 the market */
 
-export const GAP = {
-  label: "The Gap",
-  headline: [
-    "$58 billion leaves the UAE every year.",
-    "There is no room built for the people who move it.",
-  ],
-  stats: [
-    { value: "$58B", line: "Outbound remittances" },
-    {
-      value: "40%",
-      line: "Growth in the UAE's licensed payment-institution register, sixteen months",
-    },
+/**
+ * The market, stated as evidence. The section argues scale and momentum —
+ * it does NOT argue absence. Earlier drafts closed on the room being missing
+ * ("the buyers exist… the room doesn't"); that framing is retired. The
+ * market is moving and its operators are already in it; section 03 answers
+ * how the room is built around that.
+ */
+export const MARKET = {
+  label: "The Market",
+  headline: "$58 billion leaves the UAE every year.",
+  /* One primary figure carrying the scale, two supporting it. */
+  primaryStat: { value: "$58B", line: "Outbound remittances" },
+  supportingStats: [
+    { value: "40%", line: "Growth in the UAE's licensed payment-institution register" },
     { value: "61", line: "Licensed banks" },
   ],
-  closing: ["The buyers exist.", "The budgets exist.", "The room didn't. So we built it."],
+  closing: ["The rails are moving.", "The people moving them are already in the market."],
 } as const;
 
 /* ------------------------------------------------------------ 03 the room */
