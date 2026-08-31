@@ -195,12 +195,16 @@ export const SPEAKERS = {
       org: "Apex Group",
       image: "/leaders/daniel-coheur",
     },
-    /* Added from /public/more-speakers. Titles and organisations are the
-       supplied strings verbatim — "CEO" is not expanded to "Chief Executive
-       Officer" to match the roster's house style, because that would be
-       editing a verified record to suit a convention. Portraits are the
-       supplied 800x1000 files, resampled into the same 400/800 AVIF+JPEG
-       ladder every other portrait uses, so the card treatment is untouched. */
+    /* EVERY file in /public/more-speakers, added here — six people, none
+       held back. Henk J. Hoogendoorn and Ibrahim Almheiri already had
+       records above and are NOT repeated.
+
+       Titles and organisations are the supplied strings verbatim: "CEO" is
+       not expanded to "Chief Executive Officer" to match the roster's house
+       style, because that would be editing a verified record to suit a
+       convention. Portraits are the supplied 800x1000 files, resampled into
+       the same 400/800 AVIF+JPEG ladder every other portrait uses, so the
+       card treatment needs no change at all. */
     {
       id: "matthew-van-niekerk",
       name: "Matthew Van Niekerk",
@@ -221,6 +225,30 @@ export const SPEAKERS = {
       title: "Country Manager, KSA",
       org: "Temenos",
       image: "/leaders/baha-said",
+    },
+    {
+      id: "mohamed-damak",
+      name: "Mohamed Damak",
+      title: "Managing Director, Financial Sector Lead",
+      org: "S&P Global Ratings",
+      image: "/leaders/mohamed-damak",
+    },
+    {
+      id: "mohammed-wassim-khayata",
+      name: "Mohammed Wassim Khayata",
+      title: "Founder & Board Member",
+      org: "AE Coin",
+      image: "/leaders/mohammed-wassim-khayata",
+    },
+    {
+      /* The supplied file reads "Director - Digital, Data & Innovation".
+         The words are untouched; only the spaced hyphen becomes the en dash
+         the rest of the page sets. */
+      id: "ussrah-hussain",
+      name: "Ussrah Hussain",
+      title: "Director – Digital, Data & Innovation",
+      org: "HSBC",
+      image: "/leaders/ussrah-hussain",
     },
   ],
 } as const;

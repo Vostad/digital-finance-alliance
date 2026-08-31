@@ -1496,138 +1496,135 @@ function Media() {
 
 /* ---------------------------------------------------------- 11 testimonials */
 
-/* The quote is the section. Display voice at ~39px on ink — the page's
-   statement scale, which is what makes a sponsor line read as a claim rather
-   than as a review. */
+/* The quote is the focus of its column. Three-up it runs at 24px against a
+   19px name and 17px title — dominant by a clear step, without needing the
+   38px it had when one testimonial held the whole measure. */
 const QUOTE_TYPE =
-  "font-display text-[clamp(1.45rem,5.6vw,2rem)] font-extrabold uppercase leading-[1.12] tracking-[-0.022em] lg:text-[clamp(1.7rem,2.7vw,2.4rem)]";
+  "font-display text-[clamp(1.3rem,4.6vw,1.6rem)] font-extrabold uppercase leading-[1.16] tracking-[-0.018em] lg:text-[22px] xl:text-[26px]";
 
-/* Attribution at the brief's body floor — 17px mobile, 18px desktop, full
-   ink. Nothing here is faded or shrunk to make the quote dominant; the quote
-   is dominant because it is twice the size. */
+/* Attribution at the page's body floor — 17px mobile, 18px desktop, full
+   ink. Nothing is faded or shrunk to make the quote dominant; the quote is
+   dominant because it is set larger. */
 const ATTR_TEXT = "text-[17px] leading-[1.45] lg:text-[18px]";
 
-/* 11 · TESTIMONIALS — five sponsor voices, one at a time.
+/* 11 · TESTIMONIALS — three sponsor voices at once, on one ruled track.
    ------------------------------------------------------------------------
-   Manual only: no autoplay, no marquee, no grid of five. A quote that moves
-   before it is finished is worse than no quote, and executive proof reads as
-   proof precisely when the visitor controls the pace.
+   Five quotes, three columns, one row. The columns are separated by
+   hairlines rather than boxed as cards, so the three read as one composed
+   section — the same shared-rule language the Agenda and The Experience
+   speak — and no quote is ever wrapped in a border of its own.
    
-   ALL FIVE SLIDES ARE STACKED IN ONE GRID CELL, with only the active one
-   visible. The container therefore always takes the height of the LONGEST
-   testimonial, so the section cannot resize under the reader's cursor when
-   they press an arrow — the defect a simple conditional render would have
-   shipped. Inactive slides carry aria-hidden and hold no focusable elements,
-   so the tab order stays on the two controls.
+   MANUAL ONLY: no autoplay, no marquee. Executive proof reads as proof when
+   the visitor sets the pace, and a quote that moves before it is finished is
+   worse than no quote. The arrows step the track by exactly one column and
+   wrap at both ends, so the visible SET slides rather than swapping.
 
-   Every name, title, organisation and portrait comes from SPEAKERS.roster
-   through `speakerById`. Nothing about a person is restated here, so the
-   five who also appear in Section 06 cannot drift into a second title or a
-   second portrait asset. */
+   The leading rule is suppressed on the first column only. Once the track
+   has scrolled, the column at the left edge keeps its rule — which is
+   correct: it says the row continues off-screen to the left.
+
+   Every name, title, organisation and portrait resolves through
+   `speakerById` into SPEAKERS.roster, so the five people who also appear in
+   Section 06 cannot drift into a second title or a second portrait asset. */
 function Testimonials() {
-  const [active, setActive] = useState(0);
-  const count = TESTIMONIALS.length;
-  if (count === 0) return null;
-  const step = (d: 1 | -1) => setActive((i) => (i + d + count) % count);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const step = useCallback((dir: 1 | -1) => {
+    const track = trackRef.current;
+    if (!track || track.children.length < 2) return;
+    const first = track.children[0] as HTMLElement;
+    const second = track.children[1] as HTMLElement;
+    const stride = second.offsetLeft - first.offsetLeft;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
+    const max = track.scrollWidth - track.clientWidth;
+    if (dir === 1 && track.scrollLeft >= max - 8) track.scrollTo({ left: 0, behavior });
+    else if (dir === -1 && track.scrollLeft <= 8) track.scrollTo({ left: max, behavior });
+    else track.scrollBy({ left: dir * stride, behavior });
+  }, []);
+
+  if (TESTIMONIALS.length === 0) return null;
   const arrow =
     "label-lg border border-hairline-invert px-4 py-3 transition-colors duration-300 hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none";
 
   return (
     <DSSection chapter="11" tone="ink">
-      <Reveal>
-        <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[20ch] lg:mt-0")}>
-          {TESTIMONIALS_COPY.headline}
-        </h2>
-      </Reveal>
+      <div className="flex items-end justify-between gap-6">
+        <Reveal>
+          <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[20ch] lg:mt-0")}>
+            {TESTIMONIALS_COPY.headline}
+          </h2>
+        </Reveal>
+        <Reveal delay={70} className="flex shrink-0 items-center gap-3">
+          <button
+            type="button"
+            aria-label="Previous testimonials"
+            className={arrow}
+            onClick={() => step(-1)}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            aria-label="Next testimonials"
+            className={arrow}
+            onClick={() => step(1)}
+          >
+            →
+          </button>
+        </Reveal>
+      </div>
 
-      <Reveal delay={80}>
+      <Reveal delay={110}>
         <div
-          className="mt-9 lg:mt-11"
+          ref={trackRef}
           aria-roledescription="carousel"
           aria-label="Sponsor testimonials"
+          className="mt-9 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain lg:mt-11 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <div className="grid">
-            {TESTIMONIALS.map((t, i) => (
-              <blockquote
+          {TESTIMONIALS.map((t, i) => {
+            const person = speakerById(t.speakerId);
+            if (!person) return null;
+            return (
+              <figure
                 key={t.speakerId}
-                aria-hidden={i !== active}
                 className={cn(
-                  QUOTE_TYPE,
-                  "col-start-1 row-start-1 max-w-[34ch] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
-                  i === active ? "opacity-100" : "pointer-events-none opacity-0",
+                  /* One per view below md needs no separator and no indent —
+                     a rule at the left edge of a single slide reads as
+                     decoration, and it left slide 01 flush while 02–05 sat
+                     24px in. The hairlines appear only once columns actually
+                     share the view. */
+                  "flex w-full shrink-0 snap-start flex-col border-hairline-invert md:w-1/2 md:px-6 lg:w-1/3 lg:px-5 xl:px-8",
+                  i === 0 ? "md:border-l-0 md:pl-0" : "md:border-l",
                 )}
               >
-                {`\u201C${t.quote}\u201D`}
-              </blockquote>
-            ))}
-          </div>
-
-          {/* Attribution and controls share one row from sm, which is worth
-              80px against giving the arrows a row of their own — and it puts
-              them where the reading ends. Below sm the arrows drop under,
-              because a portrait, three lines of attribution and two controls
-              cannot share 342px without crushing the name. */}
-          <div className="mt-8 flex flex-col items-start gap-6 border-t border-hairline-invert pt-6 sm:flex-row sm:items-center sm:justify-between lg:mt-10">
-            <div className="grid min-w-0">
-              {TESTIMONIALS.map((t, i) => {
-                const person = speakerById(t.speakerId);
-                if (!person) return null;
-                return (
-                  <figcaption
-                    key={t.speakerId}
-                    aria-hidden={i !== active}
-                    className={cn(
-                      "col-start-1 row-start-1 flex min-w-0 items-center gap-5 transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:gap-6",
-                      i === active ? "opacity-100" : "pointer-events-none opacity-0",
-                    )}
-                  >
-                    <span className="relative block aspect-[4/5] w-20 shrink-0 overflow-hidden bg-ink lg:w-24">
-                      <picture className="contents">
-                        <source type="image/avif" srcSet={`${person.image}-400.avif`} />
-                        <img
-                          src={`${person.image}-400.jpg`}
-                          alt={`Portrait of ${person.name}`}
-                          loading="lazy"
-                          decoding="async"
-                          className="absolute inset-0 h-full w-full object-cover grayscale"
-                        />
-                      </picture>
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block font-display text-[19px] font-bold leading-tight tracking-[-0.01em] lg:text-[21px]">
-                        {person.name}
-                      </span>
-                      <span className={cn(ATTR_TEXT, "mt-1.5 block")}>
-                        {person.title} · {person.org}
-                      </span>
-                      <span className={cn(ATTR_TEXT, "accord-signal-invert mt-1.5 block")}>
-                        {t.sponsorLine}
-                      </span>
-                    </span>
-                  </figcaption>
-                );
-              })}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-3">
-              <button
-                type="button"
-                aria-label="Previous testimonial"
-                className={arrow}
-                onClick={() => step(-1)}
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                aria-label="Next testimonial"
-                className={arrow}
-                onClick={() => step(1)}
-              >
-                →
-              </button>
-            </div>
-          </div>
+                <blockquote className={QUOTE_TYPE}>{`\u201C${t.quote}\u201D`}</blockquote>
+                <figcaption className="mt-auto pt-8 lg:pt-10">
+                  <span className="relative block aspect-[4/5] w-16 overflow-hidden bg-ink lg:w-[4.5rem]">
+                    <picture className="contents">
+                      <source type="image/avif" srcSet={`${person.image}-400.avif`} />
+                      <img
+                        src={`${person.image}-400.jpg`}
+                        alt={`Portrait of ${person.name}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover grayscale"
+                      />
+                    </picture>
+                  </span>
+                  <span className="mt-4 block font-display text-[19px] font-bold leading-tight tracking-[-0.01em]">
+                    {person.name}
+                  </span>
+                  <span className={cn(ATTR_TEXT, "mt-1.5 block")}>
+                    {person.title} · {person.org}
+                  </span>
+                  <span className={cn(ATTR_TEXT, "accord-signal-invert mt-1.5 block")}>
+                    {t.sponsorLine}
+                  </span>
+                </figcaption>
+              </figure>
+            );
+          })}
         </div>
       </Reveal>
     </DSSection>
