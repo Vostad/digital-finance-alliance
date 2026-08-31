@@ -123,11 +123,14 @@ export const MARKET = {
 export const IN_NUMBERS = {
   label: "Event in Numbers",
   headline: "Built for the people moving the market.",
+  /* Three figures, not four. The ninth-edition claim still stands on the
+     page — it is the hero's trust line and Section 03's closing — but as a
+     track-record fact, not as a figure describing THIS room. Mixing it in
+     diluted the three numbers that do. */
   stats: [
     { value: "400", line: "Seats, capped" },
     { value: "~220", line: "Institutional decision-makers" },
     { value: "370+", line: "Pre-scheduled meetings" },
-    { value: "9", line: "Vostad finance editions" },
   ],
 } as const;
 

@@ -120,6 +120,11 @@ const PHOTO_DINNER: Photo = {
   widths: [768, 1280, 1920, 2560, 3840],
   alt: "A summit ballroom set with round tables during an evening session",
 };
+const PHOTO_ROOM: Photo = {
+  base: "/media/financial-rails-v2/experience/panel",
+  widths: [480, 768, 1280, 1920],
+  alt: "A panel on stage in front of a full seated audience at a Vostad finance event",
+};
 const PHOTO_PARTNER: Photo = {
   base: "/media/microsite/partner",
   widths: [480, 768, 1280, 1888],
@@ -931,39 +936,53 @@ function TheMarket() {
 
 /* ----------------------------------------------------- 05 event in numbers */
 
+/* 05 · EVENT IN NUMBERS — the room, then the figures that describe it.
+   ------------------------------------------------------------------------
+   THE FILM IS GONE. This section makes a claim about scale, and the one
+   event film is already the hero's cinematic moment; running it again here
+   spent the page's loudest asset on a supporting beat and left the numbers
+   competing with motion. A still of a full house — panel on stage, every
+   seat taken — makes the same argument and lets the figures be the only
+   thing moving.
+
+   THREE FIGURES, LOUDER. The fourth row (nine editions) was track record,
+   not room, and it diluted the three numbers that actually describe this
+   one. What is left goes up a full scale step — 54px against 41.6px — so
+   the column reads as figures with labels rather than a list.
+
+   THE IMAGE TAKES ITS HEIGHT FROM THE TEXT. `lg:h-full` against a stretched
+   grid item, so the frame can never dictate the section's height or strand
+   space beneath itself; the figures set the row and the photograph fills
+   exactly that. */
 function InNumbers() {
   return (
     <DSSection chapter="05">
-      <div className="grid gap-y-9 lg:grid-cols-12 lg:gap-x-14">
-        {/* The event, moving. The one film again, in a working frame. */}
-        <Reveal className="min-w-0 lg:col-span-6">
-          <figure className="relative aspect-[16/10] w-full overflow-hidden bg-ink lg:aspect-[4/3] lg:h-full lg:max-h-[560px]">
-            <EventFilm
-              className="hidden motion-safe:block"
-              label="Scenes from previous Vostad finance events"
-            />
-            <img
-              src={FILM.poster}
-              alt="Scenes from previous Vostad finance events"
-              className="absolute inset-0 block h-full w-full object-cover motion-safe:hidden"
-              loading="lazy"
-              decoding="async"
+      <div className="grid gap-y-8 lg:grid-cols-2 lg:gap-x-14">
+        <Reveal className="min-w-0">
+          {/* 16:9 below lg is the master's native ratio — no crop at all,
+              and the shallowest the frame can be, which keeps the stacked
+              order compact. */}
+          <figure className="relative aspect-[16/9] w-full overflow-hidden bg-ink lg:aspect-auto lg:h-full lg:min-h-[300px]">
+            <DSPhoto
+              photo={PHOTO_ROOM}
+              sizes="(min-width:1024px) calc(50vw - 108px), 100vw"
+              className="object-[50%_46%]"
             />
           </figure>
         </Reveal>
 
-        <div className="min-w-0 lg:col-span-6">
+        <div className="min-w-0">
           <Reveal>
             <h2 className={cn(SECTION_TYPE, "mt-2 max-w-[16ch] lg:mt-0")}>{IN_NUMBERS.headline}</h2>
           </Reveal>
           <Reveal delay={90}>
-            <div className="mt-8 border-t border-hairline lg:mt-10">
+            <div className="mt-7 border-t border-hairline lg:mt-8">
               {IN_NUMBERS.stats.map((stat) => (
                 <div
                   key={stat.line}
-                  className="flex items-baseline gap-6 border-b border-hairline py-5 lg:py-6"
+                  className="flex items-baseline gap-5 border-b border-hairline py-4 lg:gap-6 lg:py-5"
                 >
-                  <p className="w-[6.5rem] shrink-0 font-display text-[2rem] font-extrabold leading-[0.85] tracking-[-0.04em] lg:w-[7.5rem] lg:text-[2.6rem]">
+                  <p className="w-[7rem] shrink-0 font-display text-[2.6rem] font-extrabold leading-[0.85] tracking-[-0.045em] lg:w-[8.5rem] lg:text-[3.4rem]">
                     <CountUp value={stat.value} />
                   </p>
                   <p className={BODY}>{stat.line}</p>
