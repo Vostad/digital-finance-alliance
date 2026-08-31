@@ -21,6 +21,7 @@ import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as IntelRouteImport } from './routes/intel'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as ForumDubaiSummitRouteImport } from './routes/forum.dubai-summit'
 import { Route as ForumsIndexRouteImport } from './routes/forums.index'
 import { Route as ForumsAfricanMoneyMovementRouteImport } from './routes/forums.african-money-movement'
 import { Route as ForumsFinancialRailsAfricaRouteImport } from './routes/forums.financial-rails-africa'
@@ -89,6 +90,11 @@ const PartnersRoute = PartnersRouteImport.update({
   path: '/partners',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForumDubaiSummitRoute = ForumDubaiSummitRouteImport.update({
+  id: '/forum/dubai-summit',
+  path: '/forum/dubai-summit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForumsIndexRoute = ForumsIndexRouteImport.update({
   id: '/forums/',
   path: '/forums/',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/intel': typeof IntelRoute
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
+  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/intel': typeof IntelRoute
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
+  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/intel': typeof IntelRoute
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
+  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/intel'
     | '/intelligence'
     | '/partners'
+    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/intel'
     | '/intelligence'
     | '/partners'
+    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/intel'
     | '/intelligence'
     | '/partners'
+    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   IntelRoute: typeof IntelRoute
   IntelligenceRoute: typeof IntelligenceRoute
   PartnersRoute: typeof PartnersRoute
+  ForumDubaiSummitRoute: typeof ForumDubaiSummitRoute
   ForumsAfricanMoneyMovementRoute: typeof ForumsAfricanMoneyMovementRoute
   ForumsFinancialRailsAfricaRoute: typeof ForumsFinancialRailsAfricaRoute
   ForumsFinancialRailsAsiaRoute: typeof ForumsFinancialRailsAsiaRoute
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forum/dubai-summit': {
+      id: '/forum/dubai-summit'
+      path: '/forum/dubai-summit'
+      fullPath: '/forum/dubai-summit'
+      preLoaderRoute: typeof ForumDubaiSummitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forums/': {
       id: '/forums/'
       path: '/forums'
@@ -433,6 +453,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntelRoute: IntelRoute,
   IntelligenceRoute: IntelligenceRoute,
   PartnersRoute: PartnersRoute,
+  ForumDubaiSummitRoute: ForumDubaiSummitRoute,
   ForumsAfricanMoneyMovementRoute: ForumsAfricanMoneyMovementRoute,
   ForumsFinancialRailsAfricaRoute: ForumsFinancialRailsAfricaRoute,
   ForumsFinancialRailsAsiaRoute: ForumsFinancialRailsAsiaRoute,

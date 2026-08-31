@@ -173,11 +173,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  // Event micro-sites (/forums/<slug>) carry their own navigation and footer so
-  // each reads as its own property. Institutional pages keep the Financial Rails
-  // chrome untouched. The standalone-property branch was dropped along with the
-  // experimental event routes it served.
-  const isEventMicrosite = /^\/forums\/[^/]+\/?$/.test(pathname);
+  // Event micro-sites (/forums/<slug>, and the /forum/<slug> family the Dubai
+  // Summit page introduced) carry their own navigation and footer so each
+  // reads as its own property. Institutional pages keep the Financial Rails
+  // chrome untouched. The /forums INDEX (no slug) stays chromed either way.
+  const isEventMicrosite = /^\/forums?\/[^/]+\/?$/.test(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
