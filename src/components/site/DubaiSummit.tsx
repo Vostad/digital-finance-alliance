@@ -777,65 +777,81 @@ function Sponsors() {
 
 /* ---------------------------------------------------------- 03 the summit */
 
-/* The section answers WHAT IS FINANCIAL RAILS, so the text leads and the
-   photograph supports — and the photograph must never dictate the height.
-   It did: a 4:5 portrait in the 5-column track stood 593px against a 389px
-   argument, overshooting the copy by 204px and leaving a 300px empty field
-   under it.
+/* Section 03's own headline scale — a page-scoped constant, NOT a change to
+   the shared SECTION_TYPE, which every other section reads. This section
+   has to win the first glance against a substantial photograph, so it runs
+   ~52px at 1440 where the shared scale runs 41.6px, and stays at the shared
+   scale from 1024 down where the column is too narrow to carry more. Still
+   comfortably below the hero masthead's 73px. */
+const SUMMIT_HEAD =
+  "font-display text-[clamp(1.9rem,7vw,2.4rem)] font-extrabold uppercase leading-[1.02] tracking-[-0.03em] lg:text-[clamp(2.6rem,3.6vw,3.4rem)]";
 
-   THE IMAGE NOW TAKES ITS HEIGHT FROM THE TEXT, by construction rather
-   than by arithmetic. The Reveal is the grid item, so it stretches to the
-   row; `lg:h-full` on the figure resolves against that, and the ratio is
-   released at lg. The row is set by the taller column, and with the image
-   capped at 100% of it the copy is always the taller column — so the
-   section can only ever be as tall as its own content, and the photograph
-   can never again overshoot it.
+/* 03 · THE SUMMIT — text left, image right; Section 02's mirror.
+   ------------------------------------------------------------------------
+   THE PHOTOGRAPH SPANS THE WHOLE ARGUMENT. Two earlier passes tied its
+   height to the headline-and-body row alone, which made it a 2.12 letterbox
+   at 1440 and left the ground beside the closing statement empty. It now
+   sits in a two-row grid and spans BOTH rows from xl — headline to closing,
+   the gutter between them included — so it reads as a photograph rather
+   than a strip, gains about a third in area, and fills the column's whole
+   height instead of stranding space under itself.
 
-   THE VIEWPORT CAP IS THE SECOND HALF of that. Height-matching alone does
-   not guarantee a landscape: at 1024 the narrower column makes the copy
-   TALLER, and h-full dutifully returned a 361x461 portrait. `max-h-[26vw]`
-   tracks the column's own width — both scale with the viewport — so the
-   frame stays wider than it is tall at every desktop width while still
-   shrinking to meet short copy. The min-height sits below the cap on
-   purpose; a floor above it would win and hand the portrait back. */
+   THE TEXT STILL WINS, by composition rather than by weakening the image:
+   60/40 of the usable width, a headline a full scale step above the shared
+   section scale, and the reading order headline -> body -> closing all held
+   in the left column. Nothing is dimmed to achieve it.
+
+   THE VIEWPORT CAP SURVIVES BELOW xl and is load-bearing there. At 1024 the
+   narrower column makes the copy taller AND the image column thinner, so a
+   full-height frame returns a portrait — measured at 298x341. `max-h-[26vw]`
+   tracks the column's own width (both scale with the viewport) and holds
+   the crop landscape; the closing spans the full width there so the only
+   space left over sits beside the body, not beside the statement. From xl
+   the geometry stops fighting and the cap is released. */
 function TheSummit() {
   return (
     <DSSection chapter="03">
-      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,1.06fr)_minmax(0,1fr)] lg:items-stretch lg:gap-x-14">
-        <div className="min-w-0">
+      {/* Explicit placement, so the DOM order can serve mobile — label,
+          headline, body, closing, image — while the desktop grid puts the
+          photograph up in column two regardless. */}
+      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,1.38fr)_minmax(0,1fr)] lg:gap-x-14">
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
           <Reveal>
-            <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[18ch] lg:mt-0")}>{THE_SUMMIT.headline}</h2>
+            <h2 className={cn(SUMMIT_HEAD, "mt-5 max-w-[16ch] lg:mt-0")}>{THE_SUMMIT.headline}</h2>
           </Reveal>
           <Reveal delay={80}>
-            {/* 18px mobile, 20px desktop, 1.55 leading. Arbitrary font sizes
-                carry no implicit line-height, so the leading survives the
-                class merge intact. Full ink — never faded. */}
-            <p className="mt-6 max-w-[56ch] text-[18px] leading-[1.55] lg:text-[20px]">
+            {/* 20px desktop / 18px mobile at 1.55. Arbitrary font sizes carry
+                no implicit line-height, so the leading survives the class
+                merge. Full ink — never faded to manufacture hierarchy. */}
+            <p className="mt-7 max-w-[56ch] text-[18px] leading-[1.55] lg:text-[20px]">
               {THE_SUMMIT.body}
             </p>
           </Reveal>
         </div>
-        <Reveal delay={120} className="min-w-0">
-          <figure className="relative aspect-[16/10] w-full overflow-hidden bg-bone lg:aspect-auto lg:h-full lg:max-h-[26vw] lg:min-h-[220px]">
-            <DSPhoto
-              photo={PHOTO_SUMMIT}
-              sizes="(min-width:1024px) calc(46vw - 88px), 100vw"
-              className="object-[50%_38%]"
-            />
-          </figure>
-        </Reveal>
 
-        {/* THE CLOSING, on its own full-width row. Held inside the left
-            column it stranded a 361x194 void beside itself at 1024, where
-            the capped frame ends well above the copy. Spanning both tracks
-            there is no column left to strand — and the statement reads as
-            the band that closes the section rather than as a fourth
-            paragraph. Distinct from the body by family, weight and case
-            rather than by size; the periwinkle rule does the rest. */}
-        <Reveal delay={140} className="min-w-0 lg:col-span-2">
-          <p className="accord-hairline max-w-[34ch] border-t-2 pt-5 font-display text-[1.2rem] font-extrabold uppercase leading-[1.22] tracking-[-0.015em] lg:text-[1.4rem]">
+        {/* The closing. Stronger by weight, spacing and position — never by
+            size; it stays less than half the headline. The periwinkle rule
+            above it is the approved device and is unchanged. */}
+        <Reveal
+          delay={140}
+          className="min-w-0 lg:row-start-2 lg:max-[1339px]:col-span-2 lg:max-[1339px]:col-start-1 min-[1340px]:col-start-1"
+        >
+          <p className="accord-hairline max-w-[34ch] border-t-2 pt-6 font-display text-[1.2rem] font-extrabold uppercase leading-[1.2] tracking-[-0.018em] lg:text-[1.5rem]">
             {THE_SUMMIT.closing}
           </p>
+        </Reveal>
+
+        <Reveal
+          delay={120}
+          className="min-w-0 lg:col-start-2 lg:row-start-1 min-[1340px]:row-end-3"
+        >
+          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[220px] lg:max-[1339px]:max-h-[30vw]">
+            <DSPhoto
+              photo={PHOTO_SUMMIT}
+              sizes="(min-width:1024px) calc(42vw - 84px), 100vw"
+              className="object-[50%_36%]"
+            />
+          </figure>
         </Reveal>
       </div>
     </DSSection>
