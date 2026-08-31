@@ -1215,6 +1215,32 @@ function WhoWillYouMeet() {
 
 /* ---------------------------------------------------------------- 08 agenda */
 
+/* Section 08's own row type — page-scoped, NOT edits to the shared
+   CARD_TITLE, which Section 10 reads. The track is the thing being scanned,
+   so it carries the display voice at 26px; the topics under it sit in the
+   sans at 18px, full ink. Two families, two cases and an 8px size gap do
+   the hierarchy — nothing is faded to achieve it. */
+const TRACK_TITLE =
+  "font-display text-[19px] font-extrabold uppercase leading-[1.12] tracking-[-0.022em] md:text-[22px] lg:text-[23px] xl:text-[26px]";
+const TRACK_TOPICS = "text-[17px] leading-[1.45] lg:text-[18px]";
+
+/* 08 · THE AGENDA — a two-column ledger, not a card wall.
+   ------------------------------------------------------------------------
+   The 3x2 grid of bordered cells gave every track four edges and a hover
+   fill, which made six equal boxes out of what is really an index: an
+   ordered list you scan for your own subject. The boxes are gone. What is
+   left is the ledger the page already speaks in — a rule under each row, one
+   rule down the middle, the numeral carrying the accent inline ahead of its
+   track, and every title landing on the same left edge in its column.
+
+   Row-major, so reading order, DOM order and the numerals all agree: 01|02
+   across, then 03|04, then 05|06. Column-major would read down one side and
+   back up the other, which only works in print where the eye is not also
+   the tab order.
+
+   The container draws the top edge, each row its own bottom, and the right
+   column its own left — so the ledger closes correctly at one column and at
+   two, with no rule left hanging. */
 function TheAgenda() {
   return (
     <DSSection chapter="08" tone="bone">
@@ -1222,33 +1248,31 @@ function TheAgenda() {
         <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{AGENDA.headline}</h2>
       </Reveal>
 
-      {/* Six typographic cells on a shared ruled grid — the container draws
-          the top and left edges, every cell draws its own bottom and right,
-          so the grid stays perfect at one, two and three columns. */}
       <Reveal delay={90}>
-        <div className="mt-9 grid border-l border-t border-hairline sm:grid-cols-2 lg:mt-11 lg:grid-cols-3">
+        <div className="mt-8 grid border-t border-hairline md:grid-cols-2 lg:mt-10">
           {AGENDA.tracks.map((track, i) => (
             <div
               key={track.title}
-              className="border-b border-r border-hairline p-6 transition-colors duration-300 hover:bg-paper lg:p-7 motion-reduce:transition-none"
+              className={cn(
+                "min-w-0 border-b border-hairline py-5 lg:py-6",
+                "md:[&:nth-child(odd)]:pr-8 md:[&:nth-child(even)]:border-l md:[&:nth-child(even)]:border-hairline md:[&:nth-child(even)]:pl-8 lg:[&:nth-child(odd)]:pr-12 lg:[&:nth-child(even)]:pl-12",
+              )}
             >
-              <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
-              <h3 className={cn(CARD_TITLE, "mt-4 max-w-[16ch]")}>{track.title}</h3>
-              <p className="mt-3 font-mono text-[13px] font-medium uppercase tracking-[0.1em]">
-                {track.topics}
-              </p>
+              <h3 className={TRACK_TITLE}>
+                <span className="accord-signal">{`${String(i + 1).padStart(2, "0")} · `}</span>
+                {track.title}
+              </h3>
+              <p className={cn(TRACK_TOPICS, "mt-2")}>{track.topics}</p>
             </div>
           ))}
         </div>
       </Reveal>
 
-      <Reveal delay={140}>
-        <p className="mt-9 border-y border-hairline py-4 font-display text-base font-bold uppercase leading-[1.4] tracking-[-0.005em] lg:text-[17px]">
-          {AGENDA.format}
-        </p>
-      </Reveal>
-      <Reveal delay={180}>
-        <p className="mt-8 max-w-[26ch] font-display text-[clamp(1.35rem,4.8vw,1.8rem)] font-extrabold uppercase leading-[1.08] tracking-[-0.022em] lg:text-[clamp(1.5rem,2.3vw,2rem)]">
+      {/* The refusal. Large and certain, on a held measure so it breaks where
+          the sentence turns — but a clear step under the section heading,
+          because it closes the argument rather than opening one. */}
+      <Reveal delay={150}>
+        <p className="mt-9 max-w-[26ch] font-display text-[clamp(1.35rem,4.8vw,1.8rem)] font-extrabold uppercase leading-[1.08] tracking-[-0.022em] lg:mt-10 lg:text-[clamp(1.5rem,2.3vw,2rem)]">
           {AGENDA.closing}
         </p>
       </Reveal>

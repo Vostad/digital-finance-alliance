@@ -63,7 +63,7 @@ export const CHAPTERS = [
   { index: "05", label: "Event in Numbers", id: "in-numbers" },
   { index: "06", label: "Featured Speakers", id: "speakers" },
   { index: "07", label: "Who Will You Meet", id: "who-will-you-meet" },
-  { index: "08", label: "The Agenda", id: "agenda" },
+  { index: "08", label: "Agenda", id: "agenda" },
   { index: "09", label: "Attended By", id: "attended-by" },
   { index: "10", label: "The Experience", id: "experience" },
   { index: "11", label: "Partner With Us", id: "partnership" },
@@ -218,8 +218,11 @@ export const MEET = {
 /* ---------------------------------------------------------------- 08 agenda */
 
 export const AGENDA = {
-  label: "The Agenda",
-  headline: "The rails are moving.",
+  label: "Agenda",
+  /* The section names itself. "The rails are moving" was borrowed language —
+     it is Section 02's argument, not this one's — and an agenda that has to
+     announce itself as a rallying cry reads less certain, not more. */
+  headline: "Agenda",
   tracks: [
     { title: "Cross-Border & Corridors", topics: "Corridors · settlement" },
     { title: "Instant & National Rails", topics: "Aani · Jaywan · Buna · UPI" },
@@ -228,7 +231,6 @@ export const AGENDA = {
     { title: "Open Finance & Embedded Rails", topics: "A2A · embedded finance" },
     { title: "Regulated Digital Money", topics: "Stablecoins · tokenised settlement" },
   ],
-  format: "22 curated sessions · 6 closed-door roundtables · 2 private dinners",
   closing: "If it doesn't move money, it isn't on the agenda.",
 } as const;
 
