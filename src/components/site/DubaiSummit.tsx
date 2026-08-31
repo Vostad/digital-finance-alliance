@@ -1131,18 +1131,16 @@ function WhoWillYouMeet() {
       </Reveal>
 
       <Reveal delay={80}>
-        {/* ONE LEDGER, SIX CELLS. The qualification block is the sixth cell of
-            the same grid rather than a separate row beneath it, which is what
-            makes 2 + 2 + 1 + CTA a composition instead of an odd list with a
-            gap: the fifth constituency keeps the left track, the invitation
-            takes the right, and no cell is left empty.
+        {/* Five cells, and the fifth closes the ledger on its own. The CTA
+            sits INSIDE 05's cell, in the content track beside the numeral —
+            so it ranges with the role title and its line rather than with the
+            numeral gutter, and the register reads 01–05 with one action
+            hanging off the last of them.
 
-            The nth-child rules count the qualification cell too — 05 lands on
-            an odd child and keeps the right gutter, the invitation lands on an
-            even one and takes the vertical rule — so the ledger's own
-            arithmetic places it. And because only 05 carries a bottom border
-            in that row, its divider runs the left half alone, exactly where
-            the numbered register ends. */}
+            Only 05 carries a bottom border in its row, so the divider runs
+            the left half alone: the rule stops where the numbered register
+            stops, which is what makes the right half read as the end of the
+            list rather than as a cell someone forgot to fill. */}
         <div className="mt-8 grid border-t border-hairline sm:grid-cols-2 lg:mt-10">
           {MEET.groups.map((group, i) => {
             const lead = i === 4;
@@ -1151,7 +1149,7 @@ function WhoWillYouMeet() {
                 key={group.role}
                 className={cn(
                   "grid grid-cols-[2.6rem_1fr] items-baseline gap-x-4 border-b border-hairline",
-                  lead ? "py-6 sm:content-center lg:py-7" : "py-4 lg:py-5",
+                  lead ? "py-6 lg:py-7" : "py-4 lg:py-5",
                   "sm:[&:nth-child(odd)]:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8",
                 )}
               >
@@ -1159,25 +1157,17 @@ function WhoWillYouMeet() {
                 <div className="min-w-0">
                   <h3 className={lead ? MEET_ROLE_LEAD : MEET_ROLE}>{group.role}</h3>
                   <p className={cn(MEET_LINE, "mt-2 max-w-[52ch]")}>{group.line}</p>
+                  {lead ? (
+                    <div className="mt-6">
+                      <Btn tone="solidOnLight" onClick={() => open("apply")}>
+                        {CTA.apply}
+                      </Btn>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             );
           })}
-
-          {/* The invitation. Right-aligned from sm, where it sits opposite 05;
-              left-aligned below that, where the column is single and ranging
-              it right would strand it against nothing. No bottom border — the
-              ledger closes on 05's divider, and the CTA sits outside it. */}
-          <div className="flex flex-col items-start justify-center border-hairline py-6 sm:items-end sm:border-l sm:pl-8 sm:text-right lg:py-7">
-            <p className="font-display text-[clamp(1.3rem,4.4vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:text-[clamp(1.4rem,2vw,1.8rem)]">
-              {MEET.closingLine}
-            </p>
-            <div className="mt-6">
-              <Btn tone="solidOnLight" onClick={() => open("apply")}>
-                {CTA.apply}
-              </Btn>
-            </div>
-          </div>
         </div>
       </Reveal>
     </DSSection>

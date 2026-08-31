@@ -286,7 +286,9 @@ export const MEET = {
   /* "Qualify to join the room." retired with the section's final structure:
      the invitation block states the qualification once, and a headline above
      the same sentence was saying it twice. */
-  closingLine: "Qualified delegates attend as our guest.",
+  /* The qualification copy is retired with the section's final structure:
+     the register now ends on 05 and the CTA alone carries the invitation.
+     Removed rather than left dangling, so nothing can quietly re-render it. */
 } as const;
 
 /* ---------------------------------------------------------------- 08 agenda */
