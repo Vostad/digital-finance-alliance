@@ -1451,10 +1451,15 @@ function Partnership() {
           </Reveal>
           <Reveal delay={80}>
             <p className={cn(BODY, "mt-6 max-w-[56ch]")}>{PARTNER.body}</p>
+            <p className={cn(BODY, "mt-5 max-w-[56ch]")}>{PARTNER.proposition}</p>
           </Reveal>
+          {/* The scarcity line: ruled, uppercase and in the display voice so
+              it registers immediately, at roughly half the headline so it can
+              never be mistaken for one. Full ink — the urgency is carried by
+              the rules and the case, not by shouting or by colour. */}
           <Reveal delay={130}>
             <p className="mt-8 border-y border-hairline py-4 font-display text-[1.1rem] font-bold uppercase tracking-[-0.008em] lg:text-[1.25rem]">
-              {PARTNER.positions}
+              {PARTNER.urgency}
             </p>
           </Reveal>
           <Reveal delay={170}>
@@ -1463,7 +1468,6 @@ function Partnership() {
                 {CTA.prospectus}
               </Btn>
             </div>
-            <p className={cn(SUPPORT, "mt-5 max-w-[52ch]")}>{PARTNER.footnote}</p>
           </Reveal>
         </div>
       </div>
@@ -1471,7 +1475,7 @@ function Partnership() {
   );
 }
 
-/* ----------------------------------------------------------------- 12 media */
+/* ----------------------------------------------------------------- 13 media */
 
 /* One rail, one direction. The marks here are dark artwork on transparency,
    so they take the page's grayscale treatment rather than Section 10's

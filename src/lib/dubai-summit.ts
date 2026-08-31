@@ -9,8 +9,12 @@
  *
  * CONSISTENCY LOCKS. The commercial numbers — 400 seats capped, ~220
  * institutional decision-makers, 370+ pre-scheduled meetings, 9 Vostad
- * finance editions, 33 partner positions at $7,000–$85,000 — are stated once
- * each here and read from here everywhere. Never introduce a variant.
+ * finance editions — are stated once each here and read from here
+ * everywhere. Never introduce a variant.
+ *
+ * NO COMMERCIALS ON THE PAGE. The partner count and the price band are
+ * deliberately absent: the prospectus carries the architecture, and the
+ * page's job is to earn the request for it.
  * (The approved content architecture for THIS page says NINTH edition; the
  * legacy /forums/financial-rails-mena page says 14th. The two pages disagree
  * by design of their own briefs — reconcile before both are live.)
@@ -378,11 +382,15 @@ export const EXPERIENCE = {
 
 export const PARTNER = {
   label: "Partner With Us",
-  headline: "Put your brand in the room.",
-  body: "Financial Rails brings together the institutions, decision-makers and infrastructure companies shaping the next generation of financial rails across the Gulf.",
-  positions: "33 partner positions · $7,000–$85,000",
-  footnote:
-    "Full partnership architecture, availability and contract terms are provided in the prospectus.",
+  headline: "Be where the market moves.",
+  body: "Financial Rails brings together the banks, payment institutions, treasury leaders and financial infrastructure companies shaping how money moves across the Gulf.",
+  proposition:
+    "Put your brand in the conversations, relationships and decisions that matter.",
+  /* The one scarcity claim, and it carries no number: "limited" is the
+     supplied wording and inventing a count to sharpen it would be inventing
+     evidence. The price band and the 33-position grid are gone entirely —
+     the prospectus is where commercial architecture belongs. */
+  urgency: "Partnerships are limited for 2026.",
 } as const;
 
 /* ----------------------------------------------------------------- 12 media */
