@@ -282,13 +282,16 @@ export const MEET = {
       line: "Scaling out of DIFC and ADGM — 1,900+ firms.",
     },
     { role: "Scheme & FMI Leadership", line: "The operators of the rails themselves." },
+    {
+      role: "Payments Technology & Operations",
+      line: "Core platforms, settlement and ISO 20022 migration inside banks and payment institutions.",
+    },
   ],
-  /* "Qualify to join the room." retired with the section's final structure:
-     the invitation block states the qualification once, and a headline above
-     the same sentence was saying it twice. */
-  /* The qualification copy is retired with the section's final structure:
-     the register now ends on 05 and the CTA alone carries the invitation.
-     Removed rather than left dangling, so nothing can quietly re-render it. */
+  /* One line, under the grid: the qualification reads as a quiet condition
+     beneath the register rather than as a seventh claim inside it. The old
+     "Qualify to join the room." headline stays retired — it said the same
+     thing twice. */
+  closingLine: "Qualified delegates attend as our guest.",
 } as const;
 
 /* ---------------------------------------------------------------- 08 agenda */

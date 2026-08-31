@@ -1100,28 +1100,26 @@ const MEET_ROLE =
   "font-display text-[19px] font-bold uppercase leading-[1.15] tracking-[-0.012em] lg:text-[23px]";
 const MEET_LINE = "text-[17px] leading-[1.5] lg:text-[18px]";
 
-/* The fifth constituency carries the bridge into the qualification block, so
-   it is set a step above the four above it — extrabold at 26px against bold
-   at 23px, on deeper padding. Weight and scale, not a new device. */
-const MEET_ROLE_LEAD =
-  "font-display text-[21px] font-extrabold uppercase leading-[1.1] tracking-[-0.02em] lg:text-[26px]";
-
-/* 07 · WHO WILL YOU MEET — 01|02, 03|04, then 05 across the full measure.
+/* 07 · WHO WILL YOU MEET — six constituencies on one ruled 3x2 grid.
    ------------------------------------------------------------------------
-   The five constituencies run as one ledger: a two-column register for the
-   first four, then the fifth spanning both tracks. Because it spans, there
-   is no half-empty row at the end of an odd list — the shape of the content
-   closes the grid instead of a blank cell — and the widening itself is what
-   hands the eye down into the invitation.
+   Six cells divide evenly three ways, so the register finally closes with no
+   odd item and no half-empty row — which is what the 2 + 2 + 1 shapes were
+   always working around. All six carry the same weight now: there is no lead
+   item, because in a uniform grid singling one out would be arbitrary.
 
-   The vertical rule lives on the even cells only, so it draws through the
-   two-column register and stops exactly where that register ends. The
-   container draws the top edge and each row its own bottom.
+   THE NUMERAL SITS ABOVE ITS TITLE rather than in a side gutter. At three
+   columns a 2.6rem gutter plus its gap costs 58 of about 357 usable pixels —
+   a sixth of the measure — and every title would have paid for it in extra
+   line breaks. Above, the title gets the full cell.
 
-   THE INVITATION IS ITS OWN ROW, text left and photograph right, the two
-   centred against each other. The photograph is held to a fixed 240px at lg
-   — secondary by construction, since it cannot grow with the column — and
-   the copy sits centred beside it rather than stranding space beneath. */
+   The container draws the top and left edges and every cell its own bottom
+   and right, so the ledger closes correctly at one, two and three columns
+   with no rule left hanging.
+
+   The qualification sits BELOW the grid, centred with the CTA: one condition
+   under the register, set in the sans against the cells' display titles and
+   at 18px against their 23px, so it is plainly subordinate without being
+   dimmed or shrunk to micro. */
 function WhoWillYouMeet() {
   const open = useModals();
   return (
@@ -1131,56 +1129,23 @@ function WhoWillYouMeet() {
       </Reveal>
 
       <Reveal delay={80}>
-        {/* Five cells, and the fifth closes the ledger on its own. The CTA
-            sits INSIDE 05's cell, in the content track beside the numeral —
-            so it ranges with the role title and its line rather than with the
-            numeral gutter, and the register reads 01–05 with one action
-            hanging off the last of them.
+        <div className="mt-8 grid border-l border-t border-hairline sm:grid-cols-2 lg:mt-10 lg:grid-cols-3">
+          {MEET.groups.map((group, i) => (
+            <div key={group.role} className="min-w-0 border-b border-r border-hairline p-5 lg:p-6">
+              <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
+              <h3 className={cn(MEET_ROLE, "mt-4")}>{group.role}</h3>
+              <p className={cn(MEET_LINE, "mt-2")}>{group.line}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
 
-            Only 05 carries a bottom border in its row, so the divider runs
-            the left half alone: the rule stops where the numbered register
-            stops, which is what makes the right half read as the end of the
-            list rather than as a cell someone forgot to fill. */}
-        <div className="mt-8 grid border-t border-hairline sm:grid-cols-2 lg:mt-10">
-          {MEET.groups.map((group, i) => {
-            const lead = i === 4;
-            return (
-              <div
-                key={group.role}
-                className={cn(
-                  "grid grid-cols-[2.6rem_1fr] items-baseline gap-x-4 border-b border-hairline",
-                  lead ? "py-6 lg:py-7" : "py-4 lg:py-5",
-                  "sm:[&:nth-child(odd)]:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8",
-                )}
-              >
-                <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
-                <div className="min-w-0">
-                  <h3 className={lead ? MEET_ROLE_LEAD : MEET_ROLE}>{group.role}</h3>
-                  <p className={cn(MEET_LINE, "mt-2 max-w-[52ch]")}>{group.line}</p>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* The CTA takes the right half of 05's row as its own cell — the
-              sixth child, so the ledger's even-child rule hands it the
-              vertical rule and left gutter without a special case. It is
-              CENTRED rather than ranged right: a matching right gutter makes
-              the padding symmetric, so `justify-center` lands on the true
-              middle of the half with comfortable air either side, and
-              `items-center` balances it against 05's two lines opposite.
-
-              No bottom border — 05's divider still runs the left half alone,
-              closing the numbered register where it ends. Below sm the grid
-              is one column, so the button drops under 05, centring is
-              dropped, and a 3.6rem indent — the numeral gutter plus its gap —
-              keeps it on the same edge as the role titles rather than
-              stranding it out at the section margin. */}
-          <div className="flex items-center justify-start py-4 pl-[3.6rem] sm:justify-center sm:border-l sm:border-hairline sm:py-6 sm:pl-8 sm:pr-8 lg:py-7">
-            <Btn tone="solidOnLight" onClick={() => open("apply")}>
-              {CTA.apply}
-            </Btn>
-          </div>
+      <Reveal delay={140}>
+        <div className="mt-8 flex flex-col items-center gap-5 text-center lg:mt-10">
+          <p className={BODY}>{MEET.closingLine}</p>
+          <Btn tone="solidOnLight" onClick={() => open("apply")}>
+            {CTA.apply}
+          </Btn>
         </div>
       </Reveal>
     </DSSection>
