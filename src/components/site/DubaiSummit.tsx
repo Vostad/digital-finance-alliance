@@ -777,27 +777,65 @@ function Sponsors() {
 
 /* ---------------------------------------------------------- 03 the summit */
 
+/* The section answers WHAT IS FINANCIAL RAILS, so the text leads and the
+   photograph supports — and the photograph must never dictate the height.
+   It did: a 4:5 portrait in the 5-column track stood 593px against a 389px
+   argument, overshooting the copy by 204px and leaving a 300px empty field
+   under it.
+
+   THE IMAGE NOW TAKES ITS HEIGHT FROM THE TEXT, by construction rather
+   than by arithmetic. The Reveal is the grid item, so it stretches to the
+   row; `lg:h-full` on the figure resolves against that, and the ratio is
+   released at lg. The row is set by the taller column, and with the image
+   capped at 100% of it the copy is always the taller column — so the
+   section can only ever be as tall as its own content, and the photograph
+   can never again overshoot it.
+
+   THE VIEWPORT CAP IS THE SECOND HALF of that. Height-matching alone does
+   not guarantee a landscape: at 1024 the narrower column makes the copy
+   TALLER, and h-full dutifully returned a 361x461 portrait. `max-h-[26vw]`
+   tracks the column's own width — both scale with the viewport — so the
+   frame stays wider than it is tall at every desktop width while still
+   shrinking to meet short copy. The min-height sits below the cap on
+   purpose; a floor above it would win and hand the portrait back. */
 function TheSummit() {
   return (
     <DSSection chapter="03">
-      <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-14">
-        <div className="min-w-0 lg:col-span-7">
+      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,1.06fr)_minmax(0,1fr)] lg:items-stretch lg:gap-x-14">
+        <div className="min-w-0">
           <Reveal>
             <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[18ch] lg:mt-0")}>{THE_SUMMIT.headline}</h2>
           </Reveal>
           <Reveal delay={80}>
-            <p className={cn(BODY, "mt-6 max-w-[56ch]")}>{THE_SUMMIT.body}</p>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="accord-hairline mt-8 max-w-[34ch] border-t-2 pt-5 font-display text-[1.15rem] font-bold uppercase leading-[1.25] tracking-[-0.012em] lg:text-[1.3rem]">
-              {THE_SUMMIT.closing}
+            {/* 18px mobile, 20px desktop, 1.55 leading. Arbitrary font sizes
+                carry no implicit line-height, so the leading survives the
+                class merge intact. Full ink — never faded. */}
+            <p className="mt-6 max-w-[56ch] text-[18px] leading-[1.55] lg:text-[20px]">
+              {THE_SUMMIT.body}
             </p>
           </Reveal>
         </div>
-        <Reveal delay={120} className="min-w-0 lg:col-span-5">
-          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone lg:aspect-[4/5]">
-            <DSPhoto photo={PHOTO_SUMMIT} sizes="(min-width:1024px) calc(38vw - 88px), 100vw" />
+        <Reveal delay={120} className="min-w-0">
+          <figure className="relative aspect-[16/10] w-full overflow-hidden bg-bone lg:aspect-auto lg:h-full lg:max-h-[26vw] lg:min-h-[220px]">
+            <DSPhoto
+              photo={PHOTO_SUMMIT}
+              sizes="(min-width:1024px) calc(46vw - 88px), 100vw"
+              className="object-[50%_38%]"
+            />
           </figure>
+        </Reveal>
+
+        {/* THE CLOSING, on its own full-width row. Held inside the left
+            column it stranded a 361x194 void beside itself at 1024, where
+            the capped frame ends well above the copy. Spanning both tracks
+            there is no column left to strand — and the statement reads as
+            the band that closes the section rather than as a fourth
+            paragraph. Distinct from the body by family, weight and case
+            rather than by size; the periwinkle rule does the rest. */}
+        <Reveal delay={140} className="min-w-0 lg:col-span-2">
+          <p className="accord-hairline max-w-[34ch] border-t-2 pt-5 font-display text-[1.2rem] font-extrabold uppercase leading-[1.22] tracking-[-0.015em] lg:text-[1.4rem]">
+            {THE_SUMMIT.closing}
+          </p>
         </Reveal>
       </div>
     </DSSection>
