@@ -723,17 +723,54 @@ function WordmarkStrip({
   );
 }
 
-/* 02 · SPONSORS — a thin proof strip straight after the hero. Its job is
-   immediate credibility, delivered in one breath. */
+/* 02 · SPONSORS — three names, placed deliberately. No slider: with three
+   verified sponsors the honest move is to let the visitor actually see
+   them. The band is centred — the page's one symmetric composition, which
+   is what separates a credibility interlude from a content chapter — and
+   the word PAST in the heading is load-bearing.
+
+   OPTICAL BALANCE, not equal CSS: the three marks have wildly different
+   aspect ratios (Temenos 6.2:1 flat wordmark, Mashreq 3.9:1, QFC 3.3:1
+   emblem lockup whose English line dies small). Equal heights would let
+   Temenos dwarf the row; instead each logo gets its own height chosen so
+   the three land at near-equal rendered WIDTHS — comparable visual mass,
+   and QFC's "Qatar Financial Centre" line stays legible. */
+const SPONSOR_LOGO_SIZE: Record<string, string> = {
+  Temenos: "h-6 lg:h-7",
+  Mashreq: "h-11 md:h-12 lg:h-14",
+  "Qatar Financial Centre": "h-[3.75rem] md:h-[4.25rem] lg:h-20",
+};
+
 function Sponsors() {
   return (
     <DSSection chapter="02" pad={PAD_STRIP} eyebrow={false}>
-      <Reveal>
-        <p className="label-lg accord-signal">{SPONSORS.kicker}</p>
-        <div className="mt-6">
-          <WordmarkStrip names={SPONSORS.names} logos={SPONSORS.logos} />
-        </div>
-      </Reveal>
+      <div className="mx-auto max-w-[54rem] text-center">
+        <Reveal>
+          <p className="label-lg accord-signal lg:hidden">02 — Sponsors</p>
+          <h2 className="mt-5 font-display text-[clamp(1.25rem,3.8vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.018em] lg:mt-0 lg:text-[clamp(1.4rem,1.9vw,1.75rem)]">
+            {SPONSORS.heading}
+          </h2>
+          <p className={cn(BODY, "mx-auto mt-3 max-w-[44ch]")}>{SPONSORS.line}</p>
+        </Reveal>
+        <Reveal delay={90}>
+          <ul className="mt-9 flex flex-wrap items-center justify-center gap-x-12 gap-y-8 lg:mt-11 lg:gap-x-20">
+            {SPONSORS.logos.map((logo) => (
+              <li key={logo.name} className="flex items-center">
+                <img
+                  src={logo.src}
+                  alt={logo.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className={cn(
+                    "w-auto brightness-0 grayscale transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:brightness-100 hover:grayscale-0 motion-reduce:transition-none",
+                    SPONSOR_LOGO_SIZE[logo.name],
+                  )}
+                />
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+      </div>
     </DSSection>
   );
 }

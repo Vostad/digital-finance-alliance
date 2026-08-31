@@ -20,12 +20,13 @@
  * absent. The ten media logos are the ten files supplied in
  * /media/publications, each visually identified before being listed here.
  *
- * MISSING BEATS INVENTED. Sponsor and institutional LOGOS have no verifiable
- * files in the repo (network-logos-trimmed is 80 numbered files with no
- * identity), so both proof strips render the approved NAMES as wordmarks and
- * carry an empty logo allowlist that lights up the image treatment when
- * verified files arrive. Testimonials: none exist anywhere in the repo, so
- * the section is architecture-only and hides itself while the list is empty.
+ * MISSING BEATS INVENTED. The sponsor section shows exactly the three
+ * verified past-sponsor logos supplied for it — no aggregate count, no
+ * padding of the roster. Institutional LOGOS still have no verifiable files
+ * (network-logos-trimmed is 80 numbered files with no identity), so the
+ * attended-by strip renders the approved NAMES as wordmarks over an empty
+ * logo allowlist. Testimonials: none exist anywhere in the repo, so the
+ * section is architecture-only and hides itself while the list is empty.
  */
 
 /* ------------------------------------------------------------------ event */
@@ -74,13 +75,26 @@ export type Chapter = (typeof CHAPTERS)[number];
 
 /* -------------------------------------------------------------- 02 sponsors */
 
+/**
+ * CLOSED ALLOWLIST — exactly these three, as supplied. The heading's word
+ * PAST is deliberate and load-bearing: these organisations have sponsored
+ * Vostad's finance platforms, and this section must never read as a current
+ * Financial Rails Summit MENA sponsor roster. No aggregate count exists for
+ * this section, so none is shown.
+ */
 export const SPONSORS = {
-  kicker: "Sponsors across our platforms · 2018–present",
-  /* Approved series sponsors, as names. Verified logo files do not exist in
-     the repo; when an approved set arrives, fill `logos` and the strip swaps
-     wordmarks for images without redesign. */
-  names: ["HSBC", "Visa", "Mastercard", "Swift", "Citi", "Standard Chartered", "Temenos", "Stripe"],
-  logos: [] as { name: string; src: string }[],
+  label: "Sponsors",
+  heading: "Featured past sponsors",
+  line: "Selected organisations that have sponsored Vostad's finance platforms.",
+  logos: [
+    { name: "Temenos", src: "/logos/temenos.png", alt: "Temenos — past sponsor" },
+    { name: "Mashreq", src: "/logos/mashreq.png", alt: "Mashreq — past sponsor" },
+    {
+      name: "Qatar Financial Centre",
+      src: "/logos/qatar-financial-centre.png",
+      alt: "Qatar Financial Centre — past sponsor",
+    },
+  ],
 } as const;
 
 /* ------------------------------------------------------------ 03 the summit */
