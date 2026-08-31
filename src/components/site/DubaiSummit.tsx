@@ -1309,14 +1309,14 @@ function MarkRail({
         {[...marks, ...marks].map((src, i) => (
           <li
             key={`${src}-${i}`}
-            className="flex w-[132px] shrink-0 items-center justify-center px-3 lg:w-[168px] lg:px-4"
+            className="flex w-[150px] shrink-0 items-center justify-center px-4 lg:w-[190px] lg:px-5"
           >
             <img
               src={src}
               alt=""
               loading="lazy"
               decoding="async"
-              className="max-h-7 w-auto max-w-full invert lg:max-h-9"
+              className="max-h-8 w-auto max-w-full invert lg:max-h-10"
             />
           </li>
         ))}
@@ -1351,18 +1351,22 @@ function MarkRail({
 function AttendedBy() {
   return (
     <DSSection chapter="10" pad="px-6 py-10 md:px-12 md:py-10 lg:px-16 lg:py-12" eyebrow={false}>
-      <Reveal>
-        <p className="label-lg accord-signal">{ATTENDED_BY.kicker}</p>
-      </Reveal>
-      <Reveal delay={80}>
-        <div className="mt-7 space-y-5 lg:mt-8 lg:space-y-6">
-          <MarkRail marks={MARK_RAILS[0]!} reverse seconds={220} />
-          <MarkRail marks={MARK_RAILS[1]!} seconds={250} />
-        </div>
-      </Reveal>
-      <Reveal delay={120}>
-        <p className={cn(SUPPORT, "mt-7 max-w-[72ch] lg:mt-8")}>{ATTENDED_BY.disclaimer}</p>
-      </Reveal>
+      <div className="grid gap-y-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1fr)] lg:items-center lg:gap-x-14">
+        <Reveal className="min-w-0">
+          <p className="label-lg accord-signal lg:hidden">10 — Attended By</p>
+          <h2 className="mt-5 font-display text-[clamp(1.35rem,4.6vw,1.75rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:mt-0 lg:text-[clamp(1.6rem,2.2vw,2rem)]">
+            {ATTENDED_BY.kicker}
+          </h2>
+          <p className={cn(BODY, "mt-4 max-w-[42ch]")}>{ATTENDED_BY.disclaimer}</p>
+        </Reveal>
+
+        <Reveal delay={90} className="min-w-0">
+          <div className="space-y-7 lg:space-y-9">
+            <MarkRail marks={MARK_RAILS[0]!} reverse seconds={220} />
+            <MarkRail marks={MARK_RAILS[1]!} seconds={250} />
+          </div>
+        </Reveal>
+      </div>
     </DSSection>
   );
 }

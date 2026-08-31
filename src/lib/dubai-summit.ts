@@ -308,8 +308,16 @@ export const AGENDA = {
  * THE MARKS. The 80 files in /public/network-logos-trimmed, rendered exactly
  * as supplied — no file renamed, no organisation added or invented.
  *
- * ONE EXCLUSION: 26.png is Binance, which the brief prohibits outright, so it
- * is the single file held back. 79 marks ship.
+ * TWO EXCLUSION SETS, 71 marks ship:
+ *
+ * 26.png is Binance, which the brief prohibits outright.
+ *
+ * 61–68 are the folder's own contiguous run of media and news publications —
+ * Forbes, CNN Al Iqtisadiya, Unlock Media, CNBC Arabia, Bitcoin.com,
+ * Cointelegraph, CoinDesk and Sky News Arabia. This section claims
+ * ATTENDANCE BY INSTITUTIONS; a newsroom attends as press, which is a
+ * different claim, and three of those brands already appear in Section 13
+ * where the media claim belongs. Section 13 is untouched by this.
  *
  * They are white artwork on transparency, drawn for dark surfaces; the strip
  * sits on paper, so the page inverts them rather than re-colouring them —
@@ -321,7 +329,7 @@ export const ATTENDED_BY_MARKS: readonly string[] = Array.from(
   { length: 80 },
   (_, i) => i + 1,
 )
-  .filter((n) => n !== 26)
+  .filter((n) => n !== 26 && !(n >= 61 && n <= 68))
   .map((n) => `/network-logos-trimmed/${n}.png`);
 
 export const ATTENDED_BY = {
