@@ -1157,17 +1157,30 @@ function WhoWillYouMeet() {
                 <div className="min-w-0">
                   <h3 className={lead ? MEET_ROLE_LEAD : MEET_ROLE}>{group.role}</h3>
                   <p className={cn(MEET_LINE, "mt-2 max-w-[52ch]")}>{group.line}</p>
-                  {lead ? (
-                    <div className="mt-6">
-                      <Btn tone="solidOnLight" onClick={() => open("apply")}>
-                        {CTA.apply}
-                      </Btn>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             );
           })}
+
+          {/* The CTA takes the right half of 05's row as its own cell — the
+              sixth child, so the ledger's even-child rule hands it the
+              vertical rule and left gutter without a special case. It is
+              CENTRED rather than ranged right: a matching right gutter makes
+              the padding symmetric, so `justify-center` lands on the true
+              middle of the half with comfortable air either side, and
+              `items-center` balances it against 05's two lines opposite.
+
+              No bottom border — 05's divider still runs the left half alone,
+              closing the numbered register where it ends. Below sm the grid
+              is one column, so the button drops under 05, centring is
+              dropped, and a 3.6rem indent — the numeral gutter plus its gap —
+              keeps it on the same edge as the role titles rather than
+              stranding it out at the section margin. */}
+          <div className="flex items-center justify-start py-4 pl-[3.6rem] sm:justify-center sm:border-l sm:border-hairline sm:py-6 sm:pl-8 sm:pr-8 lg:py-7">
+            <Btn tone="solidOnLight" onClick={() => open("apply")}>
+              {CTA.apply}
+            </Btn>
+          </div>
         </div>
       </Reveal>
     </DSSection>
