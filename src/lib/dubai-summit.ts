@@ -66,12 +66,10 @@ export const CHAPTERS = [
   { index: "08", label: "Agenda", id: "agenda" },
   { index: "09", label: "The Experience", id: "experience" },
   { index: "10", label: "Attended By", id: "attended-by" },
-  { index: "11", label: "Partner With Us", id: "partnership" },
-  { index: "12", label: "Media", id: "media" },
-  { index: "13", label: "Final CTA", id: "final-cta" },
-  /* Still gated, still empty, and now out of the numbered run so 13 can be
-     the closing plate the sequence calls for. Nothing about it changed. */
-  { index: "14", label: "Testimonials", id: "testimonials", gated: true },
+  { index: "11", label: "Testimonials", id: "testimonials" },
+  { index: "12", label: "Partner With Us", id: "partnership" },
+  { index: "13", label: "Media", id: "media" },
+  { index: "14", label: "Final CTA", id: "final-cta" },
 ] as const;
 
 export type Chapter = (typeof CHAPTERS)[number];
@@ -149,49 +147,88 @@ export const SPEAKERS = {
   intro: "Previous speakers from Vostad finance-sector events · 2018–2025",
   roster: [
     {
+      id: "marwan-alzarouni",
       name: "Dr. Marwan Alzarouni",
       title: "Chief Executive Officer",
       org: "Dubai Blockchain Center",
       image: "/leaders/marwan-alzarouni",
     },
     {
+      id: "ayesha-bin-lootah",
       name: "Dr. Ayesha Bin Lootah",
       title: "Assistant Vice President",
       org: "VARA",
       image: "/leaders/ayesha-bin-lootah",
     },
     {
+      id: "henk-hoogendoorn",
       name: "Henk J. Hoogendoorn",
       title: "Chief, Financial Sector Office",
       org: "Qatar Financial Centre",
       image: "/leaders/henk-hoogendoorn",
     },
     {
+      id: "paul-kayrouz",
       name: "Paul Kayrouz",
       title: "Chief Fintech Officer",
       org: "Central Bank of the UAE",
       image: "/leaders/paul-kayrouz",
     },
     {
+      id: "ibrahim-almheiri",
       name: "Ibrahim Almheiri",
       title: "Chief Executive Officer",
       org: "Mashreq Al Islami",
       image: "/leaders/ibrahim-almheiri",
     },
     {
+      id: "giovanni-miano",
       name: "Giovanni Miano",
       title: "Chief Technology Officer",
       org: "Zodia Markets",
       image: "/leaders/giovanni-miano",
     },
     {
+      id: "daniel-coheur",
       name: "Daniel Coheur",
       title: "Co-Founder, Tokeny",
       org: "Apex Group",
       image: "/leaders/daniel-coheur",
     },
+    /* Added from /public/more-speakers. Titles and organisations are the
+       supplied strings verbatim — "CEO" is not expanded to "Chief Executive
+       Officer" to match the roster's house style, because that would be
+       editing a verified record to suit a convention. Portraits are the
+       supplied 800x1000 files, resampled into the same 400/800 AVIF+JPEG
+       ladder every other portrait uses, so the card treatment is untouched. */
+    {
+      id: "matthew-van-niekerk",
+      name: "Matthew Van Niekerk",
+      title: "CEO",
+      org: "SettleMint",
+      image: "/leaders/matthew-van-niekerk",
+    },
+    {
+      id: "jeremy-firster",
+      name: "Jeremy Firster",
+      title: "Head of Institutional Adoption",
+      org: "Cardano Foundation",
+      image: "/leaders/jeremy-firster",
+    },
+    {
+      id: "baha-said",
+      name: "Baha Said",
+      title: "Country Manager, KSA",
+      org: "Temenos",
+      image: "/leaders/baha-said",
+    },
   ],
 } as const;
+
+/** The one lookup from a testimonial to the person's single record. */
+export function speakerById(id: string) {
+  return SPEAKERS.roster.find((person) => person.id === id);
+}
 
 /* ------------------------------------------------------ 07 who will you meet */
 
@@ -340,12 +377,11 @@ export const MEDIA = {
 /* ---------------------------------------------------------- 13 testimonials */
 
 export type Testimonial = {
+  /** A SPEAKERS.roster id. The name, title, organisation and portrait are
+      read from that one record — this file never restates them. */
+  speakerId: string;
   quote: string;
-  name: string;
-  title: string;
-  org: string;
-  /** Portrait path stem, when supplied. */
-  image?: string;
+  sponsorLine: string;
 };
 
 /**
@@ -355,7 +391,48 @@ export type Testimonial = {
  * while this list is empty; adding verified quotes here lights the whole
  * chapter up without redesign.
  */
-export const TESTIMONIALS: Testimonial[] = [];
+/**
+ * DRAFTS AWAITING SPONSOR APPROVAL — not verified verbatim quotations.
+ *
+ * These five wordings were supplied for approval and are published here as
+ * supplied: not rewritten, not added to, and not to be described anywhere as
+ * confirmed quotes until each sponsor has signed off on their own line.
+ * They are attributed to named, identifiable executives, so that sign-off is
+ * a gate on shipping this page, not a formality.
+ *
+ * ONE PERSON, ONE RECORD. Each entry carries only what is unique to the
+ * testimonial — the wording and the sponsorship it came from. Every name,
+ * title, organisation and portrait resolves through `speakerId` into
+ * SPEAKERS.roster, so a person cannot end up with two titles or two
+ * portraits on the same page.
+ */
+export const TESTIMONIALS: readonly Testimonial[] = [
+  {
+    speakerId: "matthew-van-niekerk",
+    quote: "Focused, relevant and built for the conversations sponsors actually want.",
+    sponsorLine: "Sponsor — Blockchain for Banking & Finance, 2018",
+  },
+  {
+    speakerId: "henk-hoogendoorn",
+    quote: "A refreshing alternative to the noise of the traditional expo.",
+    sponsorLine: "Sponsor — Islamic Fintech Forum, 2024",
+  },
+  {
+    speakerId: "ibrahim-almheiri",
+    quote: "The right people, the right conversations and the right market.",
+    sponsorLine: "Sponsor — Islamic Fintech Forum, 2024",
+  },
+  {
+    speakerId: "jeremy-firster",
+    quote: "This event has set a very high bar for the quality of the audience.",
+    sponsorLine: "Sponsor — RWA Tokenization Summit, 2023",
+  },
+  {
+    speakerId: "baha-said",
+    quote: "A high-quality audience and conversations that made the sponsorship worthwhile.",
+    sponsorLine: "Sponsor — Blockchain for Banking & Finance, 2018",
+  },
+];
 
 export const TESTIMONIALS_COPY = {
   label: "Testimonials",

@@ -31,6 +31,7 @@ import {
   MEDIA,
   TESTIMONIALS,
   TESTIMONIALS_COPY,
+  speakerById,
   FINAL_CTA,
   FOOTER,
   submitLead,
@@ -470,7 +471,8 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
 
 /** The chapters that actually render: gated ones (Testimonials) join the
     rail, the menu and the page only once their data exists. */
-const LIVE_CHAPTERS = CHAPTERS.filter((c) => !("gated" in c) || TESTIMONIALS.length > 0);
+/* Every chapter renders now that Testimonials has content. */
+const LIVE_CHAPTERS = CHAPTERS;
 
 function DSSection({
   chapter,
@@ -1432,7 +1434,7 @@ function TheExperience() {
 function Partnership() {
   const open = useModals();
   return (
-    <DSSection chapter="11">
+    <DSSection chapter="12">
       <div className="grid gap-y-9 lg:grid-cols-12 lg:gap-x-14">
         <Reveal delay={120} className="min-w-0 lg:order-1 lg:col-span-5">
           <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone lg:h-full lg:max-h-[560px]">
@@ -1469,7 +1471,7 @@ function Partnership() {
 
 function Media() {
   return (
-    <DSSection chapter="12">
+    <DSSection chapter="13">
       <Reveal>
         <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{MEDIA.headline}</h2>
         <p className="label-lg accord-signal mt-4">{MEDIA.kicker}</p>
@@ -1492,66 +1494,142 @@ function Media() {
   );
 }
 
-/* ---------------------------------------------------------- 13 testimonials */
+/* ---------------------------------------------------------- 11 testimonials */
 
-/**
- * Renders only when verified quotes exist in TESTIMONIALS — one dominant
- * quote at a time, manual arrows, no autoplay. Architecture-ready today,
- * invisible until the data is real.
- */
+/* The quote is the section. Display voice at ~39px on ink — the page's
+   statement scale, which is what makes a sponsor line read as a claim rather
+   than as a review. */
+const QUOTE_TYPE =
+  "font-display text-[clamp(1.45rem,5.6vw,2rem)] font-extrabold uppercase leading-[1.12] tracking-[-0.022em] lg:text-[clamp(1.7rem,2.7vw,2.4rem)]";
+
+/* Attribution at the brief's body floor — 17px mobile, 18px desktop, full
+   ink. Nothing here is faded or shrunk to make the quote dominant; the quote
+   is dominant because it is twice the size. */
+const ATTR_TEXT = "text-[17px] leading-[1.45] lg:text-[18px]";
+
+/* 11 · TESTIMONIALS — five sponsor voices, one at a time.
+   ------------------------------------------------------------------------
+   Manual only: no autoplay, no marquee, no grid of five. A quote that moves
+   before it is finished is worse than no quote, and executive proof reads as
+   proof precisely when the visitor controls the pace.
+   
+   ALL FIVE SLIDES ARE STACKED IN ONE GRID CELL, with only the active one
+   visible. The container therefore always takes the height of the LONGEST
+   testimonial, so the section cannot resize under the reader's cursor when
+   they press an arrow — the defect a simple conditional render would have
+   shipped. Inactive slides carry aria-hidden and hold no focusable elements,
+   so the tab order stays on the two controls.
+
+   Every name, title, organisation and portrait comes from SPEAKERS.roster
+   through `speakerById`. Nothing about a person is restated here, so the
+   five who also appear in Section 06 cannot drift into a second title or a
+   second portrait asset. */
 function Testimonials() {
-  const [index, setIndex] = useState(0);
-  if (TESTIMONIALS.length === 0) return null;
-  const t = TESTIMONIALS[index]!;
+  const [active, setActive] = useState(0);
+  const count = TESTIMONIALS.length;
+  if (count === 0) return null;
+  const step = (d: 1 | -1) => setActive((i) => (i + d + count) % count);
   const arrow =
-    "label-lg border border-hairline-invert px-4 py-3 transition-colors duration-300 hover:bg-paper hover:text-ink motion-reduce:transition-none";
+    "label-lg border border-hairline-invert px-4 py-3 transition-colors duration-300 hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none";
+
   return (
-    <DSSection chapter="14" tone="ink">
-      <div className="flex items-end justify-between gap-6">
-        <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{TESTIMONIALS_COPY.headline}</h2>
-        <div className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            aria-label="Previous testimonial"
-            className={arrow}
-            onClick={() => setIndex((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            aria-label="Next testimonial"
-            className={arrow}
-            onClick={() => setIndex((i) => (i + 1) % TESTIMONIALS.length)}
-          >
-            →
-          </button>
+    <DSSection chapter="11" tone="ink">
+      <Reveal>
+        <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[20ch] lg:mt-0")}>
+          {TESTIMONIALS_COPY.headline}
+        </h2>
+      </Reveal>
+
+      <Reveal delay={80}>
+        <div
+          className="mt-9 lg:mt-11"
+          aria-roledescription="carousel"
+          aria-label="Sponsor testimonials"
+        >
+          <div className="grid">
+            {TESTIMONIALS.map((t, i) => (
+              <blockquote
+                key={t.speakerId}
+                aria-hidden={i !== active}
+                className={cn(
+                  QUOTE_TYPE,
+                  "col-start-1 row-start-1 max-w-[34ch] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+                  i === active ? "opacity-100" : "pointer-events-none opacity-0",
+                )}
+              >
+                {`\u201C${t.quote}\u201D`}
+              </blockquote>
+            ))}
+          </div>
+
+          {/* Attribution and controls share one row from sm, which is worth
+              80px against giving the arrows a row of their own — and it puts
+              them where the reading ends. Below sm the arrows drop under,
+              because a portrait, three lines of attribution and two controls
+              cannot share 342px without crushing the name. */}
+          <div className="mt-8 flex flex-col items-start gap-6 border-t border-hairline-invert pt-6 sm:flex-row sm:items-center sm:justify-between lg:mt-10">
+            <div className="grid min-w-0">
+              {TESTIMONIALS.map((t, i) => {
+                const person = speakerById(t.speakerId);
+                if (!person) return null;
+                return (
+                  <figcaption
+                    key={t.speakerId}
+                    aria-hidden={i !== active}
+                    className={cn(
+                      "col-start-1 row-start-1 flex min-w-0 items-center gap-5 transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none lg:gap-6",
+                      i === active ? "opacity-100" : "pointer-events-none opacity-0",
+                    )}
+                  >
+                    <span className="relative block aspect-[4/5] w-20 shrink-0 overflow-hidden bg-ink lg:w-24">
+                      <picture className="contents">
+                        <source type="image/avif" srcSet={`${person.image}-400.avif`} />
+                        <img
+                          src={`${person.image}-400.jpg`}
+                          alt={`Portrait of ${person.name}`}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-cover grayscale"
+                        />
+                      </picture>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-display text-[19px] font-bold leading-tight tracking-[-0.01em] lg:text-[21px]">
+                        {person.name}
+                      </span>
+                      <span className={cn(ATTR_TEXT, "mt-1.5 block")}>
+                        {person.title} · {person.org}
+                      </span>
+                      <span className={cn(ATTR_TEXT, "accord-signal-invert mt-1.5 block")}>
+                        {t.sponsorLine}
+                      </span>
+                    </span>
+                  </figcaption>
+                );
+              })}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
+              <button
+                type="button"
+                aria-label="Previous testimonial"
+                className={arrow}
+                onClick={() => step(-1)}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Next testimonial"
+                className={arrow}
+                onClick={() => step(1)}
+              >
+                →
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <figure className="mt-10">
-        <blockquote className="font-display max-w-[26ch] text-[clamp(1.5rem,5vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.02em] lg:text-[clamp(1.8rem,2.8vw,2.5rem)]">
-          "{t.quote}"
-        </blockquote>
-        <figcaption className="mt-7 flex items-center gap-5">
-          {t.image ? (
-            <span className="relative block h-16 w-16 overflow-hidden">
-              <img
-                src={`${t.image}-400.jpg`}
-                alt={`Portrait of ${t.name}`}
-                className="absolute inset-0 h-full w-full object-cover grayscale"
-                loading="lazy"
-                decoding="async"
-              />
-            </span>
-          ) : null}
-          <span>
-            <span className="block font-display text-[1.1rem] font-bold">{t.name}</span>
-            <span className={cn(SUPPORT, "mt-1 block")}>
-              {t.title} · {t.org}
-            </span>
-          </span>
-        </figcaption>
-      </figure>
+      </Reveal>
     </DSSection>
   );
 }
@@ -1561,7 +1639,7 @@ function Testimonials() {
 function FinalCta() {
   const open = useModals();
   return (
-    <DSSection chapter="13" tone="ink" eyebrow={false} className="accord-hairline border-t-2">
+    <DSSection chapter="14" tone="ink" eyebrow={false} className="accord-hairline border-t-2">
       <div className="grid gap-y-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-14">
         <div>
           <Reveal>
@@ -1674,9 +1752,9 @@ export function DubaiSummit() {
           <TheAgenda />
           <TheExperience />
           <AttendedBy />
+          <Testimonials />
           <Partnership />
           <Media />
-          <Testimonials />
           <FinalCta />
         </main>
         <DSFooter />
