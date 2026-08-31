@@ -747,13 +747,22 @@ function WordmarkStrip({
    line. Once the two-column composition engages the logos keep just ~42% of
    the content width, and three marks across a 433px column would put QFC's
    "Qatar Financial Centre" line near 6px — so they stack for that one range
-   and no logo is shrunk to prove a point. On mobile they hold the row, with
-   QFC given the largest share (40% against 26/28) because its emblem-plus-
-   wordmark lockup is the one that stops reading first. */
+   and no logo is shrunk to prove a point.
+
+   THE MOBILE SHARES ARE SET BY LEGIBILITY, NOT BY VISUAL MASS. Measured off
+   the files, the smallest line inside each mark is 61px of Temenos's 378
+   (the wordmark itself), 43px of Mashreq's 347, and just 22px of QFC's 377
+   — its English sub-line. Rendering each at 13px therefore needs 81, 105
+   and 223px of width: 408px before a single pixel of gap, against the 342px
+   a 390 viewport leaves inside the content edge. One row cannot carry all
+   three at 13px, so the shares equalise the shortfall rather than hiding it
+   in one mark — 19/24/51 puts every logo at the SAME rendered ~10.3px
+   instead of 14.2/11.8/7.9. QFC's sub-line gains 29%, and from roughly a
+   494px viewport up the 51% share clears 13px outright. */
 const SPONSOR_SHARE: Record<string, string> = {
-  Temenos: "w-[26%] md:w-[27%] lg:w-auto xl:w-[26%]",
-  Mashreq: "w-[28%] md:w-[29%] lg:w-auto xl:w-[28%]",
-  "Qatar Financial Centre": "w-[40%] md:w-[34%] lg:w-auto xl:w-[32%]",
+  Temenos: "w-[19%] md:w-[27%] lg:w-auto xl:w-[26%]",
+  Mashreq: "w-[24%] md:w-[29%] lg:w-auto xl:w-[28%]",
+  "Qatar Financial Centre": "w-[51%] md:w-[34%] lg:w-auto xl:w-[32%]",
 };
 
 /* Matched-mass heights for the one stacked state (lg), where a share of the
@@ -779,7 +788,7 @@ function Sponsors() {
             spans its column edge to edge rather than clustering; the gap is
             a floor, not the spacing. */}
         <Reveal delay={90} className="min-w-0">
-          <ul className="flex items-center justify-between gap-x-3 md:gap-x-8 lg:flex-col lg:items-start lg:justify-start lg:gap-x-0 lg:gap-y-8 xl:max-w-[86%] xl:flex-row xl:items-center xl:justify-between xl:gap-x-8">
+          <ul className="flex items-center justify-between gap-x-2 md:gap-x-8 lg:flex-col lg:items-start lg:justify-start lg:gap-x-0 lg:gap-y-8 xl:max-w-[86%] xl:flex-row xl:items-center xl:justify-between xl:gap-x-8">
             {SPONSORS.logos.map((logo) => (
               <li key={logo.name} className={cn("flex items-center", SPONSOR_SHARE[logo.name])}>
                 <img
