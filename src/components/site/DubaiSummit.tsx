@@ -1134,64 +1134,69 @@ function FeaturedSpeakers() {
 /* ----------------------------------------------------- 07 who will you meet */
 
 /* Section 07's own row type — page-scoped constants, NOT edits to the
-   shared CARD_TITLE and SUPPORT, which Sections 08 and 10 read. Five rows
-   are few enough to be read rather than scanned, so the role goes to 23px
-   and its line to 18px; the row padding comes down a step to pay for it,
-   which leaves the block marginally SHORTER than it was at the smaller
-   size. */
+   shared CARD_TITLE and SUPPORT, which Sections 08 and 10 read. */
 const MEET_ROLE =
   "font-display text-[19px] font-bold uppercase leading-[1.15] tracking-[-0.012em] lg:text-[23px]";
 const MEET_LINE = "text-[17px] leading-[1.5] lg:text-[18px]";
 
-/* THE PHOTOGRAPH ENDS WHERE THE INDEX ENDS. It was stretched against the
-   whole left column — headline, five roles AND the invitation — while its
-   4:5 frame only ever filled 593 of those 764px, so a 171px void sat beside
-   the invitation and the sticky frame drifted away from whatever was being
-   read. The grid now gives the photograph row one, level with the index, and
-   the invitation spans both tracks in row two: `lg:h-full` means the index
-   sets the height and the frame fills it exactly, so it can neither dictate
-   the section's height nor strand space under itself. Sticky goes with it —
-   with zero travel left it was doing nothing.
+/* The fifth constituency carries the bridge into the qualification block, so
+   it is set a step above the four above it — extrabold at 26px against bold
+   at 23px, on deeper padding. Weight and scale, not a new device. */
+const MEET_ROLE_LEAD =
+  "font-display text-[21px] font-extrabold uppercase leading-[1.1] tracking-[-0.02em] lg:text-[26px]";
 
-   The DOM order still reads headline, roles, invitation, photograph, so the
-   stacked order below lg is unchanged.
+/* 07 · WHO WILL YOU MEET — 01|02, 03|04, then 05 across the full measure.
+   ------------------------------------------------------------------------
+   The five constituencies run as one ledger: a two-column register for the
+   first four, then the fifth spanning both tracks. Because it spans, there
+   is no half-empty row at the end of an odd list — the shape of the content
+   closes the grid instead of a blank cell — and the widening itself is what
+   hands the eye down into the invitation.
 
-   THE CAP EXISTS FOR ONE RANGE. Below ~1340 the longest roles wrap to two
-   lines — no type size fixes that, since even 16px would still wrap in a
-   385px measure — which makes the index tall while the photograph's column
-   stays narrow, and an unbounded `h-full` returned a 301x706 sliver at 1024.
-   A 40rem ceiling holds the frame to a sane proportion there and still
-   leaves only 66px under it; from 1340 up the index fits on one line, the
-   cap stops binding, and the frame lands flush again. Bounded ranges rather
-   than an override, so cascade order cannot matter. */
+   The vertical rule lives on the even cells only, so it draws through the
+   two-column register and stops exactly where that register ends. The
+   container draws the top edge and each row its own bottom.
+
+   THE INVITATION IS ITS OWN ROW, text left and photograph right, the two
+   centred against each other. The photograph is held to a fixed 240px at lg
+   — secondary by construction, since it cannot grow with the column — and
+   the copy sits centred beside it rather than stranding space beneath. */
 function WhoWillYouMeet() {
   const open = useModals();
   return (
     <DSSection chapter="07">
-      <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-14">
-        <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-          <Reveal>
-            <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{MEET.headline}</h2>
-          </Reveal>
-          <Reveal delay={80}>
-            <div className="mt-8 border-t border-hairline">
-              {MEET.groups.map((group, i) => (
-                <div
-                  key={group.role}
-                  className="grid grid-cols-[2.6rem_1fr] items-baseline gap-x-4 border-b border-hairline py-4 lg:py-5"
-                >
-                  <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
-                  <div className="min-w-0">
-                    <h3 className={MEET_ROLE}>{group.role}</h3>
-                    <p className={cn(MEET_LINE, "mt-2 max-w-[52ch]")}>{group.line}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
+      <Reveal>
+        <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{MEET.headline}</h2>
+      </Reveal>
 
-        <Reveal delay={140} className="min-w-0 lg:col-span-12 lg:col-start-1 lg:row-start-2">
+      <Reveal delay={80}>
+        <div className="mt-8 grid border-t border-hairline sm:grid-cols-2 lg:mt-10">
+          {MEET.groups.map((group, i) => {
+            const lead = i === 4;
+            return (
+              <div
+                key={group.role}
+                className={cn(
+                  "grid grid-cols-[2.6rem_1fr] items-baseline gap-x-4 border-b border-hairline",
+                  lead ? "py-6 lg:py-7" : "py-4 lg:py-5",
+                  !lead &&
+                    "sm:[&:nth-child(odd)]:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8",
+                  lead && "sm:col-span-2",
+                )}
+              >
+                <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
+                <div className="min-w-0">
+                  <h3 className={lead ? MEET_ROLE_LEAD : MEET_ROLE}>{group.role}</h3>
+                  <p className={cn(MEET_LINE, "mt-2 max-w-[52ch]")}>{group.line}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Reveal>
+
+      <div className="mt-10 grid gap-y-8 lg:mt-12 lg:grid-cols-12 lg:items-center lg:gap-x-14">
+        <Reveal delay={140} className="min-w-0 lg:col-span-7">
           <p className="font-display text-[clamp(1.3rem,4.4vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:text-[clamp(1.4rem,2vw,1.8rem)]">
             {MEET.closingHeadline}
           </p>
@@ -1203,8 +1208,8 @@ function WhoWillYouMeet() {
           </div>
         </Reveal>
 
-        <Reveal delay={120} className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1">
-          <figure className="relative aspect-[4/3] w-full overflow-hidden bg-bone lg:aspect-auto lg:h-full lg:min-h-[380px] lg:max-[1339px]:max-h-[40rem]">
+        <Reveal delay={170} className="min-w-0 lg:col-span-5">
+          <figure className="relative aspect-[16/10] w-full overflow-hidden bg-bone sm:aspect-[2/1] lg:aspect-auto lg:h-[15rem]">
             <DSPhoto photo={PHOTO_MEET} sizes="(min-width:1024px) calc(38vw - 88px), 100vw" />
           </figure>
         </Reveal>
