@@ -1298,51 +1298,62 @@ function AttendedBy() {
 
 /* ------------------------------------------------------------ 10 experience */
 
-/* Four moments as an editorial mosaic — spans alternate 7/5 then 5/7, so
-   the two rows counter-rotate instead of stacking as four equal cards, and
-   the wide frames run shallower than the narrow ones. */
-const MOMENT_SPANS = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7"];
-const MOMENT_FRAMES = [
-  "lg:aspect-[16/10]",
-  "lg:aspect-[4/3]",
-  "lg:aspect-[4/3]",
-  "lg:aspect-[16/10]",
-];
+/* Section 10's own card title — page-scoped, a half-step above the shared
+   CARD_TITLE so the four names are what the section IS at first glance. */
+const EXP_TITLE =
+  "font-display text-[19px] font-extrabold uppercase leading-[1.1] tracking-[-0.018em] lg:text-[22px]";
 
+/* Per-card square crops: each master is re-centred for a 1:1 frame so the
+   subject survives the tight cut — the keynote speaker stands at frame
+   left, the ballroom's tables sit low. */
+const EXP_CROPS = ["object-[24%_40%]", "object-[56%_46%]", "object-[50%_40%]", "object-[50%_62%]"];
+
+/* 10 · THE EXPERIENCE — four compact cards on one ruled 2x2 grid.
+   ------------------------------------------------------------------------
+   The mosaic inverted the section's own hierarchy: 1,400px of photography
+   with the four names hanging under the frames as captions. But the section
+   exists so a visitor can scan STAGE / MEETINGS / NETWORKING / DINNER — the
+   words are the content and the images are the proof, so the composition
+   now says exactly that.
+
+   Each card is a media object: a square photograph at fixed compact size,
+   the title beside it carrying the display voice, the line under the title
+   in full-ink sans. The image cannot outgrow its 10rem, so it can never
+   dominate the card — and the whole section drops from ~1,400px to roughly
+   half that.
+
+   CELLS, NOT FLOATING CARDS. The container draws the top and left edges and
+   every cell draws its own bottom and right — the same shared-rule ledger
+   the rest of the page speaks, which reads as four deliberate plates rather
+   than four boxes with shadows. */
 function TheExperience() {
   return (
     <DSSection chapter="10" tone="ink">
       <Reveal>
         <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[24ch] lg:mt-0")}>{EXPERIENCE.headline}</h2>
       </Reveal>
-      <div className="mt-9 grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:mt-11 lg:grid-cols-12">
-        {EXPERIENCE.moments.map((moment, i) => (
-          <Reveal key={moment.title} delay={60 + i * 60} className={cn("min-w-0", MOMENT_SPANS[i])}>
-            <figure>
-              <div
-                className={cn(
-                  "relative aspect-[16/10] w-full overflow-hidden bg-ink",
-                  MOMENT_FRAMES[i],
-                )}
-              >
+      <Reveal delay={80}>
+        <div className="mt-8 grid border-l border-t border-hairline-invert md:grid-cols-2 lg:mt-10">
+          {EXPERIENCE.moments.map((moment, i) => (
+            <div
+              key={moment.title}
+              className="flex min-w-0 items-center gap-5 border-b border-r border-hairline-invert p-5 md:gap-6 lg:p-6"
+            >
+              <figure className="relative aspect-square w-28 shrink-0 overflow-hidden bg-ink md:w-32 lg:w-40">
                 <DSPhoto
                   photo={EXPERIENCE_PHOTOS[i]!}
-                  sizes="(min-width:1024px) 45vw, (min-width:640px) 50vw, 100vw"
+                  sizes="(min-width:1024px) 160px, 128px"
+                  className={EXP_CROPS[i]!}
                 />
+              </figure>
+              <div className="min-w-0">
+                <h3 className={EXP_TITLE}>{moment.title}</h3>
+                <p className={cn(SUPPORT, "mt-2 max-w-[36ch]")}>{moment.line}</p>
               </div>
-              <figcaption className="mt-4 flex items-baseline gap-4">
-                <span className="label-lg accord-signal-invert">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span>
-                  <span className={cn(CARD_TITLE, "block")}>{moment.title}</span>
-                  <span className={cn(SUPPORT, "mt-1.5 block max-w-[44ch]")}>{moment.line}</span>
-                </span>
-              </figcaption>
-            </figure>
-          </Reveal>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      </Reveal>
     </DSSection>
   );
 }
