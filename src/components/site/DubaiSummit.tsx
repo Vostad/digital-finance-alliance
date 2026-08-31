@@ -25,6 +25,7 @@ import {
   MEET,
   AGENDA,
   ATTENDED_BY,
+  ATTENDED_BY_MARKS,
   EXPERIENCE,
   PARTNER,
   MEDIA,
@@ -691,43 +692,6 @@ function Hero() {
 
 /* --------------------------------------------------- wordmark proof strips */
 
-/**
- * An auto-advancing strip of verified names. Wordmarks, not logos, until a
- * verified logo allowlist exists — the names are the approved evidence, and
- * a numbered PNG is not. Each item carries its own trailing space so the
- * duplicated track loops seamlessly at exactly −50%.
- */
-function WordmarkStrip({
-  names,
-  logos,
-  invert,
-}: {
-  names: readonly string[];
-  logos: readonly { name: string; src: string }[];
-  invert?: boolean;
-}) {
-  const items = logos.length > 0 ? logos.map((l) => l.name) : names;
-  return (
-    <div className="overflow-hidden" role="list" aria-label="Represented organisations">
-      <div className="marquee-track flex w-max items-center [animation-duration:38s]">
-        {[...items, ...items].map((name, i) => (
-          <span
-            key={`${name}-${i}`}
-            role={i < items.length ? "listitem" : undefined}
-            aria-hidden={i >= items.length}
-            className={cn(
-              "whitespace-nowrap pr-14 font-display text-[1.2rem] font-bold uppercase tracking-[-0.01em] lg:pr-16 lg:text-[1.4rem]",
-              invert ? "text-paper" : "text-ink",
-            )}
-          >
-            {name}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* 02 · SPONSORS — left message, right proof.
    ------------------------------------------------------------------------
    Three verified past sponsors, still: no slider, no marquee, no cards, no
@@ -1285,23 +1249,123 @@ function TheAgenda() {
   );
 }
 
-/* ------------------------------------------------------------ 09 attended by */
+/* ------------------------------------------------------------ 10 attended by */
 
+/* Alternating, not split down the middle: the folder runs roughly banks
+   first, infrastructure through the middle, media last, so halving it would
+   have stacked one category per rail. Taking every other file gives both
+   rails the same mix. */
+const MARK_RAILS = [
+  ATTENDED_BY_MARKS.filter((_, i) => i % 2 === 0),
+  ATTENDED_BY_MARKS.filter((_, i) => i % 2 === 1),
+];
+
+const RAIL_FADE = {
+  maskImage: "linear-gradient(to right, transparent, #000 5%, #000 95%, transparent)",
+  WebkitMaskImage: "linear-gradient(to right, transparent, #000 5%, #000 95%, transparent)",
+} as const;
+
+/**
+ * One rail. The track is the mark list rendered twice, so the -50% travel in
+ * the site's own `marquee-track` keyframe lands exactly on the seam; the
+ * second copy is what makes the loop invisible. `animation-direction: reverse`
+ * is what turns the site's right-to-left drift into a left-to-right one —
+ * one keyframe, two directions, rather than a second set of keyframes.
+ *
+ * aria-hidden, and every mark alt="": these are 79 numbered files. Naming
+ * them would mean asserting identities from a visual reading, and a wrong
+ * alt is a false claim about a real institution. The kicker and the
+ * disclaimer carry the section for a screen reader instead.
+ *
+ * THE CELL IS A FIXED WIDTH, and that is load-bearing rather than cosmetic.
+ * Sized by their own artwork, the marks are lazy images of 79 different
+ * intrinsic widths, so the track grew as they arrived — the geometry drifted
+ * under the animation and the -50% seam stopped landing on the join. A fixed
+ * cell makes the track deterministic from the first frame, whatever order
+ * the files load in, and gives the rail an even rhythm besides; each mark is
+ * then fitted inside its cell by height and width together, so a wide
+ * wordmark and a square emblem both sit at comparable optical weight.
+ */
+function MarkRail({
+  marks,
+  reverse = false,
+  seconds,
+}: {
+  marks: readonly string[];
+  reverse?: boolean;
+  seconds: number;
+}) {
+  return (
+    <div className="overflow-hidden" style={RAIL_FADE} aria-hidden>
+      <ul
+        className={cn(
+          "marquee-track flex w-max items-center",
+          reverse && "[animation-direction:reverse]",
+        )}
+        style={{ animationDuration: `${seconds}s` }}
+      >
+        {[...marks, ...marks].map((src, i) => (
+          <li
+            key={`${src}-${i}`}
+            className="flex w-[132px] shrink-0 items-center justify-center px-3 lg:w-[168px] lg:px-4"
+          >
+            <img
+              src={src}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="max-h-7 w-auto max-w-full invert lg:max-h-9"
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* 10 · ATTENDED BY — two rails, counter-running.
+   ------------------------------------------------------------------------
+   The wordmark strip is replaced by the marks themselves. Two rows drifting
+   against each other, the upper one left-to-right and the lower one
+   right-to-left: the opposition is what stops a logo wall reading as a
+   single scrolling banner, and it is the only motion idea borrowed — the
+   type, rules, spacing and monochrome treatment are the page's own.
+
+   Slow on purpose. Each rail carries ~40 marks over a track of several
+   thousand pixels and takes three minutes to complete a pass, so the drift
+   is something noticed rather than watched, and the two speeds differ so the
+   rows never lock into step.
+
+   The marks are white artwork drawn for dark grounds; the section stays on
+   paper and inverts them, which keeps the lockups that carry a light box
+   legible instead of flattening them into solid blocks. Edges are masked so
+   marks enter and leave rather than being cut.
+
+   THE PAD IS SPELLED OUT rather than reusing PAD_STRIP, which declares no
+   `md:` vertical padding — so Section's own `md:py-28` survived the merge
+   and inflated this strip to 112px top and bottom at tablet, 224px of
+   padding around 146px of content. Closed here for this section only;
+   Sponsors reads the same constant and is deliberately left untouched. */
 function AttendedBy() {
   return (
-    <DSSection chapter="09" pad={PAD_STRIP} eyebrow={false}>
+    <DSSection chapter="10" pad="px-6 py-10 md:px-12 md:py-10 lg:px-16 lg:py-12" eyebrow={false}>
       <Reveal>
         <p className="label-lg accord-signal">{ATTENDED_BY.kicker}</p>
-        <div className="mt-6">
-          <WordmarkStrip names={ATTENDED_BY.names} logos={ATTENDED_BY.logos} />
+      </Reveal>
+      <Reveal delay={80}>
+        <div className="mt-7 space-y-5 lg:mt-8 lg:space-y-6">
+          <MarkRail marks={MARK_RAILS[0]!} reverse seconds={220} />
+          <MarkRail marks={MARK_RAILS[1]!} seconds={250} />
         </div>
-        <p className="mt-5 font-mono text-[14px] tracking-[0.02em]">{ATTENDED_BY.disclaimer}</p>
+      </Reveal>
+      <Reveal delay={120}>
+        <p className={cn(SUPPORT, "mt-7 max-w-[72ch] lg:mt-8")}>{ATTENDED_BY.disclaimer}</p>
       </Reveal>
     </DSSection>
   );
 }
 
-/* ------------------------------------------------------------ 10 experience */
+/* ------------------------------------------------------------ 09 experience */
 
 /* Section 10's own card title — page-scoped, a half-step above the shared
    CARD_TITLE so the four names are what the section IS at first glance. */
@@ -1313,7 +1377,7 @@ const EXP_TITLE =
    left, the ballroom's tables sit low. */
 const EXP_CROPS = ["object-[24%_40%]", "object-[56%_46%]", "object-[50%_40%]", "object-[50%_62%]"];
 
-/* 10 · THE EXPERIENCE — four compact cards on one ruled 2x2 grid.
+/* 09 · THE EXPERIENCE — four compact cards on one ruled 2x2 grid.
    ------------------------------------------------------------------------
    The mosaic inverted the section's own hierarchy: 1,400px of photography
    with the four names hanging under the frames as captions. But the section
@@ -1333,7 +1397,7 @@ const EXP_CROPS = ["object-[24%_40%]", "object-[56%_46%]", "object-[50%_40%]", "
    than four boxes with shadows. */
 function TheExperience() {
   return (
-    <DSSection chapter="10" tone="ink">
+    <DSSection chapter="09" tone="ink">
       <Reveal>
         <h2 className={cn(SECTION_TYPE, "mt-6 max-w-[24ch] lg:mt-0")}>{EXPERIENCE.headline}</h2>
       </Reveal>
@@ -1442,7 +1506,7 @@ function Testimonials() {
   const arrow =
     "label-lg border border-hairline-invert px-4 py-3 transition-colors duration-300 hover:bg-paper hover:text-ink motion-reduce:transition-none";
   return (
-    <DSSection chapter="13" tone="ink">
+    <DSSection chapter="14" tone="ink">
       <div className="flex items-end justify-between gap-6">
         <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{TESTIMONIALS_COPY.headline}</h2>
         <div className="flex shrink-0 items-center gap-3">
@@ -1497,7 +1561,7 @@ function Testimonials() {
 function FinalCta() {
   const open = useModals();
   return (
-    <Section tone="ink" className="accord-hairline border-t-2" contentClassName={PAD}>
+    <DSSection chapter="13" tone="ink" eyebrow={false} className="accord-hairline border-t-2">
       <div className="grid gap-y-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-14">
         <div>
           <Reveal>
@@ -1530,7 +1594,7 @@ function FinalCta() {
           </Reveal>
         </div>
       </div>
-    </Section>
+    </DSSection>
   );
 }
 
@@ -1608,13 +1672,13 @@ export function DubaiSummit() {
           <FeaturedSpeakers />
           <WhoWillYouMeet />
           <TheAgenda />
-          <AttendedBy />
           <TheExperience />
+          <AttendedBy />
           <Partnership />
           <Media />
           <Testimonials />
+          <FinalCta />
         </main>
-        <FinalCta />
         <DSFooter />
         {modal ? <LeadModal kind={modal} onClose={() => setModal(null)} /> : null}
       </div>

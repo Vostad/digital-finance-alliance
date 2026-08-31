@@ -64,11 +64,14 @@ export const CHAPTERS = [
   { index: "06", label: "Featured Speakers", id: "speakers" },
   { index: "07", label: "Who Will You Meet", id: "who-will-you-meet" },
   { index: "08", label: "Agenda", id: "agenda" },
-  { index: "09", label: "Attended By", id: "attended-by" },
-  { index: "10", label: "The Experience", id: "experience" },
+  { index: "09", label: "The Experience", id: "experience" },
+  { index: "10", label: "Attended By", id: "attended-by" },
   { index: "11", label: "Partner With Us", id: "partnership" },
   { index: "12", label: "Media", id: "media" },
-  { index: "13", label: "Testimonials", id: "testimonials", gated: true },
+  { index: "13", label: "Final CTA", id: "final-cta" },
+  /* Still gated, still empty, and now out of the numbered run so 13 can be
+     the closing plate the sequence calls for. Nothing about it changed. */
+  { index: "14", label: "Testimonials", id: "testimonials", gated: true },
 ] as const;
 
 export type Chapter = (typeof CHAPTERS)[number];
@@ -236,6 +239,26 @@ export const AGENDA = {
 
 /* ----------------------------------------------------------- 09 attended by */
 
+/**
+ * THE MARKS. The 80 files in /public/network-logos-trimmed, rendered exactly
+ * as supplied — no file renamed, no organisation added or invented.
+ *
+ * ONE EXCLUSION: 26.png is Binance, which the brief prohibits outright, so it
+ * is the single file held back. 79 marks ship.
+ *
+ * They are white artwork on transparency, drawn for dark surfaces; the strip
+ * sits on paper, so the page inverts them rather than re-colouring them —
+ * invert preserves the internal contrast of the lockups that carry a light
+ * box (KPMG, PRYPCO MINT, CNN, Sky News), which a flat single-ink fill would
+ * have collapsed into solid blocks.
+ */
+export const ATTENDED_BY_MARKS: readonly string[] = Array.from(
+  { length: 80 },
+  (_, i) => i + 1,
+)
+  .filter((n) => n !== 26)
+  .map((n) => `/network-logos-trimmed/${n}.png`);
+
 export const ATTENDED_BY = {
   kicker: "Attended by leaders across finance · 2018–present",
   /* Approved institution names — attendance evidence, never partnership. */
@@ -254,6 +277,9 @@ export const ATTENDED_BY = {
     "Temenos",
     "Stripe",
   ],
+  /* Retained as the approved textual record even though the strip now shows
+     the logo files themselves — the list is still true, and losing it would
+     lose the only place these institutions are named on this page. */
   logos: [] as { name: string; src: string }[],
   disclaimer:
     "Institutional names indicate participation across Vostad events. No endorsement or affiliation is implied.",
