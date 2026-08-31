@@ -723,47 +723,70 @@ function WordmarkStrip({
   );
 }
 
-/* 02 · SPONSORS — three names, placed deliberately. No slider: with three
-   verified sponsors the honest move is to let the visitor actually see
-   them. The band is centred — the page's one symmetric composition, which
-   is what separates a credibility interlude from a content chapter — and
-   the word PAST in the heading is load-bearing.
+/* 02 · SPONSORS — left message, right proof.
+   ------------------------------------------------------------------------
+   Three verified past sponsors, still: no slider, no marquee, no cards, no
+   aggregate count. What changes is the composition. Centred, the section
+   read as a separate module dropped into the page; it now opens on the same
+   left content edge as every other section and the eye crosses it as
+   MESSAGE -> PROOF, along the spread rather than down it.
 
-   OPTICAL BALANCE, not equal CSS: the three marks have wildly different
-   aspect ratios (Temenos 6.2:1 flat wordmark, Mashreq 3.9:1, QFC 3.3:1
-   emblem lockup whose English line dies small). Equal heights would let
-   Temenos dwarf the row; instead each logo gets its own height chosen so
-   the three land at near-equal rendered WIDTHS — comparable visual mass,
-   and QFC's "Qatar Financial Centre" line stays legible. */
-const SPONSOR_LOGO_SIZE: Record<string, string> = {
-  Temenos: "h-6 lg:h-7",
-  Mashreq: "h-11 md:h-12 lg:h-14",
-  "Qatar Financial Centre": "h-[3.75rem] md:h-[4.25rem] lg:h-20",
+   OPTICAL BALANCE BY WIDTH, NOT HEIGHT. The three marks run 6.2:1, 3.9:1
+   and 3.3:1, so matched heights would let the flat Temenos wordmark dwarf
+   the group while crushing QFC's English line. In the row states each takes
+   a share of the column — 27/29/34 — which lands all three at comparable
+   visual mass; in the stacked states they take matched-mass heights.
+
+   THE ROW OSCILLATES ON PURPOSE. The logos have the full content width
+   below lg, then only ~40% of it once the two-column composition engages,
+   then enough again from xl. Three marks across a 418px column at 1024
+   would put QFC's "Qatar Financial Centre" line under 7px, so they stack
+   there instead: the left/right relationship is preserved and no logo is
+   shrunk to prove it. */
+const SPONSOR_SHARE: Record<string, string> = {
+  Temenos: "md:w-[27%] lg:w-auto xl:w-[27%]",
+  Mashreq: "md:w-[29%] lg:w-auto xl:w-[29%]",
+  "Qatar Financial Centre": "md:w-[34%] lg:w-auto xl:w-[34%]",
+};
+
+/* Matched-mass heights for the two stacked states, where a share of the
+   column means nothing because each mark owns a row of its own. */
+const SPONSOR_HEIGHT: Record<string, string> = {
+  Temenos: "h-7 md:h-auto md:w-full lg:h-8 lg:w-auto xl:h-auto xl:w-full",
+  Mashreq: "h-12 md:h-auto md:w-full lg:h-14 lg:w-auto xl:h-auto xl:w-full",
+  "Qatar Financial Centre": "h-[4.5rem] md:h-auto md:w-full lg:h-20 lg:w-auto xl:h-auto xl:w-full",
 };
 
 function Sponsors() {
   return (
-    <DSSection chapter="02" pad={PAD_STRIP} eyebrow={false}>
-      <div className="mx-auto max-w-[54rem] text-center">
-        <Reveal>
-          <p className="label-lg accord-signal lg:hidden">02 — Sponsors</p>
-          <h2 className="mt-5 font-display text-[clamp(1.25rem,3.8vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.018em] lg:mt-0 lg:text-[clamp(1.4rem,1.9vw,1.75rem)]">
+    <DSSection chapter="02" pad={PAD_STRIP}>
+      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1fr)] lg:items-center lg:gap-x-14">
+        <Reveal className="min-w-0">
+          <h2 className="mt-5 font-display text-[clamp(1.35rem,4.6vw,1.75rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:mt-0 lg:text-[clamp(1.6rem,2.2vw,2rem)]">
             {SPONSORS.heading}
           </h2>
-          <p className={cn(BODY, "mx-auto mt-3 max-w-[44ch]")}>{SPONSORS.line}</p>
+          <p className={cn(BODY, "mt-4 max-w-[42ch]")}>{SPONSORS.line}</p>
         </Reveal>
-        <Reveal delay={90}>
-          <ul className="mt-9 flex flex-wrap items-center justify-center gap-x-12 gap-y-8 lg:mt-11 lg:gap-x-20">
+
+        {/* The proof. `justify-between` in the row states, so the group
+            spans its column edge to edge rather than clustering; the gap is
+            a floor, not the spacing. */}
+        <Reveal delay={90} className="min-w-0">
+          <ul className="flex flex-col items-start gap-y-8 md:flex-row md:items-center md:justify-between md:gap-x-8 lg:flex-col lg:items-start lg:gap-y-9 xl:flex-row xl:items-center xl:justify-between">
             {SPONSORS.logos.map((logo) => (
-              <li key={logo.name} className="flex items-center">
+              <li key={logo.name} className={cn("flex items-center", SPONSOR_SHARE[logo.name])}>
                 <img
                   src={logo.src}
                   alt={logo.alt}
                   loading="lazy"
                   decoding="async"
                   className={cn(
-                    "w-auto brightness-0 grayscale transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:brightness-100 hover:grayscale-0 motion-reduce:transition-none",
-                    SPONSOR_LOGO_SIZE[logo.name],
+                    /* Single ink. Plain grayscale left three different greys
+                       — Temenos near-black, QFC pale — which reads as a
+                       collection rather than a system; the site's own hover
+                       language releases the true brand colour. */
+                    "brightness-0 grayscale transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:brightness-100 hover:grayscale-0 motion-reduce:transition-none",
+                    SPONSOR_HEIGHT[logo.name],
                   )}
                 />
               </li>
