@@ -97,11 +97,6 @@ const PHOTO_SUMMIT: Photo = {
   widths: [480, 768, 1280, 1888],
   alt: "Two senior delegates in conversation at a Vostad finance event",
 };
-const PHOTO_MEET: Photo = {
-  base: "/media/microsite/why-attend",
-  widths: [480, 768, 1280, 1888],
-  alt: "Delegates talking together during a Vostad conference",
-};
 const PHOTO_STAGE: Photo = {
   base: "/media/financial-rails-v2/experience/keynote",
   widths: [480, 768, 1280, 1920],
@@ -1136,6 +1131,18 @@ function WhoWillYouMeet() {
       </Reveal>
 
       <Reveal delay={80}>
+        {/* ONE LEDGER, SIX CELLS. The qualification block is the sixth cell of
+            the same grid rather than a separate row beneath it, which is what
+            makes 2 + 2 + 1 + CTA a composition instead of an odd list with a
+            gap: the fifth constituency keeps the left track, the invitation
+            takes the right, and no cell is left empty.
+
+            The nth-child rules count the qualification cell too — 05 lands on
+            an odd child and keeps the right gutter, the invitation lands on an
+            even one and takes the vertical rule — so the ledger's own
+            arithmetic places it. And because only 05 carries a bottom border
+            in that row, its divider runs the left half alone, exactly where
+            the numbered register ends. */}
         <div className="mt-8 grid border-t border-hairline sm:grid-cols-2 lg:mt-10">
           {MEET.groups.map((group, i) => {
             const lead = i === 4;
@@ -1144,10 +1151,8 @@ function WhoWillYouMeet() {
                 key={group.role}
                 className={cn(
                   "grid grid-cols-[2.6rem_1fr] items-baseline gap-x-4 border-b border-hairline",
-                  lead ? "py-6 lg:py-7" : "py-4 lg:py-5",
-                  !lead &&
-                    "sm:[&:nth-child(odd)]:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8",
-                  lead && "sm:col-span-2",
+                  lead ? "py-6 sm:content-center lg:py-7" : "py-4 lg:py-5",
+                  "sm:[&:nth-child(odd)]:pr-8 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-hairline sm:[&:nth-child(even)]:pl-8",
                 )}
               >
                 <p className="label-lg accord-signal">{String(i + 1).padStart(2, "0")}</p>
@@ -1158,28 +1163,23 @@ function WhoWillYouMeet() {
               </div>
             );
           })}
+
+          {/* The invitation. Right-aligned from sm, where it sits opposite 05;
+              left-aligned below that, where the column is single and ranging
+              it right would strand it against nothing. No bottom border — the
+              ledger closes on 05's divider, and the CTA sits outside it. */}
+          <div className="flex flex-col items-start justify-center border-hairline py-6 sm:items-end sm:border-l sm:pl-8 sm:text-right lg:py-7">
+            <p className="font-display text-[clamp(1.3rem,4.4vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:text-[clamp(1.4rem,2vw,1.8rem)]">
+              {MEET.closingLine}
+            </p>
+            <div className="mt-6">
+              <Btn tone="solidOnLight" onClick={() => open("apply")}>
+                {CTA.apply}
+              </Btn>
+            </div>
+          </div>
         </div>
       </Reveal>
-
-      <div className="mt-10 grid gap-y-8 lg:mt-12 lg:grid-cols-12 lg:items-center lg:gap-x-14">
-        <Reveal delay={140} className="min-w-0 lg:col-span-7">
-          <p className="font-display text-[clamp(1.3rem,4.4vw,1.6rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:text-[clamp(1.4rem,2vw,1.8rem)]">
-            {MEET.closingHeadline}
-          </p>
-          <p className={cn(BODY, "mt-3")}>{MEET.closingLine}</p>
-          <div className="mt-6">
-            <Btn tone="solidOnLight" onClick={() => open("apply")}>
-              {CTA.apply}
-            </Btn>
-          </div>
-        </Reveal>
-
-        <Reveal delay={170} className="min-w-0 lg:col-span-5">
-          <figure className="relative aspect-[16/10] w-full overflow-hidden bg-bone sm:aspect-[2/1] lg:aspect-auto lg:h-[15rem]">
-            <DSPhoto photo={PHOTO_MEET} sizes="(min-width:1024px) calc(38vw - 88px), 100vw" />
-          </figure>
-        </Reveal>
-      </div>
     </DSSection>
   );
 }

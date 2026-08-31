@@ -283,7 +283,9 @@ export const MEET = {
     },
     { role: "Scheme & FMI Leadership", line: "The operators of the rails themselves." },
   ],
-  closingHeadline: "Qualify to join the room.",
+  /* "Qualify to join the room." retired with the section's final structure:
+     the invitation block states the qualification once, and a headline above
+     the same sentence was saying it twice. */
   closingLine: "Qualified delegates attend as our guest.",
 } as const;
 
