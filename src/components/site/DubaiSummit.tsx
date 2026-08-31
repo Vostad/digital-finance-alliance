@@ -1116,10 +1116,11 @@ const MEET_LINE = "text-[17px] leading-[1.5] lg:text-[18px]";
    and right, so the ledger closes correctly at one, two and three columns
    with no rule left hanging.
 
-   The qualification sits BELOW the grid, centred with the CTA: one condition
-   under the register, set in the sans against the cells' display titles and
-   at 18px against their 23px, so it is plainly subordinate without being
-   dimmed or shrunk to micro. */
+   The qualification sits BELOW the grid on the section's own content edge,
+   ranged left with the heading and the grid's first column rather than
+   centred: one condition under the register, set in the sans against the
+   cells' display titles and at 18px against their 23px, so it is plainly
+   subordinate without being dimmed or shrunk to micro. */
 function WhoWillYouMeet() {
   const open = useModals();
   return (
@@ -1141,7 +1142,7 @@ function WhoWillYouMeet() {
       </Reveal>
 
       <Reveal delay={140}>
-        <div className="mt-8 flex flex-col items-center gap-5 text-center lg:mt-10">
+        <div className="mt-8 flex flex-col items-start gap-5 lg:mt-10">
           <p className={BODY}>{MEET.closingLine}</p>
           <Btn tone="solidOnLight" onClick={() => open("apply")}>
             {CTA.apply}
