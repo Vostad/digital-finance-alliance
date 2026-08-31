@@ -1473,27 +1473,74 @@ function Partnership() {
 
 /* ----------------------------------------------------------------- 12 media */
 
+/* One rail, one direction. The marks here are dark artwork on transparency,
+   so they take the page's grayscale treatment rather than Section 10's
+   invert — these need no flipping to sit on paper.
+
+   Named alts on the first pass and empty ones on the duplicate: unlike the
+   numbered institutional files, every publication here is verified by name
+   in MEDIA.logos, so a screen reader gets the roster once rather than
+   twenty times or not at all. */
+function MediaRail() {
+  const items = MEDIA.logos;
+  return (
+    <div className="overflow-hidden" style={RAIL_FADE}>
+      <ul
+        aria-label="Media and publications represented"
+        className="marquee-track flex w-max items-center"
+        style={{ animationDuration: "72s" }}
+      >
+        {[...items, ...items].map((logo, i) => {
+          const duplicate = i >= items.length;
+          return (
+            <li
+              key={`${logo.src}-${i}`}
+              aria-hidden={duplicate}
+              className="flex w-[150px] shrink-0 items-center justify-center px-4 lg:w-[190px] lg:px-5"
+            >
+              <img
+                src={logo.src}
+                alt={duplicate ? "" : logo.name}
+                loading="lazy"
+                decoding="async"
+                className="max-h-8 w-auto max-w-full grayscale lg:max-h-10"
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* 13 · MEDIA — Section 02's composition, one continuous rail.
+   ------------------------------------------------------------------------
+   The five-column grid packed ten marks into a static block under the
+   heading, which read as a contact sheet rather than as proof. Message left,
+   proof right, centred against each other on the same 43/57 split the
+   sponsor band and Attended By use, so the page's three logo sections now
+   share one grammar and one left content edge.
+
+   ONE RAIL, ONE DIRECTION — the counter-running pair belongs to Attended By,
+   where it distinguishes 71 marks; ten publications need only a single
+   unhurried pass. Cells are wide enough that each mark carries its own space
+   instead of sharing a gutter, and the edges are masked so marks enter and
+   leave rather than being cut. */
 function Media() {
   return (
-    <DSSection chapter="13">
-      <Reveal>
-        <h2 className={cn(SECTION_TYPE, "mt-6 lg:mt-0")}>{MEDIA.headline}</h2>
-        <p className="label-lg accord-signal mt-4">{MEDIA.kicker}</p>
-      </Reveal>
-      <Reveal delay={90}>
-        <div className="mt-9 grid grid-cols-2 items-center gap-x-10 gap-y-9 border-t border-hairline pt-9 sm:grid-cols-3 lg:mt-10 lg:grid-cols-5">
-          {MEDIA.logos.map((logo) => (
-            <img
-              key={logo.name}
-              src={logo.src}
-              alt={logo.name}
-              loading="lazy"
-              decoding="async"
-              className="h-6 w-auto max-w-[150px] justify-self-start object-contain grayscale lg:h-7"
-            />
-          ))}
-        </div>
-      </Reveal>
+    <DSSection chapter="13" pad="px-6 py-10 md:px-12 md:py-10 lg:px-16 lg:py-12">
+      <div className="grid gap-y-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1fr)] lg:items-center lg:gap-x-14">
+        <Reveal className="min-w-0">
+          <h2 className="mt-5 font-display text-[clamp(1.35rem,4.6vw,1.75rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:mt-0 lg:text-[clamp(1.6rem,2.2vw,2rem)]">
+            {MEDIA.headline}
+          </h2>
+          <p className={cn(BODY, "mt-4 max-w-[42ch]")}>{MEDIA.kicker}</p>
+        </Reveal>
+
+        <Reveal delay={90} className="min-w-0">
+          <MediaRail />
+        </Reveal>
+      </div>
     </DSSection>
   );
 }
