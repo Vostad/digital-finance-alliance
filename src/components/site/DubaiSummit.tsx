@@ -737,30 +737,37 @@ function WordmarkStrip({
    a share of the column — 27/29/34 — which lands all three at comparable
    visual mass; in the stacked states they take matched-mass heights.
 
-   THE ROW OSCILLATES ON PURPOSE. The logos have the full content width
-   below lg, then only ~40% of it once the two-column composition engages,
-   then enough again from xl. Three marks across a 418px column at 1024
-   would put QFC's "Qatar Financial Centre" line under 7px, so they stack
-   there instead: the left/right relationship is preserved and no logo is
-   shrunk to prove it. */
+   THE GROUP SITS LEFT INSIDE ITS COLUMN, not pinned to the page's right
+   edge. Spread edge to edge it read as a separate band with a long empty
+   run between it and the sentence; capped at 86% of the column it keeps the
+   even distribution but its centre moves ~60px toward the text, while the
+   56px gutter still holds the two apart.
+
+   THE ROW BREAKS ONLY AT lg. Everywhere else the three marks share one
+   line. Once the two-column composition engages the logos keep just ~42% of
+   the content width, and three marks across a 433px column would put QFC's
+   "Qatar Financial Centre" line near 6px — so they stack for that one range
+   and no logo is shrunk to prove a point. On mobile they hold the row, with
+   QFC given the largest share (40% against 26/28) because its emblem-plus-
+   wordmark lockup is the one that stops reading first. */
 const SPONSOR_SHARE: Record<string, string> = {
-  Temenos: "md:w-[27%] lg:w-auto xl:w-[27%]",
-  Mashreq: "md:w-[29%] lg:w-auto xl:w-[29%]",
-  "Qatar Financial Centre": "md:w-[34%] lg:w-auto xl:w-[34%]",
+  Temenos: "w-[26%] md:w-[27%] lg:w-auto xl:w-[26%]",
+  Mashreq: "w-[28%] md:w-[29%] lg:w-auto xl:w-[28%]",
+  "Qatar Financial Centre": "w-[40%] md:w-[34%] lg:w-auto xl:w-[32%]",
 };
 
-/* Matched-mass heights for the two stacked states, where a share of the
+/* Matched-mass heights for the one stacked state (lg), where a share of the
    column means nothing because each mark owns a row of its own. */
 const SPONSOR_HEIGHT: Record<string, string> = {
-  Temenos: "h-7 md:h-auto md:w-full lg:h-8 lg:w-auto xl:h-auto xl:w-full",
-  Mashreq: "h-12 md:h-auto md:w-full lg:h-14 lg:w-auto xl:h-auto xl:w-full",
-  "Qatar Financial Centre": "h-[4.5rem] md:h-auto md:w-full lg:h-20 lg:w-auto xl:h-auto xl:w-full",
+  Temenos: "h-auto w-full lg:h-7 lg:w-auto xl:h-auto xl:w-full",
+  Mashreq: "h-auto w-full lg:h-12 lg:w-auto xl:h-auto xl:w-full",
+  "Qatar Financial Centre": "h-auto w-full lg:h-[4.25rem] lg:w-auto xl:h-auto xl:w-full",
 };
 
 function Sponsors() {
   return (
     <DSSection chapter="02" pad={PAD_STRIP}>
-      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1fr)] lg:items-center lg:gap-x-14">
+      <div className="grid gap-y-9 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1fr)] lg:items-center lg:gap-x-14">
         <Reveal className="min-w-0">
           <h2 className="mt-5 font-display text-[clamp(1.35rem,4.6vw,1.75rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em] lg:mt-0 lg:text-[clamp(1.6rem,2.2vw,2rem)]">
             {SPONSORS.heading}
@@ -772,7 +779,7 @@ function Sponsors() {
             spans its column edge to edge rather than clustering; the gap is
             a floor, not the spacing. */}
         <Reveal delay={90} className="min-w-0">
-          <ul className="flex flex-col items-start gap-y-8 md:flex-row md:items-center md:justify-between md:gap-x-8 lg:flex-col lg:items-start lg:gap-y-9 xl:flex-row xl:items-center xl:justify-between">
+          <ul className="flex items-center justify-between gap-x-3 md:gap-x-8 lg:flex-col lg:items-start lg:justify-start lg:gap-x-0 lg:gap-y-8 xl:max-w-[86%] xl:flex-row xl:items-center xl:justify-between xl:gap-x-8">
             {SPONSORS.logos.map((logo) => (
               <li key={logo.name} className={cn("flex items-center", SPONSOR_SHARE[logo.name])}>
                 <img
