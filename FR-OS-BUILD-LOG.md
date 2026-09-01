@@ -287,3 +287,44 @@ just added.
 where the admin shell exists to host it.
 
 **Next:** Boundary 4 — Assignment / Ownership.
+
+---
+
+## Boundary 4 · Assignment / Ownership
+
+**Commit:** `0a5e75c`
+
+**Built** — `src/server/domain/assignment.ts`: `assignOwner`, `setSplit`,
+`assignMany`, `assignableUsers`.
+
+**The property proved:** ownership is per workstream. One person, three
+functions, three different owners, and each owner sees exactly one record.
+
+**Decisions worth recording**
+
+- **An owner must be able to do the work.** A sponsor deal cannot be assigned
+  to a delegate-only Team Member. Their dashboard is built to show only their
+  permitted functions, so such a deal would be owned and invisible at the same
+  time — the definition of a hidden lead. The same rule filters
+  `assignableUsers`, so the impossible assignment is never offered.
+- A deactivated account cannot be given work.
+- Unassigning to `NULL` is legitimate and returns the record to the Super Admin
+  inbox. NULL is a state, not a gap.
+- **Bulk assignment checks every record individually.** It is a convenience for
+  the operator, never a way around the per-record permission check — the test
+  hands an Admin one in-scope and one out-of-scope id and asserts one assigned,
+  one refused.
+- The commission split is stored on the opportunity and copied onto the ledger
+  entry at WON, so changing it later cannot reach backwards into money already
+  earned. The database enforces the two shares total 100.
+
+**Tests** — 101 integration (15 new), passing first run. §39 scenarios 3, 8,
+25, 26 covered.
+
+| | |
+|---|---|
+| `npm test` | 124 passed |
+| `npm run test:integration` | 101 passed |
+| `tsc --noEmit` | clean |
+
+**Next:** Boundary 5 — Activities / Follow-ups.
