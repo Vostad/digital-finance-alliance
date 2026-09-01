@@ -224,3 +224,66 @@ commission reversal that CANCELLED must trigger in Boundary 11 (the stage
 machine already returns `cancelledCommission` for it to hook).
 
 **Next:** Boundary 3 — Manual Lead Creation.
+
+---
+
+## Boundary 3 · Manual Lead Creation
+
+**Commit:** `62891ff`
+
+**Built**
+
+- `src/server/domain/leads.ts` — `previewLead` (matching before save),
+  `createLead` (company → person → one workstream per function),
+  `otherWorkstreams` (§13), `permittedEditions`.
+- `src/rpc/leads.ts` — the authenticated RPC surface. Every handler begins with
+  `requireAuth()`; domain errors reach the client, internal ones are logged and
+  replaced.
+
+**The order is the design: company, then person, then workstreams.** Each step
+feeds the next — the email's domain identifies the company, the company
+sharpens the person match — and all of it happens before a single opportunity
+row exists, so a duplicate is caught while there is nothing to unwind.
+
+**Server-side authorization, proved live**
+
+| Attempt | Result |
+|---|---|
+| Team Member opens a function they do not hold | refused — *"You are not assigned to speaker work."* |
+| Admin files against an edition outside their scope | refused — *"outside the events you manage"* |
+| Admin files inside their scope | permitted |
+| Team Member lists workstreams | sees only their own |
+
+**Decisions worth recording**
+
+- Re-submitting when **every** requested function already has an open
+  workstream **raises**, naming the remedy. A silent no-op reads as success and
+  the operator walks away believing they filed something.
+- A **mix** of new and existing opens the new ones and reports the skips in
+  `skippedFunctions` — never swallowed.
+- A different edition is a different workstream. Event memory means the same
+  person legitimately carries five workstreams across two editions.
+- Existing people are **backfilled**, not overwritten wholesale: a second
+  submission often carries the phone number the first lacked.
+- §13's projection is enforced in the query, not the UI. `otherWorkstreams`
+  returns exactly `id`, `function`, `stageKey`, `ownerId`, `editionId` — the
+  test asserts that key list, so adding `finalValue` to it fails the build.
+
+**Tests** — 124 unit, 86 integration (22 new in `integration/leads.test.ts`).
+§39 scenarios 1, 2, 6, 7, 9, 10, 11, 23, 26, 28 covered.
+
+| | |
+|---|---|
+| `npm test` | 124 passed |
+| `npm run test:integration` | 86 passed |
+| `tsc --noEmit` | clean |
+
+**Three functional test failures, fixed in place** (§46.2) — all three were my
+expectations, not defects: an all-functions-already-open case I expected to
+return when it correctly raises, and two counts that ignored a fixture I had
+just added.
+
+**Deferred:** the `+ ADD LEAD` screen itself lands with Dashboards, Boundary 9,
+where the admin shell exists to host it.
+
+**Next:** Boundary 4 — Assignment / Ownership.

@@ -40,19 +40,21 @@ export class ValidationError extends Error {
 
 /* ------------------------------------------------------------------- create */
 
+type Maybe<T> = T | null | undefined;
+
 export type CreateOpportunityInput = {
   personId: string;
-  companyId?: string | null;
+  companyId?: Maybe<string>;
   editionId: string;
   function: WorkFunction;
-  ownerId?: string | null;
-  source?: "website" | "manual" | "import" | "referral" | "event" | "other";
-  estimatedValue?: string | null;
-  currency?: string;
-  priority?: "normal" | "high";
-  nextAction?: string | null;
-  nextActionDueAt?: Date | null;
-  notes?: string | null;
+  ownerId?: Maybe<string>;
+  source?: Maybe<"website" | "manual" | "import" | "referral" | "event" | "other">;
+  estimatedValue?: Maybe<string>;
+  currency?: Maybe<string>;
+  priority?: Maybe<"normal" | "high">;
+  nextAction?: Maybe<string>;
+  nextActionDueAt?: Maybe<Date>;
+  notes?: Maybe<string>;
 };
 
 /**
@@ -151,11 +153,11 @@ export async function createOpportunity(
 
 export type StageChangeInput = {
   stageKey: string;
-  lossReasonKey?: string | null;
-  cancellationReasonKey?: string | null;
-  finalValue?: string | null;
-  probability?: number | null;
-  note?: string | null;
+  lossReasonKey?: Maybe<string>;
+  cancellationReasonKey?: Maybe<string>;
+  finalValue?: Maybe<string>;
+  probability?: Maybe<number>;
+  note?: Maybe<string>;
 };
 
 /**
@@ -334,19 +336,19 @@ export async function loadForWrite(
 }
 
 export type OpportunityFilters = {
-  eventId?: string | null;
-  editionId?: string | null;
-  function?: WorkFunction | null;
-  ownerId?: string | null;
-  unassignedOnly?: boolean;
-  stageKeys?: string[] | null;
-  source?: string | null;
-  priority?: "normal" | "high" | null;
-  companyId?: string | null;
-  personId?: string | null;
-  country?: string | null;
-  openOnly?: boolean;
-  search?: string | null;
+  eventId?: Maybe<string>;
+  editionId?: Maybe<string>;
+  function?: Maybe<WorkFunction>;
+  ownerId?: Maybe<string>;
+  unassignedOnly?: Maybe<boolean>;
+  stageKeys?: Maybe<string[]>;
+  source?: Maybe<string>;
+  priority?: Maybe<"normal" | "high">;
+  companyId?: Maybe<string>;
+  personId?: Maybe<string>;
+  country?: Maybe<string>;
+  openOnly?: Maybe<boolean>;
+  search?: Maybe<string>;
 };
 
 /** §14 — every filter composes onto the caller's scope, never replaces it. */

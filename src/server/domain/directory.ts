@@ -43,6 +43,11 @@ import {
   type MatchConfidence,
 } from "./identity";
 
+/** `T | null | undefined` throughout the domain inputs. With
+    exactOptionalPropertyTypes on, an omitted field and an explicitly-null one
+    are different types, and every caller here legitimately produces both. */
+type Maybe<T> = T | null | undefined;
+
 /* ------------------------------------------------------------------- types */
 
 export type PersonMatch = {
@@ -82,7 +87,7 @@ export class DuplicateError extends Error {
 
 export async function findCompanyMatches(
   q: ScopedQuery,
-  input: { name?: string | null; domain?: string | null },
+  input: { name?: Maybe<string>; domain?: Maybe<string> },
 ): Promise<CompanyMatch[]> {
   const db = q.directory;
   const found = new Map<string, CompanyMatch>();
@@ -156,7 +161,7 @@ export async function findCompanyMatches(
 
 export async function findPersonMatches(
   q: ScopedQuery,
-  input: { fullName?: string | null; email?: string | null; companyId?: string | null },
+  input: { fullName?: Maybe<string>; email?: Maybe<string>; companyId?: Maybe<string> },
 ): Promise<PersonMatch[]> {
   const db = q.directory;
   const found = new Map<string, PersonMatch>();
@@ -262,7 +267,7 @@ export async function findPersonMatches(
  */
 export async function resolveCompany(
   q: ScopedQuery,
-  input: { name: string; domain?: string | null; website?: string | null; country?: string | null },
+  input: { name: string; domain?: Maybe<string>; website?: Maybe<string>; country?: Maybe<string> },
   ctx: AuthContext | null,
 ): Promise<{ id: string; created: boolean }> {
   const db = q.directory;
@@ -332,12 +337,12 @@ async function attachDomain(
 
 export type CreatePersonInput = {
   fullName: string;
-  email?: string | null;
-  jobTitle?: string | null;
-  phone?: string | null;
-  country?: string | null;
-  companyId?: string | null;
-  companyName?: string | null;
+  email?: Maybe<string>;
+  jobTitle?: Maybe<string>;
+  phone?: Maybe<string>;
+  country?: Maybe<string>;
+  companyId?: Maybe<string>;
+  companyName?: Maybe<string>;
 };
 
 /**
@@ -350,7 +355,7 @@ export type CreatePersonInput = {
  */
 export async function resolvePerson(
   q: ScopedQuery,
-  input: CreatePersonInput & { acceptMatchId?: string | null },
+  input: CreatePersonInput & { acceptMatchId?: Maybe<string> },
   ctx: AuthContext | null,
 ): Promise<{ id: string; created: boolean; companyId: string | null }> {
   const db = q.directory;
