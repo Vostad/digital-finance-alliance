@@ -822,3 +822,68 @@ or terminate the abandoned backend. Recorded here because it looks exactly like
 a code hang and is not one.
 
 **Next:** Boundary 11 — Commission.
+
+---
+
+## Boundary 11 · Commission
+
+**Commit:** `c704877`
+
+**Built** — `src/server/domain/commission.ts`: `resolveRule`, `computeAmount`,
+`recordEarnedCommission`, `reverseCommissionFor`, `ledger`,
+`commissionSummary`, `simulate`, `createRule`, `supersedeRule`. Wired into
+`changeStage` so commission and the stage change commit **in one transaction**.
+
+**The four properties, each of which fails silently if wrong**
+
+| | Proved by |
+|---|---|
+| Base is **final contracted value** | 100k estimated, 80k contracted, 10% → **8,000**, never 10,000 |
+| Rate is **locked at WON** | rule changed to 20% afterwards; the entry still reads **8,000 at 10%** |
+| CANCELLED **reverses automatically** | a linked **−10,000** row appears with no manual step |
+| Balance is `SUM(amount)` | 18,000 → **8,000** after cancellation, earned and reversed reported separately |
+
+**Decisions worth recording**
+
+- **Not one number in this module decides what anyone earns.** Every rate,
+  fixed amount and tier is read from `commission_rules`.
+- **Rules resolve by specificity** — person beats edition beats event beats the
+  house rule — and ties break on the most recently effective. Resolved **per
+  person**, because a split does not mean both parties earn at the same rate.
+- **Rules are versioned, never edited.** `supersedeRule` closes the old one at
+  the moment the new one starts, so "which rule applied the day this was won"
+  always has one answer.
+- **The reversal carries the same locked terms as what it undoes.** A reversal
+  computed from today's rule could differ from what was actually paid.
+- **Nothing is deleted.** The earned entry survives its own reversal, so the
+  history of what someone was told they had earned remains.
+- Both write paths are **idempotent** — re-entering them writes nothing.
+- **Tiers are marginal, not a cliff.** 200k over 0–100k@5% and 100k+@10% pays
+  15,000, not 20,000. A cliff would mean earning *less* just below a boundary
+  than just above it. A property test asserts a larger deal never pays less.
+- **The simulator resolves the same rule and calls the same pure function** the
+  WON path does. A simulator with its own arithmetic is a second opinion that
+  eventually contradicts the ledger.
+- No rule configured returns **null**, not zero. Zero implies a rule that pays
+  nothing; null says nobody has configured one.
+
+**Tests** — 137 unit, **245 integration** (20 new). §39 scenarios 14, 15, 16
+covered, plus reversal idempotency and the marginal-tier property.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 245 passed |
+| `npm run verify:db` | all passed |
+
+**One recurring trap, now named.** A JS `Date` inside a **raw** `sql` template
+reaches the driver unserialisable — the typed helpers are fine because the
+column tells the driver what it is. This has caught the build twice (Boundary 5,
+and here). Added `tsAt(date)` with the explanation at the definition, so the
+requirement is visible at the call site rather than at runtime.
+
+**One test corrected:** the split test named a speaker-only member as secondary
+owner on a sponsor deal. Boundary 4 refused it, correctly — an owner must hold
+the function.
+
+**Next:** Boundary 12 — Forecast.

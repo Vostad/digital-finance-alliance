@@ -28,6 +28,7 @@ import type { AuthContext, WorkFunction } from "../auth/permissions";
 import { canAssignOpportunity, canReadOpportunity, canWriteOpportunity } from "../auth/permissions";
 import { forbidden } from "../auth/context";
 import { recordAudit } from "./audit";
+import { recordEarnedCommission, reverseCommissionFor } from "./commission";
 import { findStage, stagesFor, transitionError } from "./pipeline";
 
 export class ValidationError extends Error {
@@ -257,6 +258,42 @@ export async function changeStage(
       createdBy: ctx.userId,
     });
 
+    /**
+     * §10 — commission moves with the stage, inside the same transaction.
+     *
+     * A WON deal with no commission row, or a commission row on a deal that
+     * was never won, are both states nobody could explain afterwards. And §4
+     * says CANCELLED reverses AUTOMATICALLY — no manual reversal is
+     * permitted, so this is the only place either happens.
+     */
+    if (to.isWon) {
+      await recordEarnedCommission(
+        tx,
+        {
+          opportunityId,
+          function: current.function,
+          ownerId: current.ownerId,
+          secondaryOwnerId: current.secondaryOwnerId,
+          ownerSplitPct: current.ownerSplitPct,
+          secondarySplitPct: current.secondarySplitPct,
+          finalValue: (patch["finalValue"] as string) ?? current.finalValue,
+          currency: current.currency,
+          editionId: current.editionId,
+          wonAt: (patch["wonAt"] as Date) ?? now,
+        },
+        ctx,
+      );
+    }
+
+    if (to.isCancelled) {
+      await reverseCommissionFor(
+        tx,
+        opportunityId,
+        `Cancelled: ${input.cancellationReasonKey}`,
+        ctx,
+      );
+    }
+
     await recordAudit(tx, {
       ctx,
       entityType: "opportunity",
@@ -290,6 +327,8 @@ export type OpportunityRow = {
   stageKey: string;
   ownerId: string | null;
   secondaryOwnerId: string | null;
+  ownerSplitPct: number;
+  secondarySplitPct: number;
   editionId: string;
   eventId: string;
   personId: string;
@@ -321,6 +360,8 @@ export async function loadForWrite(
       stageKey: opportunities.stageKey,
       ownerId: opportunities.ownerId,
       secondaryOwnerId: opportunities.secondaryOwnerId,
+      ownerSplitPct: opportunities.ownerSplitPct,
+      secondarySplitPct: opportunities.secondarySplitPct,
       editionId: opportunities.editionId,
       eventId: editions.eventId,
       personId: opportunities.personId,
