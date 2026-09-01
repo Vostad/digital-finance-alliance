@@ -659,3 +659,97 @@ Passed first run.
 
 **Next:** Boundary 9 — Dashboards. The first boundary with real UI: the admin
 shell, the three role dashboards, and the `+ ADD LEAD` screen.
+
+---
+
+## Boundary 9 · Dashboards
+
+**Commit:** `4e8b129`
+
+**The first boundary with real UI.** Everything before this was operable only
+through the RPC surface.
+
+**Built**
+
+- `src/server/domain/dashboard.ts` — `headline`, `suggestions`, `teamStanding`,
+  and the assembled `dashboard` view.
+- `src/rpc/dashboard.ts`, plus `workstream`, `logWork`, `board`, `rates`,
+  `moveStage`, `setOwner` on the leads surface.
+- `src/components/admin/primitives.tsx` — the complete UI vocabulary.
+- `src/components/admin/Shell.tsx` — header, nav, content column.
+- Routes: `/admin` (Today), `/admin/pipeline`, `/admin/leads`,
+  `/admin/leads/new`, `/admin/leads/$id`.
+
+**TWO PRODUCTION DEFECTS FOUND BY ACTUALLY OPENING THE APP.** Neither was
+visible from code or from the test suite.
+
+1. **`max: 1` on the connection pool wedged any page that fanned out.** The
+   workstream detail issues eight queries in one `Promise.all`; over the
+   transaction pooler they never completed and never errored — the page simply
+   loaded forever. Each of the eight returned in ~100ms when run alone. Raised
+   to `max: 5` and reduced the fan-out to two groups. My original comment
+   claimed one connection per instance was the right shape; it was wrong the
+   moment one request needed two queries at once.
+2. **`fetch_types: false` was missing.** postgres.js introspects array types on
+   first use, and the transaction pooler cancels that catalog query
+   (`57014 query_canceled`). Found while diagnosing the above.
+
+Both are runtime-only and would have shipped. **The integration suite passed
+throughout** — because it runs inside an explicit transaction, which reserves a
+connection and hides exactly this class of bug.
+
+**§20 audit — measured, not eyeballed**
+
+| | |
+|---|---|
+| Font sizes in the rendered admin | **13 · 14 · 17 · 22 · 26** |
+| Anything below 13px | **none** |
+| Page scrolls sideways at 390px | **no** (`bodyScrollWidth` 390 = viewport) |
+| Wide content | contained in `overflow-x:auto` — nav and tables scroll, the page does not |
+
+One readability fix from the audit: 85 elements sat at the 13px floor and one
+above it. Dense, legal, and hard to scan. Table cells moved to 14px so labels
+and meta sit one step below the data rather than beside it.
+
+**Verified live at 1440 / 1024 / 390**, signed in as a Super Admin: dashboard,
+pipeline board, leads list, workstream detail. **Mobile write path proved end
+to end** — logged an activity and set a next action at 390px and read both back
+out of the database.
+
+One more fix from that: `router.invalidate()` was not awaited, so the timeline
+did not refresh after logging. The write had succeeded; the screen just did not
+say so.
+
+**Decisions worth recording**
+
+- A manager with no function selected defaults to **sponsor** — the only
+  function carrying money. Leaving it null showed no rates at all, which reads
+  as a broken panel rather than a deliberate absence.
+- Suggestions carry the filter that produced them, so clicking one opens
+  exactly the rows it counted rather than an approximation.
+- Closed revenue **excludes cancelled**. A revenue figure counting money that
+  was won and then collapsed is the most misleading number this system could
+  print.
+- No sidebar. Six destinations do not justify 15% of a laptop screen, and on
+  mobile the nav scrolls horizontally rather than hiding behind a tap.
+
+**Tests** — 137 unit, 202 integration.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 202 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0, no secrets in 61 client files |
+
+**Note on the suite's one assumption:** the integration tests assert a
+commercially empty database. Seeding the DEMO fixture for the UX audit failed
+29 of them on count assertions; removing it restored all 202. That is the
+tests behaving correctly — but it means the suite cannot run against a database
+holding real pipeline data.
+
+**DEMO fixture** — two accounts and seven workstreams, every record prefixed
+`DEMO`, created for the audit and **deleted**. Database back to zero
+commercial rows, `verify:db` green.
+
+**Next:** Boundary 10 — Targets.

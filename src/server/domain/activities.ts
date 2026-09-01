@@ -144,7 +144,10 @@ export async function timeline(q: ScopedQuery, opportunityId: string, limit = 10
       occurredAt: activities.occurredAt,
       createdAt: activities.createdAt,
       notes: activities.notes,
-      metadata: activities.metadata,
+      /* Typed rather than `unknown`: jsonb reaches TypeScript as unknown, and
+         an unknown cannot cross the RPC boundary's serialisation check. The
+         shape is ours — status_change and assignment both write {from, to}. */
+      metadata: sql<{ from?: string | null; to?: string | null } | null>`${activities.metadata}`,
       userId: activities.userId,
       userName: users.fullName,
     })
@@ -175,7 +178,11 @@ const startOfDayUtc = (offsetDays = 0) => {
  */
 export async function followUps(
   q: ScopedQuery,
-  opts: { ownerId?: string | null; editionId?: string | null; horizonDays?: number } = {},
+  opts: {
+    ownerId?: string | null | undefined;
+    editionId?: string | null | undefined;
+    horizonDays?: number | undefined;
+  } = {},
 ) {
   const todayStart = startOfDayUtc(0);
   const tomorrowStart = startOfDayUtc(1);
@@ -243,7 +250,7 @@ export async function followUps(
  */
 export async function attentionNeeded(
   q: ScopedQuery,
-  opts: { ownerId?: string | null; quietDays?: number } = {},
+  opts: { ownerId?: string | null | undefined; quietDays?: number | undefined } = {},
 ) {
   const quietSince = new Date(Date.now() - (opts.quietDays ?? 7) * 86_400_000);
 

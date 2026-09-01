@@ -32,7 +32,8 @@ import {
   reverseMerge,
   reversibleMerges,
 } from "@/server/domain/directory";
-import { listOpportunities } from "@/server/domain/opportunities";
+import { listOpportunities, loadForWrite } from "@/server/domain/opportunities";
+import { logActivity, timeline } from "@/server/domain/activities";
 import { searchDirectory } from "@/server/domain/directory";
 import { globalSearch } from "@/server/domain/search";
 import {
@@ -284,6 +285,71 @@ export const owners = createServerFn({ method: "POST" })
     sealed(async () => {
       const s = await q();
       return assignableUsers(s.q, data.function);
+    }),
+  );
+
+/** One workstream, with everything the detail screen needs, in one round trip.
+    Scope is applied by `loadForWrite`, which refuses read and write alike. */
+export const workstream = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      const opp = await loadForWrite(s.q, data.id, s.ctx);
+
+      /* Two small groups rather than one fan-out of eight. The reference sets
+         are process-cached, so after the first request this is three queries,
+         and a screen does not need to open eight connections to draw itself. */
+      const [detail, events, others] = await Promise.all([
+        listOpportunities(s.q, { personId: opp.personId }, 20),
+        timeline(s.q, data.id),
+        otherWorkstreams(s.q, opp.personId, data.id),
+      ]);
+      const [stages, loss, cancellation, withdrawal, assignees] = await Promise.all([
+        stagesFor(s.q, opp.function),
+        loadLossReasons(s.q, opp.function),
+        loadCancellationReasons(s.q),
+        loadWithdrawalReasons(s.q),
+        assignableUsers(s.q, opp.function),
+      ]);
+      return {
+        opportunity: detail.find((d) => d.id === data.id) ?? null,
+        timeline: events,
+        otherWorkstreams: others,
+        stages,
+        lossReasons: loss,
+        cancellationReasons: cancellation,
+        withdrawalReasons: withdrawal,
+        assignees,
+        canAssign: s.ctx.role !== "team_member",
+      };
+    }),
+  );
+
+export const logWork = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      opportunityId: z.string().uuid(),
+      type: z.enum(["call", "email", "meeting", "follow_up", "note", "proposal", "other"]),
+      notes: z.string().max(4000).optional(),
+      nextAction: z.string().max(400).nullable().optional(),
+      nextActionDueAt: z.string().datetime().nullable().optional(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return logActivity(
+        s.q,
+        {
+          opportunityId: data.opportunityId,
+          type: data.type,
+          notes: data.notes ?? null,
+          nextAction: data.nextAction ?? null,
+          nextActionDueAt: data.nextActionDueAt ? new Date(data.nextActionDueAt) : null,
+        },
+        s.ctx,
+      );
     }),
   );
 

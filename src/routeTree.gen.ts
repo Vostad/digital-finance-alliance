@@ -23,6 +23,7 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
 import { Route as ForumsIndexRouteImport } from './routes/forums.index'
 import { Route as ForumsAfricanMoneyMovementRouteImport } from './routes/forums.african-money-movement'
 import { Route as ForumsFinancialRailsAfricaRouteImport } from './routes/forums.financial-rails-africa'
@@ -31,6 +32,9 @@ import { Route as ForumsFinancialRailsMenaRouteImport } from './routes/forums.fi
 import { Route as ForumsFinancialRailsV2RouteImport } from './routes/forums.financial-rails-v2'
 import { Route as ForumsIndiaDigitalPaymentsRouteImport } from './routes/forums.india-digital-payments'
 import { Route as ForumsMenaRouteImport } from './routes/forums.mena'
+import { Route as AdminLeadsIndexRouteImport } from './routes/admin.leads.index'
+import { Route as AdminLeadsIdRouteImport } from './routes/admin.leads.$id'
+import { Route as AdminLeadsNewRouteImport } from './routes/admin.leads.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -102,6 +106,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPipelineRoute = AdminPipelineRouteImport.update({
+  id: '/admin/pipeline',
+  path: '/admin/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForumsIndexRoute = ForumsIndexRouteImport.update({
   id: '/forums/',
   path: '/forums/',
@@ -147,6 +156,21 @@ const ForumsMenaRoute = ForumsMenaRouteImport.update({
   path: '/forums/mena',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLeadsIndexRoute = AdminLeadsIndexRouteImport.update({
+  id: '/admin/leads/',
+  path: '/admin/leads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLeadsIdRoute = AdminLeadsIdRouteImport.update({
+  id: '/admin/leads/$id',
+  path: '/admin/leads/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLeadsNewRoute = AdminLeadsNewRouteImport.update({
+  id: '/admin/leads/new',
+  path: '/admin/leads/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -171,6 +196,9 @@ export interface FileRoutesByFullPath {
   '/forums/mena': typeof ForumsMenaRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
+  '/admin/leads/$id': typeof AdminLeadsIdRoute
+  '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/admin/leads/': typeof AdminLeadsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -186,6 +214,7 @@ export interface FileRoutesByTo {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -195,6 +224,9 @@ export interface FileRoutesByTo {
   '/forums/mena': typeof ForumsMenaRoute
   '/admin': typeof AdminIndexRoute
   '/forums': typeof ForumsIndexRoute
+  '/admin/leads/$id': typeof AdminLeadsIdRoute
+  '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/admin/leads': typeof AdminLeadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,6 +243,7 @@ export interface FileRoutesById {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -220,6 +253,9 @@ export interface FileRoutesById {
   '/forums/mena': typeof ForumsMenaRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
+  '/admin/leads/$id': typeof AdminLeadsIdRoute
+  '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/admin/leads/': typeof AdminLeadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +273,7 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
+    | '/admin/pipeline'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -246,6 +283,9 @@ export interface FileRouteTypes {
     | '/forums/mena'
     | '/admin/'
     | '/forums/'
+    | '/admin/leads/$id'
+    | '/admin/leads/new'
+    | '/admin/leads/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -261,6 +301,7 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
+    | '/admin/pipeline'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -270,6 +311,9 @@ export interface FileRouteTypes {
     | '/forums/mena'
     | '/admin'
     | '/forums'
+    | '/admin/leads/$id'
+    | '/admin/leads/new'
+    | '/admin/leads'
   id:
     | '__root__'
     | '/'
@@ -285,6 +329,7 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
+    | '/admin/pipeline'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -294,6 +339,9 @@ export interface FileRouteTypes {
     | '/forums/mena'
     | '/admin/'
     | '/forums/'
+    | '/admin/leads/$id'
+    | '/admin/leads/new'
+    | '/admin/leads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -310,6 +358,7 @@ export interface RootRouteChildren {
   IntelligenceRoute: typeof IntelligenceRoute
   PartnersRoute: typeof PartnersRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminPipelineRoute: typeof AdminPipelineRoute
   ForumsAfricanMoneyMovementRoute: typeof ForumsAfricanMoneyMovementRoute
   ForumsFinancialRailsAfricaRoute: typeof ForumsFinancialRailsAfricaRoute
   ForumsFinancialRailsAsiaRoute: typeof ForumsFinancialRailsAsiaRoute
@@ -319,6 +368,9 @@ export interface RootRouteChildren {
   ForumsMenaRoute: typeof ForumsMenaRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ForumsIndexRoute: typeof ForumsIndexRoute
+  AdminLeadsIdRoute: typeof AdminLeadsIdRoute
+  AdminLeadsNewRoute: typeof AdminLeadsNewRoute
+  AdminLeadsIndexRoute: typeof AdminLeadsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -421,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/pipeline': {
+      id: '/admin/pipeline'
+      path: '/admin/pipeline'
+      fullPath: '/admin/pipeline'
+      preLoaderRoute: typeof AdminPipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forums/': {
       id: '/forums/'
       path: '/forums'
@@ -477,6 +536,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumsMenaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/leads/': {
+      id: '/admin/leads/'
+      path: '/admin/leads'
+      fullPath: '/admin/leads/'
+      preLoaderRoute: typeof AdminLeadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/leads/$id': {
+      id: '/admin/leads/$id'
+      path: '/admin/leads/$id'
+      fullPath: '/admin/leads/$id'
+      preLoaderRoute: typeof AdminLeadsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/leads/new': {
+      id: '/admin/leads/new'
+      path: '/admin/leads/new'
+      fullPath: '/admin/leads/new'
+      preLoaderRoute: typeof AdminLeadsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -494,6 +574,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceRoute: IntelligenceRoute,
   PartnersRoute: PartnersRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminPipelineRoute: AdminPipelineRoute,
   ForumsAfricanMoneyMovementRoute: ForumsAfricanMoneyMovementRoute,
   ForumsFinancialRailsAfricaRoute: ForumsFinancialRailsAfricaRoute,
   ForumsFinancialRailsAsiaRoute: ForumsFinancialRailsAsiaRoute,
@@ -503,6 +584,9 @@ const rootRouteChildren: RootRouteChildren = {
   ForumsMenaRoute: ForumsMenaRoute,
   AdminIndexRoute: AdminIndexRoute,
   ForumsIndexRoute: ForumsIndexRoute,
+  AdminLeadsIdRoute: AdminLeadsIdRoute,
+  AdminLeadsNewRoute: AdminLeadsNewRoute,
+  AdminLeadsIndexRoute: AdminLeadsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

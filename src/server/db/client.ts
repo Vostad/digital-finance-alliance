@@ -29,11 +29,37 @@ function connect() {
      */
     prepare: false,
     /**
-     * Vercel functions are frozen between invocations. A large pool per
-     * function instance multiplies across concurrent instances and exhausts
-     * the pooler; one connection per instance is the right shape here.
+     * ALSO MANDATORY on the transaction pooler, and less obvious than
+     * `prepare: false`.
+     *
+     * postgres.js introspects array types with a catalog query the first time
+     * a connection is used. In transaction mode that query races the real work
+     * across a connection the pooler is handing round, and it comes back as
+     * `57014 query_canceled` — which surfaces as a request that simply hangs,
+     * not as an error anyone can read. Found exactly that way: the workstream
+     * detail page loaded forever while the tests, which run inside an explicit
+     * transaction, passed.
+     *
+     * Skipping the introspection costs nothing here: no column in this schema
+     * is an array type.
      */
-    max: 1,
+    fetch_types: false,
+    /**
+     * NOT 1. That was the original setting, and it was wrong.
+     *
+     * A single screen legitimately fans out — the workstream detail issues
+     * eight queries in one `Promise.all`. With `max: 1` those serialise behind
+     * one lazily-opened connection, and over the transaction pooler they wedge
+     * outright: the request never completes and never errors. Found by a page
+     * that loaded forever while every one of those eight queries returned in
+     * ~100ms when run on its own.
+     *
+     * Five is small enough that concurrent function instances do not exhaust
+     * the pooler — which is built for exactly this, many short-lived clients —
+     * and large enough that one request's fan-out does not queue against
+     * itself.
+     */
+    max: 5,
     idle_timeout: 20,
     connect_timeout: 10,
   });
