@@ -46,6 +46,7 @@ npm run db:studio      # browse data
 | `0000_initial_schema.sql` | 23 tables, 37 foreign keys, indexes, check constraints | generated, then hand-edited once — see below |
 | `0001_rls_default_deny.sql` | RLS on every table, zero policies, grants revoked | hand-written |
 | `0002_seed_pipeline_reference.sql` | Pipeline stages and loss reasons | hand-written |
+| `0003_rls_guarantee_assertions.sql` | Asserts the privilege that actually gates anon access | hand-written |
 | `meta/` | drizzle-kit's snapshots and journal | generated — never edit |
 
 ### The one hand edit in `0000`
@@ -58,6 +59,24 @@ fails immediately with a readable message instead of halfway through.
 
 The foreign key itself was left in place. `src/server/test/rls-coverage.test.ts`
 checks both facts, so the edit cannot be silently undone by a regeneration.
+
+### Why `0003` exists
+
+`0001` asserts that RLS is enabled and no policy exists. That is necessary and
+not sufficient: what actually stops the anon key is having **no table
+privilege**, and the obvious way to check the schema half —
+`has_schema_privilege('anon','public','USAGE')` — answers `TRUE` no matter what
+you revoke, because Postgres grants USAGE on `public` to `PUBLIC` and that
+function resolves inherited privileges.
+
+`0003` asks the questions that have real answers: no table privileges for
+`anon`/`authenticated`, and no *direct* schema grant to either. PUBLIC's
+inherited USAGE is left alone deliberately — schema USAGE permits nothing on
+its own, and revoking it from PUBLIC would affect Supabase's own managed roles
+for no measurable gain.
+
+Verified empirically as well: every PostgREST request with the anon key returns
+`42501 insufficient_privilege`, on reads and writes alike.
 
 ## Order matters
 
@@ -72,6 +91,7 @@ remembered to look.
 2. Add its name to `APPLICATION_TABLES` in the same file.
 3. Add an `ALTER TABLE … ENABLE ROW LEVEL SECURITY` line to a **new** migration.
 4. `npm run db:generate && npm test`.
+5. `npm run db:migrate && npm run test:integration`.
 
 Step 3 is not optional and step 4 is what catches you if it is skipped: the test
 suite compares `APPLICATION_TABLES` against the RLS migration and fails on a

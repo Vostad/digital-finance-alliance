@@ -30,6 +30,7 @@ import {
   AuthError,
   clearSession,
   getAuthContext,
+  loadContext,
   REFRESH_TOKEN_COOKIE,
   requireAuth,
   writeSession,
@@ -52,10 +53,14 @@ export async function signIn(data: { email: string; password: string }) {
   writeSession(session.session.access_token, session.session.refresh_token);
 
   /** Resolve immediately, so a deactivated or unprovisioned account is
-        rejected here rather than on the first screen they reach. */
+      rejected here rather than on the first screen they reach.
+
+      From the session id, NOT from the request: the cookie written a line ago
+      is on the RESPONSE, and the browser has not sent it back yet — reading the
+      request would return null for a perfectly valid login. This id came from
+      the auth server over TLS moments ago. */
   try {
-    const ctx = await getAuthContext();
-    if (!ctx) throw new AuthError("unauthenticated", "Email or password is incorrect.", 401);
+    const ctx = await loadContext(session.session.user.id);
     return { fullName: ctx.fullName, role: ctx.role };
   } catch (problem) {
     clearSession();

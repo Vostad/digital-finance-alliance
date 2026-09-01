@@ -12,6 +12,11 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/server/test/**/*.test.ts"],
+    /* The integration suite needs .env and a migrated database. It has its own
+       config (vitest.integration.config.ts) and is run by `npm run test:integration`.
+       Keeping it out of here is what preserves this suite's one guarantee:
+       it runs anywhere, with no credentials. */
+    exclude: ["src/server/test/integration/**"],
     env: {
       /** Shape-valid and unreachable. Nothing here opens a socket: postgres.js
           connects lazily and these tests only ever build SQL, never run it. */

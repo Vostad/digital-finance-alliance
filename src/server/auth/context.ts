@@ -97,12 +97,6 @@ async function verifiedUserId(token: string): Promise<string | null> {
 }
 
 /**
- * Resolve the caller. Returns null when there is no usable session, and THROWS
- * when there is a session belonging to an account that may no longer act —
- * the difference matters, because the first is "show the login page" and the
- * second is "say why".
- */
-/**
  * Trade the refresh token for a new access token.
  *
  * This is also where REQUIREMENT 3's second mechanism lands: a banned account's
@@ -124,18 +118,18 @@ async function refreshed(): Promise<string | null> {
   return data.session.access_token;
 }
 
-export async function getAuthContext(): Promise<AuthContext | null> {
-  const token = bearerToken();
-
-  /** Verify what we have; if it has expired, refresh once and verify again.
-      Never more than once — a second failure is a real failure. */
-  let authUserId = token ? await verifiedUserId(token) : null;
-  if (!authUserId) {
-    const fresh = await refreshed();
-    authUserId = fresh ? await verifiedUserId(fresh) : null;
-  }
-  if (!authUserId) return null;
-
+/**
+ * Build the context for a KNOWN-GOOD Supabase user id.
+ *
+ * Split out from getAuthContext because sign-in cannot go through the request.
+ * `setCookie` writes to the RESPONSE; `getCookie` reads the REQUEST. On the
+ * login POST the request carries no session cookie, so a freshly written one is
+ * invisible until the browser sends it back on the NEXT request — resolving the
+ * context by re-reading the request would return null every time, for a
+ * perfectly valid login. signIn passes the id from the session it just received
+ * instead. Same checks, same failures, different way in.
+ */
+export async function loadContext(authUserId: string): Promise<AuthContext> {
   const [row] = await db
     .select({
       id: users.id,
@@ -187,6 +181,27 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     canManageCommissionRules: row.canManageCommissionRules,
     timezone: row.timezone,
   };
+}
+
+/**
+ * Resolve the caller from the incoming request. Returns null when there is no
+ * usable session, and THROWS when there is a session belonging to an account
+ * that may no longer act — the difference matters, because the first is "show
+ * the login page" and the second is "say why".
+ */
+export async function getAuthContext(): Promise<AuthContext | null> {
+  const token = bearerToken();
+
+  /** Verify what we have; if it has expired, refresh once and verify again.
+      Never more than once — a second failure is a real failure. */
+  let authUserId = token ? await verifiedUserId(token) : null;
+  if (!authUserId) {
+    const fresh = await refreshed();
+    authUserId = fresh ? await verifiedUserId(fresh) : null;
+  }
+  if (!authUserId) return null;
+
+  return loadContext(authUserId);
 }
 
 /** The form every server function uses. There is no unauthenticated data path

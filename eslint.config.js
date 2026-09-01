@@ -50,7 +50,15 @@ export default tseslint.config(
    */
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/auth/**", "src/server/db/**", "src/server/env.server.ts"],
+    ignores: [
+      "src/server/auth/**",
+      "src/server/db/**",
+      "src/server/env.server.ts",
+      // The test layer legitimately opens a raw connection — the integration
+      // suite has to, in order to prove the scoped queries filter correctly
+      // once Postgres executes them.
+      "src/server/test/**",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",
