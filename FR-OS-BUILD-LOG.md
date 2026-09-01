@@ -612,3 +612,50 @@ Raised to 180s — failing a suite for latency rather than for a defect teaches
 the wrong lesson.
 
 **Next:** Boundary 8 — Search / Filters.
+
+---
+
+## Boundary 8 · Search / Filters
+
+**Commit:** `10fdb20`
+
+**Built** — `src/server/domain/search.ts` (`globalSearch`), plus `search` and
+`searchPeopleAndCompanies` on the RPC surface. Filters were delivered in
+Boundary 2 as `opportunityFilterSql` and are exposed through `board`, `rates`
+and `listWorkstreams`.
+
+**One search box, three different permission rules underneath.** Applying one
+rule to all three sections would break the system in one direction or the
+other:
+
+| Section | Rule | Why |
+|---|---|---|
+| People, companies | open to every active user | §2 — you cannot be told to find the existing person before creating one and also be prevented from seeing them |
+| Opportunities | `q.where.opportunities()` | a Team Member searching a company finds their own workstreams, never a colleague's |
+| Team members | projected per role | the Gate 2 ruling |
+
+The user projection reuses `visibleUserFields` rather than reimplementing the
+rule in SQL — one implementation instead of two that drift. An Admin searching
+for a Super Admin gets **name and id and nothing else**; the test asserts email
+and role come back `null`.
+
+**Decisions worth recording**
+
+- A one-character query returns nothing. It matches most of the database and
+  produces a list nobody can read.
+- Person search covers name, phone, **every** email on the record, and the
+  employer's name — normalised on both sides, so `Zubeyde` finds `Zübeyde`.
+- Company search covers name and **domain**, so pasting an email domain finds
+  the institution.
+
+**Tests** — 137 unit, 202 integration (16 new in `integration/search.test.ts`).
+Passed first run.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 202 passed |
+| `tsc --noEmit` | clean |
+
+**Next:** Boundary 9 — Dashboards. The first boundary with real UI: the admin
+shell, the three role dashboards, and the `+ ADD LEAD` screen.

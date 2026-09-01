@@ -34,6 +34,7 @@ import {
 } from "@/server/domain/directory";
 import { listOpportunities } from "@/server/domain/opportunities";
 import { searchDirectory } from "@/server/domain/directory";
+import { globalSearch } from "@/server/domain/search";
 import {
   loadCancellationReasons,
   loadLossReasons,
@@ -146,7 +147,18 @@ export const workstreamsForPerson = createServerFn({ method: "POST" })
     }),
   );
 
+/** §14 — one search box, three permission rules underneath. */
 export const search = createServerFn({ method: "POST" })
+  .validator(z.object({ term: z.string().max(200) }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return globalSearch(s.q, s.ctx, data.term);
+    }),
+  );
+
+/** Directory-only search, for the lead form's company and person pickers. */
+export const searchPeopleAndCompanies = createServerFn({ method: "POST" })
   .validator(z.object({ term: z.string().max(200) }))
   .handler(({ data }) =>
     sealed(async () => {
