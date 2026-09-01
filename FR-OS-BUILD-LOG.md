@@ -941,3 +941,47 @@ Passed first run.
 | `npm run build` | exit 0 |
 
 **Next:** Boundary 13 — Productivity.
+
+---
+
+## Boundary 13 · Productivity
+
+**Commit:** `d7f1ca6`
+
+**Built** — `src/server/domain/productivity.ts` (`metrics`, `insights`), the
+`productivityMetrics` / `productivityInsights` RPCs, and `/admin/insights`.
+
+**Decisions worth recording**
+
+- **Denominators differ on purpose, and each metric states its own.** A
+  response rate measured against every opportunity rather than against those
+  actually contacted flatters the team by counting people they never called.
+  `basis` carries the sentence — *"of those contacted"*, *"of those met"*,
+  *"of those that reached an outcome"* — and the screen prints it under the
+  label.
+- **Function-specific metrics appear only where they mean something.** Sponsor
+  has no attrition rate; speaker has no average deal size, because speakers are
+  not priced.
+- **"High value" is the top quartile of THIS caller's own open estimates**, not
+  a threshold invented here. A fixed number is wrong for every team but the one
+  it was chosen for, and stops meaning anything as deal sizes move.
+- **Every insight carries the ids it counted**, and the screen lets you open
+  them. A suggestion you cannot check is a suggestion you have to believe.
+- Average deal size and time-to-close refuse below the sample too. Two wins is
+  not a distribution.
+- The response-rate heuristic is **explicitly approximate and labelled so** in
+  the code: the system records what the team *did*, so a reply is only visible
+  because somebody logged it.
+
+**Tests** — 137 unit, **286 integration** (19 new). Passed first run. The
+assertion that matters most: the rows an insight names are checked to actually
+have the property claimed — the "never contacted" list is verified against the
+set that was contacted.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 286 passed |
+| `npm run build` | exit 0 |
+
+**Next:** Boundary 14 — Audit / Export / Erasure.

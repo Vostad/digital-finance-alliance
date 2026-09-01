@@ -113,3 +113,38 @@ export const overrides = createServerFn({ method: "POST" })
       return overriddenOpportunities(s.q, data.function ?? "sponsor");
     }),
   );
+
+/* --------------------------------------------------- §12 · productivity */
+
+export const productivityMetrics = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      function: WORK_FUNCTION,
+      editionId: z.string().uuid().nullable().optional(),
+      ownerId: z.string().uuid().nullable().optional(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await session();
+      const { metrics } = await import("@/server/domain/productivity");
+      const { function: fn, ...filters } = data;
+      return metrics(s.q, fn, filters);
+    }),
+  );
+
+/** Deterministic. No model calls — every insight carries the ids it counted. */
+export const productivityInsights = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      ownerId: z.string().uuid().nullable().optional(),
+      editionId: z.string().uuid().nullable().optional(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await session();
+      const { insights } = await import("@/server/domain/productivity");
+      return insights(s.q, s.ctx, data);
+    }),
+  );

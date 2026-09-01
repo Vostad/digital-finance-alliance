@@ -24,6 +24,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDirectoryRouteImport } from './routes/admin.directory'
 import { Route as AdminForecastRouteImport } from './routes/admin.forecast'
+import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
 import { Route as AdminTargetsRouteImport } from './routes/admin.targets'
@@ -112,6 +113,11 @@ const AdminDirectoryRoute = AdminDirectoryRouteImport.update({
 const AdminForecastRoute = AdminForecastRouteImport.update({
   id: '/admin/forecast',
   path: '/admin/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInsightsRoute = AdminInsightsRouteImport.update({
+  id: '/admin/insights',
+  path: '/admin/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/targets': typeof AdminTargetsRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/targets': typeof AdminTargetsRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/targets': typeof AdminTargetsRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
     | '/admin/targets'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
     | '/admin/targets'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
     | '/admin/targets'
@@ -395,6 +407,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   AdminDirectoryRoute: typeof AdminDirectoryRoute
   AdminForecastRoute: typeof AdminForecastRoute
+  AdminInsightsRoute: typeof AdminInsightsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPipelineRoute: typeof AdminPipelineRoute
   AdminTargetsRoute: typeof AdminTargetsRoute
@@ -519,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminForecastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/insights': {
+      id: '/admin/insights'
+      path: '/admin/insights'
+      fullPath: '/admin/insights'
+      preLoaderRoute: typeof AdminInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -635,6 +655,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   AdminDirectoryRoute: AdminDirectoryRoute,
   AdminForecastRoute: AdminForecastRoute,
+  AdminInsightsRoute: AdminInsightsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPipelineRoute: AdminPipelineRoute,
   AdminTargetsRoute: AdminTargetsRoute,
