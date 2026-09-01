@@ -43,6 +43,9 @@ const commission: Counts = {};
 const activityCounts: Counts = {};
 let unassignedForAdmin = 0;
 const committedRowsAfter: Counts = {};
+/** Sampled BEFORE the fixture runs, so the post-rollback comparison measures
+    what the fixture did rather than what the migrations seeded. */
+let eventsBefore = -1;
 
 /** Run work inside a transaction and roll it back, returning its result. */
 async function inRollback<T>(
@@ -76,6 +79,9 @@ function ctxFor(role: Role, userId: string, scopeIds: string[], grant = false): 
 }
 
 beforeAll(async () => {
+  const baseline = await db.select({ n: sql<number>`count(*)::int` }).from(events);
+  eventsBefore = baseline[0]?.n ?? -1;
+
   await inRollback(async (tx) => {
     const eventMena = id();
     const eventAsia = id();
@@ -227,7 +233,7 @@ beforeAll(async () => {
     return true;
   });
 
-  /* After the rollback: prove nothing survived. */
+  /* After the rollback: prove the fixture left every table as it found it. */
   for (const [label, table] of [
     ["opportunities", opportunities],
     ["people", people],
@@ -285,10 +291,17 @@ describe("commission visibility", () => {
 });
 
 describe("the fixture left nothing behind", () => {
-  it.each([["opportunities"], ["people"], ["companies"], ["events"], ["commission_entries"]])(
+  it.each([["opportunities"], ["people"], ["companies"], ["commission_entries"]])(
     "%s is still empty after rollback",
     (table) => {
       expect(committedRowsAfter[table]).toBe(0);
     },
   );
+
+  it("events is UNCHANGED — it holds the seeded calendar, which is configuration", () => {
+    /* Not weakened: the fixture inserts two events of its own, so if the
+       rollback had failed this count would be higher. It just measures against
+       the right baseline instead of assuming the table starts empty. */
+    expect(committedRowsAfter["events"]).toBe(eventsBefore);
+  });
 });

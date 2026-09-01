@@ -756,6 +756,44 @@ export const erasures = pgTable(
   (t) => [index("erasures_person_idx").on(t.personId)],
 );
 
+/**
+ * §46.5 — THE EMAIL OUTBOX.
+ *
+ * Every message the system intends to send is written here first, then sent.
+ * With no transactional provider configured it is written and NOT sent, and
+ * that is the point: the intent survives, the payload is inspectable, and
+ * nothing about lead capture depends on an SMTP conversation succeeding.
+ *
+ * When a provider is wired in, it reads unsent rows and stamps `sentAt`.
+ * Nothing else in the system has to change.
+ */
+export const emailOutbox = pgTable(
+  "email_outbox",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    toEmail: text("to_email").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    /** Template variables, kept apart from the rendered body so a future
+        provider can re-render rather than send our plain-text fallback. */
+    payload: jsonb("payload"),
+    relatedEntityType: text("related_entity_type"),
+    relatedEntityId: uuid("related_entity_id"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    attempts: integer("attempts").notNull().default(0),
+    ...stamps,
+  },
+  (t) => [
+    index("email_outbox_unsent_idx")
+      .on(t.createdAt)
+      .where(sql`${t.sentAt} is null`),
+    index("email_outbox_related_idx").on(t.relatedEntityType, t.relatedEntityId),
+  ],
+);
+
 /** §27 suggestion thresholds and global switches. Super Admin only. */
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
@@ -861,6 +899,7 @@ export const APPLICATION_TABLES = [
   "commission_rule_tiers",
   "commission_entries",
   "audit_log",
+  "email_outbox",
   "merges",
   "erasures",
   "settings",

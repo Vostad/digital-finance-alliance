@@ -385,3 +385,87 @@ system-written `assignment` rows (§9 lists it as an activity type), and orders
 by `occurred_at`, so a meeting logged last but dated yesterday sorts last.
 
 **Next:** Boundary 6 — Website Integration.
+
+---
+
+## Boundary 6 · Website Integration
+
+**Commit:** `91758d8`
+
+**Built**
+
+- Migrations `0006`/`0007` — `email_outbox` table, RLS enabled, grants revoked.
+- Migration `0008` — the event calendar. **Configuration, not commercial
+  history**: every value is a published fact from the live public site (MENA,
+  Dubai, 18–19 November 2026). No person, company, opportunity, target or
+  commission row is seeded anywhere in this repository.
+- `src/server/domain/email.ts` — the outbox. Write the intent, then send.
+- `src/server/domain/intake.ts` — the public intake pipeline.
+- `src/rpc/intake.ts` — **the only server function with no `requireAuth()`**.
+- `src/lib/dubai-summit.ts` — `submitLead` now posts to the OS. The `mailto`-
+  free TODO stub is gone.
+- `src/components/site/DubaiSummit.tsx` — honeypot field, real error state,
+  busy state, and the modal-open timestamp for the timing guard. **No visual
+  change to the microsite** beyond an error line that only renders on failure.
+
+**The order is the guarantee**
+
+1. raw submission recorded **verbatim, always**
+2. then match, resolve, open the workstream
+3. then queue the acknowledgement — failure swallowed
+
+Step 1 first because §6 requires the raw submission preserved even when the
+rest fails: a form filled in and then lost to a transient error is a lost
+customer nobody knows about. Step 3 last and non-fatal because §46.5 says
+email must never prevent lead creation.
+
+**Verified end to end through the real browser**, not just by unit test:
+
+```
+public form at /forums/mena
+  → form_submissions   prospectus | processed | ip hashed | person linked
+  → opportunities      sponsor / new / owner UNASSIGNED / source website / MENA 2026
+  → email_outbox       prospectus_delivery → …  | sent: NOT SENT (no provider)
+```
+
+The verification person, company, workstream, submission and outbox row were
+then **deleted**; `verify:db` re-run clean, zero commercial rows.
+
+**Decisions worth recording**
+
+- A spam rejection returns **the same response a success returns**. Telling a
+  bot it was detected teaches whoever wrote it what to change.
+- Rate limiting counts rows in the database, not in process memory. Serverless
+  functions are many and short-lived; an in-process counter resets on every
+  cold start and limits nothing.
+- The IP is **hashed**, never stored raw. A rate limit must recognise a repeat
+  visitor; it does not need to know who they are, and a raw IP is personal data
+  §31 would then owe an answer about.
+- The synthetic system actor has **no user id** — `created_by` is null on a
+  website submission, because no user acted and pretending one did is worse
+  than the gap.
+- A repeated submission still stores the raw payload and marks the submission
+  `failed` when the workstream is already open, so a human can see exactly what
+  arrived.
+
+**Tests** — 125 unit, 140 integration (21 new). §39 scenarios 20, 21, 22 and
+repeated-submission covered. Passed first run.
+
+| | |
+|---|---|
+| `npm test` | 125 passed |
+| `npm run test:integration` | 140 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0 — 53 client files, no secrets |
+| client bundle | 0 hits for postgres / drizzle / service_role / pooler |
+
+**OPEN GAP — EMAIL (§46.5).** No transactional provider is configured. Every
+email path is built and every message is written to `email_outbox`; nothing is
+sent, and `outboxSummary` reports `providerConfigured: false` honestly. To
+close it: publish the DNS in `docs/fr-os/dns-email-authentication.md`, set
+`EMAIL_PROVIDER_API_KEY` and `EMAIL_FROM_ADDRESS`, and implement the provider
+call in `drainOutbox`. Deliberately left unimplemented rather than stubbed to
+look successful.
+
+**Next:** Boundary 7 — Pipelines (largely delivered in Boundary 2; the
+remaining work is the board and stage-move UI).

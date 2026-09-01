@@ -337,10 +337,7 @@ export const AGENDA = {
  * box (KPMG, PRYPCO MINT, CNN, Sky News), which a flat single-ink fill would
  * have collapsed into solid blocks.
  */
-export const ATTENDED_BY_MARKS: readonly string[] = Array.from(
-  { length: 80 },
-  (_, i) => i + 1,
-)
+export const ATTENDED_BY_MARKS: readonly string[] = Array.from({ length: 80 }, (_, i) => i + 1)
   .filter((n) => n !== 26 && !(n >= 61 && n <= 68))
   .map((n) => `/network-logos-trimmed/${n}.png`);
 
@@ -392,8 +389,7 @@ export const PARTNER = {
   label: "Partner With Us",
   headline: "Be where the market moves.",
   body: "Financial Rails brings together the banks, payment institutions, treasury leaders and financial infrastructure companies shaping how money moves across the Gulf.",
-  proposition:
-    "Put your brand in the conversations, relationships and decisions that matter.",
+  proposition: "Put your brand in the conversations, relationships and decisions that matter.",
   /* The one scarcity claim, and it carries no number: "limited" is the
      supplied wording and inventing a count to sharpen it would be inventing
      evidence. The price band and the 33-position grid are gone entirely —
@@ -533,12 +529,40 @@ export type LeadPayload =
     };
 
 /**
- * THE ONE DELIVERY SEAM. The repo has no form backend; when the hosted
- * endpoint is supplied, implement this function and both modals ship without
- * another change. Until then it resolves successfully so the UI's success
- * state is honest about what the page can do locally.
+ * THE DELIVERY SEAM, now wired to Financial Rails OS.
+ *
+ * REQUEST THE PROSPECTUS opens a sponsor workstream; APPLY TO ATTEND opens a
+ * delegate one. Both arrive UNASSIGNED, in the Super Admin inbox, and the raw
+ * submission is stored before anything else can fail.
+ *
+ * `openedAt` is when the modal opened. A person takes seconds to fill a form;
+ * a bot posts instantly, and the server silently rejects anything under its
+ * threshold. `honeypot` is the off-screen field no real visitor ever fills.
  */
-export async function submitLead(payload: LeadPayload): Promise<void> {
-  // TODO(endpoint): POST `payload` to the hosted form endpoint when supplied.
-  void payload;
+export async function submitLead(
+  payload: LeadPayload,
+  openedAt?: number,
+  honeypot?: string,
+): Promise<void> {
+  const { submitWebsiteLead } = await import("@/rpc/intake");
+
+  const common = {
+    kind: payload.kind,
+    name: payload.name,
+    email: payload.email,
+    elapsedMs: openedAt ? Date.now() - openedAt : undefined,
+    honeypot: honeypot || undefined,
+  };
+
+  await submitWebsiteLead({
+    data:
+      payload.kind === "prospectus"
+        ? { ...common, company: payload.company, role: payload.role }
+        : {
+            ...common,
+            company: payload.organisation,
+            role: payload.title,
+            notes: payload.evaluating,
+          },
+  });
 }

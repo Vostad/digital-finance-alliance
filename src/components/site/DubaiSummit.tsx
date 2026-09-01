@@ -372,6 +372,11 @@ function Field({
 
 function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose: () => void }) {
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  /* When the modal opened. The server rejects submissions filled faster than
+     a person could type — a real visitor takes seconds, a bot posts instantly. */
+  const openedAt = useRef(Date.now());
   const isProspectus = kind === "prospectus";
   const heading = isProspectus ? CTA.prospectus : CTA.apply;
   const note = isProspectus
@@ -382,6 +387,7 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const v = (k: string) => String(data.get(k) ?? "").trim();
+    const honeypot = v("website_url");
     const payload: LeadPayload = isProspectus
       ? { kind, name: v("name"), company: v("company"), role: v("role"), email: v("email") }
       : {
@@ -392,8 +398,21 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
           email: v("email"),
           evaluating: v("evaluating"),
         };
-    await submitLead(payload);
-    setDone(true);
+    setBusy(true);
+    setError(null);
+    try {
+      await submitLead(payload, openedAt.current, honeypot);
+      setDone(true);
+    } catch (problem) {
+      /* The request reached a real backend and it said no. Show what it said
+         rather than a success state the submission did not earn. */
+      setError(
+        problem instanceof Error && problem.message
+          ? problem.message
+          : "We could not record that. Please try again.",
+      );
+      setBusy(false);
+    }
   }
 
   return (
@@ -439,12 +458,29 @@ function LeadModal({ kind, onClose }: { kind: Exclude<ModalKind, null>; onClose:
               {isProspectus ? null : (
                 <Field label="What you're evaluating" name="evaluating" textarea />
               )}
+              {/* A honeypot. Positioned off-screen rather than display:none,
+                  which some bots detect, and hidden from assistive technology
+                  so nobody who cannot see it is asked to fill it in. */}
+              <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                <label>
+                  Company website
+                  <input type="text" name="website_url" tabIndex={-1} autoComplete="off" />
+                </label>
+              </div>
+
+              {error ? (
+                <p role="alert" className={cn(SUPPORT, "border-l-2 border-ink pl-3")}>
+                  {error}
+                </p>
+              ) : null}
+
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="group label-lg inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:transition-none"
+                  disabled={busy}
+                  className="group label-lg inline-flex items-center gap-4 bg-ink px-7 py-4 text-paper transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-accent hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:opacity-60 motion-reduce:transition-none"
                 >
-                  <span>{heading}</span>
+                  <span>{busy ? "Sending…" : heading}</span>
                   <span
                     aria-hidden
                     className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1.5 motion-reduce:transition-none"
