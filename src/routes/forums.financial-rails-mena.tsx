@@ -1,89 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { FinancialRailsSummit } from "@/components/site/FinancialRailsSummit";
-import { SUMMIT } from "@/lib/financial-rails-summit";
-import { ORG_ID, absolute, jsonLd } from "@/lib/structured-data";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 /**
- * Financial Rails Summit — Dubai · 18–19 November 2026. The V4 microsite.
+ * Financial Rails MENA moved to /forums/mena.
  *
- * The route keeps its /forums/financial-rails-mena address — MENA is the
- * regional identity in the platform's calendar — while the page itself
- * carries the formal event name, Financial Rails Summit.
+ * THIS REDIRECT IS NOT SPECULATIVE. Before it was written, the live site was
+ * checked: https://financialrails.org/forums/financial-rails-mena answered
+ * 200 and the URL is listed in the published sitemap, so it is indexed and
+ * carries inbound links. Removing it outright would 404 every one of them.
  *
- * The Event graph is written here rather than through the shared
- * eventGraph() helper because this page's claims are its own: a two-day
- * range, the Summit name, and a CITY-LEVEL location only — the venue is
- * shared with confirmed delegates and partners, so no venue is emitted.
+ * The page it used to render is gone — /forums/mena is the one MENA microsite
+ * now — so this file keeps the address alive and nothing else.
+ *
+ * By contrast /forum/dubai-summit, where the new microsite was developed,
+ * answered 404 in production and was never merged to main. It has no redirect
+ * because it never had an audience.
  */
-
-const URL = "https://financialrails.org/forums/financial-rails-mena";
-
-const SUMMIT_GRAPH = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Event",
-      "@id": `${URL}#event`,
-      name: SUMMIT.name,
-      startDate: SUMMIT.startDateISO,
-      endDate: SUMMIT.endDateISO,
-      eventStatus: "https://schema.org/EventScheduled",
-      url: URL,
-      description:
-        "The people who move the Gulf's money. One room. Two days. 400 seats, capped; ~220 institutional decision-makers; 370+ pre-scheduled meetings.",
-      image: absolute("/media/microsite/closing-frame-1280.jpg"),
-      location: {
-        "@type": "Place",
-        name: "Dubai",
-        address: { "@type": "PostalAddress", addressLocality: "Dubai", addressCountry: "AE" },
-      },
-      organizer: { "@id": ORG_ID },
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": `${URL}#breadcrumbs`,
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: "https://financialrails.org" },
-        { "@type": "ListItem", position: 2, name: "Forums", item: absolute("/forums") },
-        { "@type": "ListItem", position: 3, name: SUMMIT.name, item: URL },
-      ],
-    },
-  ],
-};
-
 export const Route = createFileRoute("/forums/financial-rails-mena")({
-  head: () => ({
-    meta: [
-      { title: "Financial Rails Summit — Dubai, 18–19 November 2026 | Financial Rails" },
-      {
-        name: "description",
-        content:
-          "18–19 November 2026, Dubai, UAE. The people who move the Gulf's money — 400 seats, capped, ~220 institutional decision-makers, 370+ pre-scheduled meetings. Vostad's 14th finance event.",
-      },
-      { property: "og:title", content: "Financial Rails Summit — Dubai · 18–19 November 2026" },
-      {
-        property: "og:description",
-        content:
-          "The people who move the Gulf's money. One room. Two days. 400 seats, capped · ~220 institutional decision-makers · 370+ pre-scheduled meetings.",
-      },
-      { property: "og:url", content: URL },
-    ],
-    links: [
-      { rel: "canonical", href: URL },
-      { rel: "preload", as: "image", href: "/media/financial-rails-v2-hero-poster.jpg" },
-    ],
-  }),
-  component: SummitRoute,
+  beforeLoad: () => {
+    throw redirect({ to: "/forums/mena", replace: true, statusCode: 301 });
+  },
 });
-
-function SummitRoute() {
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(SUMMIT_GRAPH) }}
-      />
-      <FinancialRailsSummit />
-    </>
-  );
-}

@@ -173,11 +173,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  // Event micro-sites (/forums/<slug>, and the /forum/<slug> family the Dubai
-  // Summit page introduced) carry their own navigation and footer so each
-  // reads as its own property. Institutional pages keep the Financial Rails
-  // chrome untouched. The /forums INDEX (no slug) stays chromed either way.
-  const isEventMicrosite = /^\/forums?\/[^/]+\/?$/.test(pathname);
+  // Event micro-sites (/forums/<slug>) carry their own navigation and footer
+  // so each reads as its own property. Institutional pages keep the Financial
+  // Rails chrome untouched. The /forums INDEX (no slug) stays chromed.
+  //
+  // Narrowed back from /forums?/ — the singular form existed only for the
+  // temporary /forum/dubai-summit route, which is gone. Left widened, a 404
+  // under /forum/anything would render with no navigation and no footer.
+  const isEventMicrosite = /^\/forums\/[^/]+\/?$/.test(pathname);
 
   // Financial Rails OS is an internal admin surface, not a page of the public
   // site. It shares the router and the design tokens; it must never inherit the

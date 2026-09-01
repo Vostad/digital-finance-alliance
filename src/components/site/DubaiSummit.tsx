@@ -39,11 +39,11 @@ import {
 } from "@/lib/dubai-summit";
 
 /**
- * FINANCIAL RAILS SUMMIT MENA — the NEW Dubai Summit microsite, page-scoped.
- * /forum/dubai-summit. A ground-up implementation: it shares the platform's
- * identity (Archivo display, IBM Plex body and mono, paper/bone/ink, hairline
- * rules, the periwinkle accent pair, the left chapter rail) and nothing of
- * the legacy MENA page's layouts.
+ * FINANCIAL RAILS SUMMIT MENA — the MENA microsite, page-scoped. /forums/mena.
+ * A ground-up implementation: it shares the platform's identity (Archivo
+ * display, IBM Plex body and mono, paper/bone/ink, hairline rules, the
+ * periwinkle accent pair, the left chapter rail) and nothing of the removed
+ * legacy MENA page's layouts.
  *
  * The page's two governing rules, from the brief:
  *

@@ -15,8 +15,8 @@
  * digitalfinancealliance.com/council lands on financialrails.org/council rather
  * than dumping every inbound link on the homepage. Paths that were renamed in
  * the rebrand are then picked up by the app's own route redirects (/df30 →
- * /fr30, /forums/financial-rails-v2 → /forums/financial-rails-mena, and so
- * on), so a deep legacy link resolves in two hops and never 404s.
+ * /fr30, /forums/financial-rails-mena → /forums/mena, and so on), so a deep
+ * legacy link resolves in two hops and never 404s.
  *
  * The summit domain is the one exception: it names an event, not the
  * institution, so its bare root goes to the flagship edition. Its deeper paths
@@ -40,7 +40,7 @@ const LEGACY_HOSTS = new Set([
 const SUMMIT_HOSTS = new Set(["financialrailssummit.com", "www.financialrailssummit.com"]);
 
 /** Where financialrailssummit.com/ lands. */
-const SUMMIT_TARGET = "/forums/financial-rails-mena";
+const SUMMIT_TARGET = "/forums/mena";
 
 /**
  * The www form of the canonical domain. The apex IS canonical, so www folds

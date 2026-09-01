@@ -459,7 +459,7 @@ function Home() {
           ratio: "3 / 4",
           alt: "Glass office towers rising above a financial district, photographed looking upward",
         }}
-        figureTo="/forums/financial-rails-mena"
+        figureTo="/forums/mena"
         figureLabel="Financial Rails MENA"
       />
 

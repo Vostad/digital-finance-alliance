@@ -23,7 +23,6 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
-import { Route as ForumDubaiSummitRouteImport } from './routes/forum.dubai-summit'
 import { Route as ForumsIndexRouteImport } from './routes/forums.index'
 import { Route as ForumsAfricanMoneyMovementRouteImport } from './routes/forums.african-money-movement'
 import { Route as ForumsFinancialRailsAfricaRouteImport } from './routes/forums.financial-rails-africa'
@@ -31,6 +30,7 @@ import { Route as ForumsFinancialRailsAsiaRouteImport } from './routes/forums.fi
 import { Route as ForumsFinancialRailsMenaRouteImport } from './routes/forums.financial-rails-mena'
 import { Route as ForumsFinancialRailsV2RouteImport } from './routes/forums.financial-rails-v2'
 import { Route as ForumsIndiaDigitalPaymentsRouteImport } from './routes/forums.india-digital-payments'
+import { Route as ForumsMenaRouteImport } from './routes/forums.mena'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -102,11 +102,6 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ForumDubaiSummitRoute = ForumDubaiSummitRouteImport.update({
-  id: '/forum/dubai-summit',
-  path: '/forum/dubai-summit',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForumsIndexRoute = ForumsIndexRouteImport.update({
   id: '/forums/',
   path: '/forums/',
@@ -147,6 +142,11 @@ const ForumsIndiaDigitalPaymentsRoute =
     path: '/forums/india-digital-payments',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ForumsMenaRoute = ForumsMenaRouteImport.update({
+  id: '/forums/mena',
+  path: '/forums/mena',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,13 +162,13 @@ export interface FileRoutesByFullPath {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
-  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
   '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
+  '/forums/mena': typeof ForumsMenaRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
 }
@@ -186,13 +186,13 @@ export interface FileRoutesByTo {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
-  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
   '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
+  '/forums/mena': typeof ForumsMenaRoute
   '/admin': typeof AdminIndexRoute
   '/forums': typeof ForumsIndexRoute
 }
@@ -211,13 +211,13 @@ export interface FileRoutesById {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/login': typeof AdminLoginRoute
-  '/forum/dubai-summit': typeof ForumDubaiSummitRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
   '/forums/financial-rails-mena': typeof ForumsFinancialRailsMenaRoute
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
+  '/forums/mena': typeof ForumsMenaRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
 }
@@ -237,13 +237,13 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
-    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
     | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
+    | '/forums/mena'
     | '/admin/'
     | '/forums/'
   fileRoutesByTo: FileRoutesByTo
@@ -261,13 +261,13 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
-    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
     | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
+    | '/forums/mena'
     | '/admin'
     | '/forums'
   id:
@@ -285,13 +285,13 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/login'
-    | '/forum/dubai-summit'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
     | '/forums/financial-rails-mena'
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
+    | '/forums/mena'
     | '/admin/'
     | '/forums/'
   fileRoutesById: FileRoutesById
@@ -310,13 +310,13 @@ export interface RootRouteChildren {
   IntelligenceRoute: typeof IntelligenceRoute
   PartnersRoute: typeof PartnersRoute
   AdminLoginRoute: typeof AdminLoginRoute
-  ForumDubaiSummitRoute: typeof ForumDubaiSummitRoute
   ForumsAfricanMoneyMovementRoute: typeof ForumsAfricanMoneyMovementRoute
   ForumsFinancialRailsAfricaRoute: typeof ForumsFinancialRailsAfricaRoute
   ForumsFinancialRailsAsiaRoute: typeof ForumsFinancialRailsAsiaRoute
   ForumsFinancialRailsMenaRoute: typeof ForumsFinancialRailsMenaRoute
   ForumsFinancialRailsV2Route: typeof ForumsFinancialRailsV2Route
   ForumsIndiaDigitalPaymentsRoute: typeof ForumsIndiaDigitalPaymentsRoute
+  ForumsMenaRoute: typeof ForumsMenaRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ForumsIndexRoute: typeof ForumsIndexRoute
 }
@@ -421,13 +421,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forum/dubai-summit': {
-      id: '/forum/dubai-summit'
-      path: '/forum/dubai-summit'
-      fullPath: '/forum/dubai-summit'
-      preLoaderRoute: typeof ForumDubaiSummitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forums/': {
       id: '/forums/'
       path: '/forums'
@@ -477,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumsIndiaDigitalPaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forums/mena': {
+      id: '/forums/mena'
+      path: '/forums/mena'
+      fullPath: '/forums/mena'
+      preLoaderRoute: typeof ForumsMenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -494,13 +494,13 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceRoute: IntelligenceRoute,
   PartnersRoute: PartnersRoute,
   AdminLoginRoute: AdminLoginRoute,
-  ForumDubaiSummitRoute: ForumDubaiSummitRoute,
   ForumsAfricanMoneyMovementRoute: ForumsAfricanMoneyMovementRoute,
   ForumsFinancialRailsAfricaRoute: ForumsFinancialRailsAfricaRoute,
   ForumsFinancialRailsAsiaRoute: ForumsFinancialRailsAsiaRoute,
   ForumsFinancialRailsMenaRoute: ForumsFinancialRailsMenaRoute,
   ForumsFinancialRailsV2Route: ForumsFinancialRailsV2Route,
   ForumsIndiaDigitalPaymentsRoute: ForumsIndiaDigitalPaymentsRoute,
+  ForumsMenaRoute: ForumsMenaRoute,
   AdminIndexRoute: AdminIndexRoute,
   ForumsIndexRoute: ForumsIndexRoute,
 }

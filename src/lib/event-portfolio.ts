@@ -106,7 +106,10 @@ export const EVENT_PORTFOLIO: PortfolioEvent[] = [
     city: "Dubai",
     country: "United Arab Emirates",
     countryCode: "AE",
-    to: "/forums/financial-rails-mena",
+    /* The canonical MENA microsite. The old /forums/financial-rails-mena
+       address still resolves, by 301, for links already in the world — but
+       nothing internal points at it. */
+    to: "/forums/mena",
     image: {
       src: "/media/microsite/closing-frame-1280.jpg",
       alt: "Delegates seated at round tables during a conference session",

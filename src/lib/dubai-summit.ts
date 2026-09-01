@@ -1,11 +1,11 @@
 /**
- * FINANCIAL RAILS SUMMIT MENA — /forum/dubai-summit.
+ * FINANCIAL RAILS SUMMIT MENA — /forums/mena.
  *
- * The NEW Dubai Summit microsite's single source of content. This module is
- * deliberately independent of financial-rails-summit.ts: the two routes are
- * separate implementations and must never drift into each other through a
- * shared import. Every sentence the page speaks lives here; the component in
- * DubaiSummit.tsx carries composition and nothing else.
+ * The single source of content for the one MENA microsite. It was built at the
+ * temporary route /forum/dubai-summit, which was never published and no longer
+ * exists; the old /forums/financial-rails-mena implementation has been removed
+ * and its URL now 301s here. Every sentence the page speaks lives in this
+ * file; the component in DubaiSummit.tsx carries composition and nothing else.
  *
  * CONSISTENCY LOCKS. The commercial numbers — 400 seats capped, ~220
  * institutional decision-makers, 370+ pre-scheduled meetings, 9 Vostad
@@ -15,9 +15,10 @@
  * NO COMMERCIALS ON THE PAGE. The partner count and the price band are
  * deliberately absent: the prospectus carries the architecture, and the
  * page's job is to earn the request for it.
- * (The approved content architecture for THIS page says NINTH edition; the
- * legacy /forums/financial-rails-mena page says 14th. The two pages disagree
- * by design of their own briefs — reconcile before both are live.)
+ * (This page says NINTH edition. The removed legacy page said 14th; with that
+ * page gone there is no longer a contradiction anywhere in the site, and NINTH
+ * is the number the platform now states. Nothing else asserts an edition
+ * count — verified by search at the time of the route consolidation.)
  *
  * CLOSED ALLOWLISTS. The seven speakers below are the complete set this page
  * may show — Mario Nawfal has a portrait in the repo and is deliberately
