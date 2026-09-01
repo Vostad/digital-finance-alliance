@@ -20,7 +20,11 @@ export default defineConfig({
     setupFiles: ["src/server/test/integration/setup.ts"],
     /* One connection, one transaction at a time. */
     fileParallelism: false,
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    /* These talk to a remote Supabase over the pooler. A fixture that opens
+       twenty workstreams is sixty-odd round trips before the first assertion
+       runs, and a tight timeout fails the suite for latency rather than for a
+       defect. */
+    testTimeout: 60_000,
+    hookTimeout: 180_000,
   },
 });

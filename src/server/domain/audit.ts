@@ -24,6 +24,8 @@ export type AuditAction =
   | "won"
   | "lost"
   | "cancelled"
+  | "withdrawn"
+  | "attended"
   | "merged"
   | "merge_reversed"
   | "cloned"

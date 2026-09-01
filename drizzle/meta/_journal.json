@@ -78,6 +78,20 @@
       "when": 1788254694771,
       "tag": "0010_apply_locked_decisions",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788256201707,
+      "tag": "0011_withdrawal_reasons",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788256202704,
+      "tag": "0012_seed_withdrawal_reasons",
+      "breakpoints": true
     }
   ]
 }

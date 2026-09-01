@@ -155,6 +155,8 @@ export type StageChangeInput = {
   stageKey: string;
   lossReasonKey?: Maybe<string>;
   cancellationReasonKey?: Maybe<string>;
+  /** D4 — required when moving to WITHDRAWN. Not a loss reason. */
+  withdrawalReasonKey?: Maybe<string>;
   finalValue?: Maybe<string>;
   probability?: Maybe<number>;
   note?: Maybe<string>;
@@ -204,6 +206,12 @@ export async function changeStage(
     throw new ValidationError("A cancelled opportunity needs a cancellation reason.");
   }
 
+  /* D4 — a withdrawal states why, in its own vocabulary. Asked for here so the
+     operator gets a sentence rather than a constraint violation. */
+  if (to.isAttrition && !input.withdrawalReasonKey) {
+    throw new ValidationError("A withdrawal needs a reason.");
+  }
+
   const now = new Date();
   const overridden = input.probability != null && input.probability !== to.defaultProbability;
 
@@ -227,6 +235,9 @@ export async function changeStage(
     if (to.isCancelled) {
       patch["cancelledAt"] = now;
       patch["cancellationReasonKey"] = input.cancellationReasonKey;
+    }
+    if (to.isAttrition) {
+      patch["withdrawalReasonKey"] = input.withdrawalReasonKey;
     }
     /* Moving back into an open stage clears the terminal marks, so a
        reopened deal does not carry a stale loss reason into reporting. */
@@ -262,6 +273,7 @@ export async function changeStage(
         stageKey: to.key,
         lossReasonKey: input.lossReasonKey ?? null,
         cancellationReasonKey: input.cancellationReasonKey ?? null,
+        withdrawalReasonKey: input.withdrawalReasonKey ?? null,
         finalValue: input.finalValue ?? current.finalValue,
       },
     });

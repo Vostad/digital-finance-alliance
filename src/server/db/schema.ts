@@ -422,6 +422,28 @@ export const cancellationReasons = pgTable(
   (t) => [uniqueIndex("cancellation_reasons_key").on(t.key)],
 );
 
+/**
+ * D4 — why a CONFIRMED speaker withdrew.
+ *
+ * Its own set, for the same reason cancellations have their own: a withdrawal
+ * is not a loss. DECLINED means they never confirmed; WITHDRAWN means they
+ * confirmed and then left. Storing both in `loss_reasons` would put them one
+ * careless `WHERE loss_reason_key IS NOT NULL` away from being counted
+ * together, which would misreport the loss rate and the attrition rate at the
+ * same time.
+ */
+export const withdrawalReasons = pgTable(
+  "withdrawal_reasons",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    ...stamps,
+  },
+  (t) => [uniqueIndex("withdrawal_reasons_key").on(t.key)],
+);
+
 export const lossReasons = pgTable(
   "loss_reasons",
   {
@@ -473,9 +495,11 @@ export const opportunities = pgTable(
     /** §16 — so the forecast can be read both ways. */
     probabilityOverridden: boolean("probability_overridden").notNull().default(false),
     lossReasonKey: text("loss_reason_key"),
-    /** §46.3 — a cancellation is NOT a loss. Separate reference set, separate
-        column, so win-rate reporting can never aggregate the two together. */
+    /** A cancellation is NOT a loss. Separate reference set, separate column,
+        so win-rate reporting can never aggregate the two together. */
     cancellationReasonKey: text("cancellation_reason_key"),
+    /** D4 — a withdrawal is NOT a loss either. Same reasoning, own column. */
+    withdrawalReasonKey: text("withdrawal_reason_key"),
     nextAction: text("next_action"),
     nextActionDueAt: timestamp("next_action_due_at", { withTimezone: true }),
     /** The rate-locking date. §22 */
@@ -527,15 +551,23 @@ export const opportunities = pgTable(
       sql`${t.function} <> 'sponsor' OR ${t.stageKey} <> 'won' OR ${t.finalValue} IS NOT NULL`,
     ),
     /**
-     * §14 — terminal LOST is not permitted without a reason. The three
+     * §4 — terminal LOST is not permitted without a reason. The three
      * functions name their terminal-negative stage differently (sponsor
-     * `lost`, delegate `declined`/`lost`, speaker `declined`/`withdrawn`), so
-     * the keys are enumerated rather than joined against pipeline_stages —
-     * a CHECK cannot read another table.
+     * `lost`, delegate `declined`/`lost`, speaker `declined`), so the keys are
+     * enumerated rather than joined against pipeline_stages — a CHECK cannot
+     * read another table.
+     *
+     * `withdrawn` is deliberately NOT in this list. D4 made it attrition
+     * rather than loss, and it carries its own reason column below.
      */
     check(
       "opportunities_lost_requires_reason",
-      sql`${t.stageKey} NOT IN ('lost', 'declined', 'withdrawn') OR ${t.lossReasonKey} IS NOT NULL`,
+      sql`${t.stageKey} NOT IN ('lost', 'declined') OR ${t.lossReasonKey} IS NOT NULL`,
+    ),
+    /** D4 — a withdrawal states why, in its own vocabulary. */
+    check(
+      "opportunities_withdrawn_requires_reason",
+      sql`${t.stageKey} <> 'withdrawn' OR ${t.withdrawalReasonKey} IS NOT NULL`,
     ),
     /** §46.3 — CANCELLED requires a cancellation reason. */
     check(
@@ -925,6 +957,7 @@ export const APPLICATION_TABLES = [
   "pipeline_stages",
   "loss_reasons",
   "cancellation_reasons",
+  "withdrawal_reasons",
   "opportunities",
   "activities",
   "form_submissions",

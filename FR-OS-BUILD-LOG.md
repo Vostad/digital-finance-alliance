@@ -540,3 +540,75 @@ domains *because* the human-confirmed domain attached to `abcBank`, so the zero
 is evidence D7 worked.
 
 **Next:** Boundary 7 — Pipelines.
+
+---
+
+## Boundary 7 · Pipelines
+
+**Commit:** `26fb7e7`
+
+**A data-integrity gap D4 opened, found and closed first.** Making WITHDRAWN
+attrition rather than loss meant `changeStage` no longer set a reason for it —
+while the `opportunities_lost_requires_reason` CHECK still demanded one. Moving
+a speaker to WITHDRAWN would have failed with a raw constraint violation.
+
+Fixed the way R4 settled the same question for cancellations: **a withdrawal
+gets its own reason set and its own column.** `withdrawal_reasons` table,
+`opportunities.withdrawal_reason_key`, its own CHECK, and `withdrawn` removed
+from the loss CHECK. The four stopgap `withdrew_*` rows 0010 put into
+`loss_reasons` are deleted — one careless `WHERE loss_reason_key IS NOT NULL`
+would have counted a withdrawal as a loss.
+
+**Built**
+
+- Migrations `0011`/`0012` — withdrawal reasons, column, constraints, RLS.
+- `src/server/domain/board.ts` — `pipelineBoard` and `conversionRates`.
+- `src/server/domain/opportunities.ts` — attrition and attendance in the stage
+  machine, with `withdrawn` / `attended` as their own audit actions.
+- `src/rpc/leads.ts` — `board`, `rates`, `moveStage`, `setOwner`,
+  `setCommissionSplit`, `owners`.
+
+**Decisions worth recording**
+
+- **One query per board, not one per column.** Nine round trips to draw one
+  screen, with counts drifting between the first and the last if anyone is
+  working — and every figure is aggregated *inside* the caller's scope, so the
+  totals can never disagree with the rows beneath them.
+- `totalValue` uses `coalesce(final, estimated)`. Summing only estimates would
+  make the WON column read zero on a board where money has actually closed.
+- Weighted pipeline uses the probability **on the opportunity**, not the stage
+  default. An operator who overrode it meant the override, and a forecast
+  quietly using the ladder instead would contradict the card.
+- **`MIN_SAMPLE = 10`.** A close rate over four opportunities is noise
+  presented as a percentage. Below the threshold the rate is `null` and the raw
+  counts are still returned, so a screen can say NOT ENOUGH DATA and show why.
+- **Attrition and attendance are measured against those who CONVERTED**, not
+  against every opportunity opened. You cannot withdraw from something you
+  never confirmed.
+
+**The two tests that matter most**
+
+| | Before | After | Meaning |
+|---|---|---|---|
+| Delegate achieved, then one ATTENDS | 2 | **2** | D2 — attending changes nothing |
+| Speaker achieved, then one WITHDRAWS | 2 | **1** | D4 — attrition removes achievement |
+| Speaker loss count, same withdrawal | 1 | **1** | D4 — and is *not* a loss |
+
+Both numbers moving would misreport the loss rate and the attrition rate at
+once, which is precisely what D4 exists to prevent.
+
+**Tests** — 137 unit, 186 integration (20 new in `integration/pipeline.test.ts`).
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 186 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0 |
+
+**One infrastructure fix:** the integration hook timeout was 30s and a fixture
+opening twenty workstreams is sixty-odd round trips to a remote Supabase.
+Raised to 180s — failing a suite for latency rather than for a defect teaches
+the wrong lesson.
+
+**Next:** Boundary 8 — Search / Filters.

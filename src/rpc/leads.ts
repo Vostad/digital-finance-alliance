@@ -34,7 +34,15 @@ import {
 } from "@/server/domain/directory";
 import { listOpportunities } from "@/server/domain/opportunities";
 import { searchDirectory } from "@/server/domain/directory";
-import { loadCancellationReasons, loadLossReasons, stagesFor } from "@/server/domain/pipeline";
+import {
+  loadCancellationReasons,
+  loadLossReasons,
+  loadWithdrawalReasons,
+  stagesFor,
+} from "@/server/domain/pipeline";
+import { changeStage } from "@/server/domain/opportunities";
+import { conversionRates, pipelineBoard } from "@/server/domain/board";
+import { assignOwner, assignableUsers, setSplit } from "@/server/domain/assignment";
 
 const WORK_FUNCTION = z.enum(["sponsor", "delegate", "speaker"]);
 
@@ -151,13 +159,14 @@ export const search = createServerFn({ method: "POST" })
 export const leadFormOptions = createServerFn({ method: "GET" }).handler(() =>
   sealed(async () => {
     const s = await q();
-    const [editions, sponsorStages, delegateStages, speakerStages, cancellation] =
+    const [editions, sponsorStages, delegateStages, speakerStages, cancellation, withdrawal] =
       await Promise.all([
         permittedEditions(s.q, s.ctx),
         stagesFor(s.q, "sponsor"),
         stagesFor(s.q, "delegate"),
         stagesFor(s.q, "speaker"),
         loadCancellationReasons(s.q),
+        loadWithdrawalReasons(s.q),
       ]);
     const [sponsorLoss, delegateLoss, speakerLoss] = await Promise.all([
       loadLossReasons(s.q, "sponsor"),
@@ -175,9 +184,96 @@ export const leadFormOptions = createServerFn({ method: "GET" }).handler(() =>
       stages: { sponsor: sponsorStages, delegate: delegateStages, speaker: speakerStages },
       lossReasons: { sponsor: sponsorLoss, delegate: delegateLoss, speaker: speakerLoss },
       cancellationReasons: cancellation,
+      withdrawalReasons: withdrawal,
     };
   }),
 );
+
+/* --------------------------------------------------------- §4 · the pipeline */
+
+const WORKSTREAM_FILTERS = z.object({
+  eventId: z.string().uuid().nullable().optional(),
+  editionId: z.string().uuid().nullable().optional(),
+  ownerId: z.string().uuid().nullable().optional(),
+  unassignedOnly: z.boolean().optional(),
+  priority: z.enum(["normal", "high"]).nullable().optional(),
+  search: z.string().max(200).nullable().optional(),
+});
+
+export const board = createServerFn({ method: "POST" })
+  .validator(z.object({ function: WORK_FUNCTION, filters: WORKSTREAM_FILTERS.optional() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return pipelineBoard(s.q, data.function, data.filters ?? {});
+    }),
+  );
+
+export const rates = createServerFn({ method: "POST" })
+  .validator(z.object({ function: WORK_FUNCTION, filters: WORKSTREAM_FILTERS.optional() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return conversionRates(s.q, data.function, data.filters ?? {});
+    }),
+  );
+
+/** Every §4 transition rule is enforced inside `changeStage`, on the server.
+    The UI disables what it can; this is what actually stops it. */
+export const moveStage = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      opportunityId: z.string().uuid(),
+      stageKey: z.string().min(1).max(40),
+      lossReasonKey: z.string().max(40).nullable().optional(),
+      cancellationReasonKey: z.string().max(40).nullable().optional(),
+      withdrawalReasonKey: z.string().max(40).nullable().optional(),
+      finalValue: z.string().max(20).nullable().optional(),
+      probability: z.number().int().min(0).max(100).nullable().optional(),
+      note: z.string().max(2000).nullable().optional(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      const { opportunityId, ...change } = data;
+      return changeStage(s.q, opportunityId, change, s.ctx);
+    }),
+  );
+
+export const setOwner = createServerFn({ method: "POST" })
+  .validator(z.object({ opportunityId: z.string().uuid(), ownerId: z.string().uuid().nullable() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return assignOwner(s.q, data.opportunityId, data.ownerId, s.ctx);
+    }),
+  );
+
+export const setCommissionSplit = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      opportunityId: z.string().uuid(),
+      secondaryOwnerId: z.string().uuid().nullable(),
+      ownerSplitPct: z.number().int().min(0).max(100),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      const { opportunityId, ...split } = data;
+      return setSplit(s.q, opportunityId, split, s.ctx);
+    }),
+  );
+
+export const owners = createServerFn({ method: "POST" })
+  .validator(z.object({ function: WORK_FUNCTION.nullable().optional() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return assignableUsers(s.q, data.function);
+    }),
+  );
 
 /* ------------------------------------------------------- D6 / D7 · duplicates */
 

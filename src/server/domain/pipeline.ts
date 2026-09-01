@@ -14,7 +14,7 @@
 
 import { asc, eq } from "drizzle-orm";
 
-import { cancellationReasons, lossReasons, pipelineStages } from "../db/schema";
+import { cancellationReasons, lossReasons, pipelineStages, withdrawalReasons } from "../db/schema";
 import type { ScopedQuery } from "../auth/scoped";
 import type { WorkFunction } from "../auth/permissions";
 
@@ -88,6 +88,14 @@ export async function loadLossReasons(q: ScopedQuery, fn: WorkFunction) {
     .from(lossReasons)
     .where(eq(lossReasons.function, fn))
     .orderBy(asc(lossReasons.sortOrder));
+}
+
+/** D4 — the withdrawal vocabulary, separate from loss. */
+export async function loadWithdrawalReasons(q: ScopedQuery) {
+  return q.directory
+    .select({ key: withdrawalReasons.key, label: withdrawalReasons.label })
+    .from(withdrawalReasons)
+    .orderBy(asc(withdrawalReasons.sortOrder));
 }
 
 export async function loadCancellationReasons(q: ScopedQuery) {
