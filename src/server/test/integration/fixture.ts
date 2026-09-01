@@ -18,7 +18,14 @@
 import { TransactionRollbackError } from "drizzle-orm";
 
 import { db } from "@/server/db/client";
-import { authUsers, editions, events, userEventScopes, users } from "@/server/db/schema";
+import {
+  authUsers,
+  editions,
+  events,
+  userEventScopes,
+  userFunctions,
+  users,
+} from "@/server/db/schema";
 import { scopedQuery, type ScopedQuery, type Tx } from "@/server/auth/scoped";
 import { clearPipelineCache } from "@/server/domain/pipeline";
 import type { AuthContext, Role, WorkFunction } from "@/server/auth/permissions";
@@ -150,6 +157,16 @@ export async function withFixture<T>(work: (f: Fixture) => Promise<T>): Promise<
 
       /* The Admin is scoped to MENA only, explicitly. Never inferred. */
       await tx.insert(userEventScopes).values([{ userId: ids.adminMena, eventId: ids.eventMena }]);
+
+      /* Team Members hold explicit functions, and the ROWS must match the
+         contexts handed out below — assignment refuses an owner who does not
+         hold the function, so a fixture that declares one and stores the other
+         fails in a way that looks like a code defect. */
+      await tx.insert(userFunctions).values([
+        { userId: ids.memberSponsor, function: "sponsor" },
+        { userId: ids.memberSpeaker, function: "speaker" },
+        { userId: ids.memberDelegate, function: "delegate" },
+      ]);
 
       const roleOf: Record<string, [Role, WorkFunction[], string[]]> = {
         superAdmin: ["super_admin", ["sponsor", "delegate", "speaker"], []],

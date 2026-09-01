@@ -328,3 +328,60 @@ functions, three different owners, and each owner sees exactly one record.
 | `tsc --noEmit` | clean |
 
 **Next:** Boundary 5 — Activities / Follow-ups.
+
+---
+
+## Boundary 5 · Activities / Follow-ups
+
+**Commit:** `6f4d04f`
+
+**Built** — `src/server/domain/activities.ts`: `logActivity`, `setNextAction`,
+`timeline`, `followUps`, `attentionNeeded`.
+
+**Append-only by construction.** The module exposes no update path and no
+delete path, and a test asserts that by inspecting its own exports — "activity
+history cannot be silently deleted" is only true if the code offers no way to
+do it. A correction is a new entry, the way a ledger is corrected.
+
+**Decisions worth recording**
+
+- `status_change` and `assignment` **cannot be logged by hand.** They are
+  written by the system as a side effect of the real action; letting someone
+  type one would let them fabricate a stage history.
+- Nothing can be recorded as having happened in the future.
+- `occurred_at` is separate from `created_at`, and the timeline orders by
+  `occurred_at`. You log yesterday's call today; a timeline that pretends it
+  happened at the moment of typing makes response-time metrics meaningless.
+- Logging an activity and setting the next action happen in **one transaction**,
+  so the follow-up queue cannot be left honest-looking by a half-completed
+  two-step.
+- The follow-up queue excludes closed work by testing the stage's own `is_open`
+  flag in SQL, not by a hardcoded list of stage keys that would rot the next
+  time a stage is added.
+- Day boundaries are computed in UTC. Rendering into the user's zone is the
+  UI's job; the boundary must not move depending on which server answered.
+
+**Tests** — 119 integration (18 new). §39 scenarios 4, 5, 9, 25 covered.
+
+| | |
+|---|---|
+| `npm test` | 124 passed |
+| `npm run test:integration` | 119 passed |
+| `tsc --noEmit` | clean |
+
+**Two defects found and fixed** (both mine, both real):
+
+1. **A `Date` in a raw `sql` template reaches the driver unserialisable.** The
+   typed column comparisons were fine — the column tells the driver what it is
+   — but the bucketing `CASE` had no column to infer from. Now cast explicitly
+   as `${d.toISOString()}::timestamptz`.
+2. **The shared fixture declared Team Member functions in the context but never
+   wrote the `user_functions` rows.** Boundary 4 refuses an owner who does not
+   hold the function, so the mismatch surfaced as what looked like a code
+   defect. The fixture now writes rows that match the contexts it hands out.
+
+**Four test expectations corrected** — the timeline legitimately includes
+system-written `assignment` rows (§9 lists it as an activity type), and orders
+by `occurred_at`, so a meeting logged last but dated yesterday sorts last.
+
+**Next:** Boundary 6 — Website Integration.

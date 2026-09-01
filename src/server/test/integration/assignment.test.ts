@@ -8,7 +8,7 @@
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { activities, auditLog, opportunities, userFunctions } from "@/server/db/schema";
+import { activities, auditLog, opportunities } from "@/server/db/schema";
 import { assignMany, assignOwner, assignableUsers, setSplit } from "@/server/domain/assignment";
 import { createLead } from "@/server/domain/leads";
 import { listOpportunities } from "@/server/domain/opportunities";
@@ -19,13 +19,6 @@ const R: Record<string, unknown> = {};
 beforeAll(async () => {
   await withFixture(async ({ tx, ids, ctx, q }) => {
     const sa = q("superAdmin");
-
-    /* Team Members hold explicit functions. Super/Admin hold all by role. */
-    await tx.insert(userFunctions).values([
-      { userId: ids.memberSponsor, function: "sponsor" },
-      { userId: ids.memberSpeaker, function: "speaker" },
-      { userId: ids.memberDelegate, function: "delegate" },
-    ]);
 
     const lead = await createLead(
       sa,
