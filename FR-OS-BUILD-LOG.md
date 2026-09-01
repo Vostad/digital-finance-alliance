@@ -85,3 +85,70 @@ exactly as `FR-OS-SPEC.md` §4. Sponsor probability ladder unchanged from Gate 1
 **Deferred:** nothing.
 
 **Next:** Boundary 1 — People / Companies.
+
+---
+
+## Boundary 1 · People / Companies
+
+**Commit:** `35a7de9`
+
+**Built**
+
+- `src/server/domain/identity.ts` — normalisation primitives. Accent folding,
+  punctuation stripping, legal-suffix stripping, consumer-mail-host detection,
+  graded match confidence (`certain` / `strong` / `possible`).
+- `src/server/domain/audit.ts` — `recordAudit` and `diff`. Takes a transaction,
+  so a change and the audit row describing it commit together or not at all.
+- `src/server/domain/directory.ts` — matching, find-or-create, merge, search.
+- `src/server/auth/scoped.ts` — added `directory` (the handle for the
+  deliberately unscoped tables) and the exported `Tx` transaction type, so
+  domain modules never import `db` directly and the eslint boundary holds.
+
+**Duplicate prevention rests on three layers, all of them needed**
+
+| Layer | What it catches |
+|---|---|
+| Unique index on `lower(email)` | two people clicking Save at the same instant |
+| `findPersonMatches` / `findCompanyMatches` | the same person typed differently |
+| Search-before-create in the UI (§5) | the operator who would not have looked |
+
+Check-then-insert alone is a race. A unique index alone gives the user a
+database error instead of "here they are". The write path catches `23505` and
+re-reads, so the loser of a concurrent insert receives the winner's record.
+
+**Decisions worth recording**
+
+- `bank` is a stripped company suffix. `ABC Bank` and `ABC` therefore collapse
+  to one match key. Intended for this market, where the same institution is
+  written both ways constantly — and it produces a *candidate*, never an
+  automatic merge.
+- Suffix stripping never reduces a name to nothing, so a company genuinely
+  called `AG` keeps an identity instead of colliding with every other
+  suffix-only name.
+- A `certain` match (email) returns the existing person rather than raising —
+  that is the answer the caller wanted. A `strong` match raises
+  `DuplicateError` carrying the candidates, and a human resolves it with
+  `acceptMatchId`. There is deliberately no "create anyway" for `certain`.
+- Merge never deletes: the source keeps its row, gains `merged_into_id`, and
+  stops surfacing as a match.
+
+**Tests** — 103 unit (20 new in `identity.test.ts`), 38 integration (20 new in
+`integration/directory.test.ts`), covering §39 scenarios 7, 22, 23, 24 and the
+concurrent-duplicate case.
+
+| | |
+|---|---|
+| `npm test` | 103 passed |
+| `npm run test:integration` | 38 passed |
+| `npm run verify:db` | all passed |
+| `tsc --noEmit` | clean |
+
+**One functional test failure, fixed in place** (§46.2): a company-count
+assertion sampled at the wrong moment in the fixture. Expectation corrected;
+no code defect.
+
+**Deferred to later boundaries:** merge reversal UI and the 30-day window
+(the snapshot and audit row are written; the reverse action lands with Audit,
+Boundary 14). People/company screens land with Dashboards, Boundary 9.
+
+**Next:** Boundary 2 — Opportunities / Workstreams.

@@ -117,6 +117,22 @@ export function scopedQuery(ctx: AuthContext) {
     },
 
     /**
+     * THE DIRECTORY TABLES — people, companies, person_emails, company_domains,
+     * events, editions, and the reference sets.
+     *
+     * These carry no row-level scope, and that is a decision rather than an
+     * omission: "NO DUPLICATE PEOPLE" is unachievable if you are required to
+     * find the existing record before creating one and simultaneously
+     * prevented from seeing it. What is commercially sensitive about a
+     * relationship is the pipeline attached to it, and that IS scoped, above.
+     *
+     * Reads through this handle need no further check. WRITES must still be
+     * preceded by the relevant assert — creating a person is open to every
+     * active user, merging two is not.
+     */
+    directory: db,
+
+    /**
      * The escape hatch, named so it cannot be used by accident and greps in one
      * search. Legitimate uses: the public form intake, which has no user, and
      * background jobs. Every call site must carry a comment saying why.
@@ -129,4 +145,12 @@ export function scopedQuery(ctx: AuthContext) {
 }
 
 export type ScopedQuery = ReturnType<typeof scopedQuery>;
+
+/**
+ * A Drizzle transaction handle, derived from the real one rather than
+ * described by hand. Domain modules take this so a write and its audit row
+ * commit together or not at all — and they get it from here rather than from
+ * db/client, which eslint keeps out of their reach.
+ */
+export type Tx = Parameters<Parameters<ScopedQuery["directory"]["transaction"]>[0]>[0];
 export type { AuthError };
