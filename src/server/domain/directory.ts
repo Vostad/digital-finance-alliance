@@ -25,9 +25,16 @@
  * rest of the time.
  */
 
-import { and, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 
-import { companies, companyDomains, opportunities, people, personEmails } from "../db/schema";
+import {
+  companies,
+  companyDomains,
+  merges,
+  opportunities,
+  people,
+  personEmails,
+} from "../db/schema";
 import type { ScopedQuery } from "../auth/scoped";
 import type { AuthContext } from "../auth/permissions";
 import { canMergeRecords } from "../auth/permissions";
@@ -261,31 +268,55 @@ export async function findPersonMatches(
 /* ------------------------------------------------------------- company write */
 
 /**
- * Find or create. Returns the existing company when one certainly matches,
- * rather than raising — for a company, "you already have this one" is the
- * answer the caller wants, not an error to handle.
+ * D7 — FIND OR CREATE, WITHOUT EVER GUESSING.
+ *
+ * The identity key for a company is its DOMAIN. A domain match attaches
+ * automatically because the database itself would have refused a second row
+ * for it.
+ *
+ * A NAME match never attaches. `normalizeCompanyName` strips legal suffixes —
+ * `Ltd`, `AG`, `Holdings`, and `Bank` — which is exactly what makes it useful
+ * as a heuristic and exactly what makes it unsafe as an identity key: it
+ * collapses `ABC Bank` and `ABC` into one key, and those are sometimes the
+ * same institution and sometimes not. Only a human can tell, so only a human
+ * decides, via `acceptMatchId`.
+ *
+ * When no human is present — the website path — a new company is created and
+ * the collision is surfaced by `possibleDuplicateCompanies`. Creating
+ * something a person will later reconcile is acceptable. Creating it
+ * invisibly, or silently merging two institutions, is not.
  */
 export async function resolveCompany(
   q: ScopedQuery,
-  input: { name: string; domain?: Maybe<string>; website?: Maybe<string>; country?: Maybe<string> },
+  input: {
+    name: string;
+    domain?: Maybe<string>;
+    website?: Maybe<string>;
+    country?: Maybe<string>;
+    /** The operator looked at the candidates and said "this one". */
+    acceptMatchId?: Maybe<string>;
+  },
   ctx: AuthContext | null,
-): Promise<{ id: string; created: boolean }> {
+): Promise<{ id: string; created: boolean; candidates: CompanyMatch[] }> {
   const db = q.directory;
   const name = input.name.trim();
   if (!name) throw new Error("Company name is required.");
 
   const domain = input.domain?.trim().toLowerCase() || null;
   const matches = await findCompanyMatches(q, { name, domain });
-  const certain = matches.find((m) => m.confidence === "certain");
-  if (certain) return { id: certain.id, created: false };
 
-  const exact = matches.find(
-    (m) => m.confidence === "strong" && normalizeCompanyName(m.name) === normalizeCompanyName(name),
-  );
-  if (exact) {
-    if (domain) await attachDomain(q, exact.id, domain, ctx);
-    return { id: exact.id, created: false };
+  /* 1 · DOMAIN — the identity key. Attaches without asking. */
+  const certain = matches.find((m) => m.confidence === "certain");
+  if (certain) return { id: certain.id, created: false, candidates: [] };
+
+  /* 2 · A HUMAN DECIDED. Honour it, and attach the domain to what they chose. */
+  if (input.acceptMatchId) {
+    if (domain) await attachDomain(q, input.acceptMatchId, domain, ctx);
+    return { id: input.acceptMatchId, created: false, candidates: [] };
   }
+
+  /* 3 · NAME CANDIDATES EXIST BUT NOBODY CONFIRMED. Create, and say so. */
+  const candidates = matches.filter((m) => m.confidence !== "certain");
 
   return db.transaction(async (tx) => {
     const [row] = await tx
@@ -306,7 +337,13 @@ export async function resolveCompany(
       entityType: "company",
       entityId: id,
       action: "created",
-      after: { name, domain },
+      after: {
+        name,
+        domain,
+        /* The trail that makes an unconfirmed creation reviewable rather than
+           invisible. */
+        unconfirmedCandidates: candidates.map((c) => ({ id: c.id, name: c.name })),
+      },
     });
     if (domain) {
       await tx
@@ -314,13 +351,13 @@ export async function resolveCompany(
         .values({ companyId: id, domain, isPrimary: true, createdBy: ctx?.userId ?? null })
         .onConflictDoNothing();
     }
-    return { id, created: true };
+    return { id, created: true, candidates };
   });
 }
 
 /** Idempotent. A domain already owned by another company is left alone — one
-    domain belongs to one company, and silently moving it would re-parent
-    every person matched through it. */
+    domain belongs to one company, and silently moving it would re-parent every
+    person matched through it. */
 async function attachDomain(
   q: ScopedQuery,
   companyId: string,
@@ -485,22 +522,52 @@ export async function attachEmail(
 /* -------------------------------------------------------------------- merge */
 
 /**
- * Merge `sourceId` into `targetId`. §2 — reversible for 30 days.
+ * D6 — MERGE, AND UN-MERGE. Both genuinely implemented.
  *
- * Nothing is deleted. The source row survives with `merged_into_id` set, every
- * repointed foreign key is captured in the snapshot, and the audit row names
- * both sides. That is what makes the reversal exact rather than approximate.
+ * Nothing is ever deleted. The loser keeps its row, gains `merged_into_id`,
+ * and stops surfacing as a match. Every foreign key that was repointed is
+ * written into the `merges` snapshot, which is what makes the reversal EXACT
+ * rather than approximate: un-merging moves back precisely the rows that
+ * moved, and leaves alone anything that already belonged to the survivor.
+ *
+ * A reversal that guessed — "move every email back" — would steal the
+ * survivor's own addresses the first time the two records genuinely shared a
+ * company. The snapshot is the difference between reversible and destructive.
  */
+
+/** How long a merge may be undone. §2. */
+export const MERGE_REVERSAL_WINDOW_DAYS = 30;
+
+type MergeSnapshot = {
+  /** Table → the ids whose foreign key this merge actually moved. */
+  moved: Record<string, string[]>;
+  /** Restored verbatim on reversal — the loser's own state before the merge. */
+  source: { archivedAt: string | null; companyId?: string | null };
+};
+
+async function assertCanMerge(ctx: AuthContext, sourceId: string, targetId: string) {
+  if (!canMergeRecords(ctx)) throw forbidden("You cannot merge records.");
+  if (sourceId === targetId) throw new Error("Cannot merge a record into itself.");
+}
+
 export async function mergePeople(
   q: ScopedQuery,
   sourceId: string,
   targetId: string,
   ctx: AuthContext,
-): Promise<{ moved: Record<string, number> }> {
-  if (!canMergeRecords(ctx)) throw forbidden("You cannot merge records.");
-  if (sourceId === targetId) throw new Error("Cannot merge a record into itself.");
+): Promise<{ mergeId: string; moved: Record<string, number> }> {
+  await assertCanMerge(ctx, sourceId, targetId);
 
   return q.directory.transaction(async (tx) => {
+    const before = await tx
+      .select({ archivedAt: people.archivedAt, mergedIntoId: people.mergedIntoId })
+      .from(people)
+      .where(eq(people.id, sourceId))
+      .limit(1);
+    const source = before[0];
+    if (!source) throw new Error("That person does not exist.");
+    if (source.mergedIntoId) throw new Error("That person has already been merged.");
+
     const movedEmails = await tx
       .update(personEmails)
       .set({ personId: targetId, isPrimary: false })
@@ -523,7 +590,25 @@ export async function mergePeople(
       })
       .where(eq(people.id, sourceId));
 
-    const moved = { person_emails: movedEmails.length, opportunities: movedOpps.length };
+    const snapshot: MergeSnapshot = {
+      moved: {
+        person_emails: movedEmails.map((r) => r.id),
+        opportunities: movedOpps.map((r) => r.id),
+      },
+      source: { archivedAt: source.archivedAt?.toISOString() ?? null },
+    };
+
+    const [mergeRow] = await tx
+      .insert(merges)
+      .values({
+        entityType: "person",
+        sourceId,
+        targetId,
+        snapshot,
+        performedBy: ctx.userId,
+        createdBy: ctx.userId,
+      })
+      .returning({ id: merges.id });
 
     await recordAudit(tx, {
       ctx,
@@ -531,11 +616,295 @@ export async function mergePeople(
       entityId: sourceId,
       action: "merged",
       before: { mergedIntoId: null },
-      after: { mergedIntoId: targetId, moved },
+      after: { mergedIntoId: targetId, mergeId: mergeRow!.id, moved: snapshot.moved },
     });
 
-    return { moved };
+    return {
+      mergeId: mergeRow!.id,
+      moved: {
+        person_emails: movedEmails.length,
+        opportunities: movedOpps.length,
+      },
+    };
   });
+}
+
+export async function mergeCompanies(
+  q: ScopedQuery,
+  sourceId: string,
+  targetId: string,
+  ctx: AuthContext,
+): Promise<{ mergeId: string; moved: Record<string, number> }> {
+  await assertCanMerge(ctx, sourceId, targetId);
+
+  return q.directory.transaction(async (tx) => {
+    const before = await tx
+      .select({ archivedAt: companies.archivedAt, mergedIntoId: companies.mergedIntoId })
+      .from(companies)
+      .where(eq(companies.id, sourceId))
+      .limit(1);
+    const source = before[0];
+    if (!source) throw new Error("That company does not exist.");
+    if (source.mergedIntoId) throw new Error("That company has already been merged.");
+
+    const movedDomains = await tx
+      .update(companyDomains)
+      .set({ companyId: targetId, isPrimary: false })
+      .where(eq(companyDomains.companyId, sourceId))
+      .returning({ id: companyDomains.id });
+
+    const movedPeople = await tx
+      .update(people)
+      .set({ companyId: targetId, updatedAt: new Date(), updatedBy: ctx.userId })
+      .where(eq(people.companyId, sourceId))
+      .returning({ id: people.id });
+
+    const movedOpps = await tx
+      .update(opportunities)
+      .set({ companyId: targetId, updatedAt: new Date(), updatedBy: ctx.userId })
+      .where(eq(opportunities.companyId, sourceId))
+      .returning({ id: opportunities.id });
+
+    await tx
+      .update(companies)
+      .set({
+        mergedIntoId: targetId,
+        archivedAt: new Date(),
+        updatedAt: new Date(),
+        updatedBy: ctx.userId,
+      })
+      .where(eq(companies.id, sourceId));
+
+    const snapshot: MergeSnapshot = {
+      moved: {
+        company_domains: movedDomains.map((r) => r.id),
+        people: movedPeople.map((r) => r.id),
+        opportunities: movedOpps.map((r) => r.id),
+      },
+      source: { archivedAt: source.archivedAt?.toISOString() ?? null },
+    };
+
+    const [mergeRow] = await tx
+      .insert(merges)
+      .values({
+        entityType: "company",
+        sourceId,
+        targetId,
+        snapshot,
+        performedBy: ctx.userId,
+        createdBy: ctx.userId,
+      })
+      .returning({ id: merges.id });
+
+    await recordAudit(tx, {
+      ctx,
+      entityType: "company",
+      entityId: sourceId,
+      action: "merged",
+      before: { mergedIntoId: null },
+      after: { mergedIntoId: targetId, mergeId: mergeRow!.id, moved: snapshot.moved },
+    });
+
+    return {
+      mergeId: mergeRow!.id,
+      moved: {
+        company_domains: movedDomains.length,
+        people: movedPeople.length,
+        opportunities: movedOpps.length,
+      },
+    };
+  });
+}
+
+/**
+ * Undo a merge, exactly.
+ *
+ * Only the rows this merge moved go back, identified by id from the snapshot.
+ * Anything the survivor already owned, and anything added since, is untouched.
+ */
+export async function reverseMerge(
+  q: ScopedQuery,
+  mergeId: string,
+  ctx: AuthContext,
+): Promise<{ restored: Record<string, number> }> {
+  if (!canMergeRecords(ctx)) throw forbidden("You cannot reverse a merge.");
+
+  return q.directory.transaction(async (tx) => {
+    const rows = await tx
+      .select({
+        id: merges.id,
+        entityType: merges.entityType,
+        sourceId: merges.sourceId,
+        targetId: merges.targetId,
+        snapshot: merges.snapshot,
+        performedAt: merges.performedAt,
+        reversedAt: merges.reversedAt,
+      })
+      .from(merges)
+      .where(eq(merges.id, mergeId))
+      .limit(1);
+
+    const merge = rows[0];
+    if (!merge) throw new Error("That merge does not exist.");
+    if (merge.reversedAt) throw new Error("That merge has already been reversed.");
+
+    const ageDays = (Date.now() - merge.performedAt.getTime()) / 86_400_000;
+    if (ageDays > MERGE_REVERSAL_WINDOW_DAYS) {
+      throw new Error(
+        `That merge is ${Math.floor(ageDays)} days old. Merges can be reversed for ${MERGE_REVERSAL_WINDOW_DAYS} days, after which the records are treated as genuinely one.`,
+      );
+    }
+
+    const snapshot = merge.snapshot as MergeSnapshot;
+    const restored: Record<string, number> = {};
+    const ids = (table: string) => snapshot.moved[table] ?? [];
+
+    if (merge.entityType === "person") {
+      const emailIds = ids("person_emails");
+      if (emailIds.length) {
+        const back = await tx
+          .update(personEmails)
+          .set({ personId: merge.sourceId })
+          .where(inArray(personEmails.id, emailIds))
+          .returning({ id: personEmails.id });
+        restored["person_emails"] = back.length;
+      }
+      const oppIds = ids("opportunities");
+      if (oppIds.length) {
+        const back = await tx
+          .update(opportunities)
+          .set({ personId: merge.sourceId, updatedAt: new Date(), updatedBy: ctx.userId })
+          .where(inArray(opportunities.id, oppIds))
+          .returning({ id: opportunities.id });
+        restored["opportunities"] = back.length;
+      }
+      await tx
+        .update(people)
+        .set({
+          mergedIntoId: null,
+          archivedAt: snapshot.source.archivedAt ? new Date(snapshot.source.archivedAt) : null,
+          updatedAt: new Date(),
+          updatedBy: ctx.userId,
+        })
+        .where(eq(people.id, merge.sourceId));
+    } else {
+      const domainIds = ids("company_domains");
+      if (domainIds.length) {
+        const back = await tx
+          .update(companyDomains)
+          .set({ companyId: merge.sourceId })
+          .where(inArray(companyDomains.id, domainIds))
+          .returning({ id: companyDomains.id });
+        restored["company_domains"] = back.length;
+      }
+      const peopleIds = ids("people");
+      if (peopleIds.length) {
+        const back = await tx
+          .update(people)
+          .set({ companyId: merge.sourceId, updatedAt: new Date(), updatedBy: ctx.userId })
+          .where(inArray(people.id, peopleIds))
+          .returning({ id: people.id });
+        restored["people"] = back.length;
+      }
+      const oppIds = ids("opportunities");
+      if (oppIds.length) {
+        const back = await tx
+          .update(opportunities)
+          .set({ companyId: merge.sourceId, updatedAt: new Date(), updatedBy: ctx.userId })
+          .where(inArray(opportunities.id, oppIds))
+          .returning({ id: opportunities.id });
+        restored["opportunities"] = back.length;
+      }
+      await tx
+        .update(companies)
+        .set({
+          mergedIntoId: null,
+          archivedAt: snapshot.source.archivedAt ? new Date(snapshot.source.archivedAt) : null,
+          updatedAt: new Date(),
+          updatedBy: ctx.userId,
+        })
+        .where(eq(companies.id, merge.sourceId));
+    }
+
+    await tx
+      .update(merges)
+      .set({ reversedAt: new Date(), reversedBy: ctx.userId })
+      .where(eq(merges.id, mergeId));
+
+    await recordAudit(tx, {
+      ctx,
+      entityType: merge.entityType === "person" ? "person" : "company",
+      entityId: merge.sourceId,
+      action: "merge_reversed",
+      before: { mergedIntoId: merge.targetId },
+      after: { mergedIntoId: null, mergeId, restored },
+    });
+
+    return { restored };
+  });
+}
+
+/** Merges still inside the reversal window, newest first. */
+export async function reversibleMerges(q: ScopedQuery, limit = 50) {
+  const cutoff = new Date(Date.now() - MERGE_REVERSAL_WINDOW_DAYS * 86_400_000);
+  return q.directory
+    .select({
+      id: merges.id,
+      entityType: merges.entityType,
+      sourceId: merges.sourceId,
+      targetId: merges.targetId,
+      performedAt: merges.performedAt,
+      performedBy: merges.performedBy,
+    })
+    .from(merges)
+    .where(and(isNull(merges.reversedAt), gte(merges.performedAt, cutoff)))
+    .orderBy(desc(merges.performedAt))
+    .limit(limit);
+}
+
+/* --------------------------------------------------- possible duplicates (D7) */
+
+/**
+ * The review queue D7 requires.
+ *
+ * Name normalisation is never allowed to attach records automatically, so
+ * collisions accumulate — mostly from the unattended website path, where no
+ * human was present to confirm. This surfaces them. Computed on demand rather
+ * than stored, so it is always accurate and a merge removes an entry from it
+ * without any bookkeeping.
+ */
+export async function possibleDuplicateCompanies(q: ScopedQuery, limit = 50) {
+  const rows = await q.directory.execute(sql`
+    select c.normalized_name,
+           json_agg(json_build_object('id', c.id, 'name', c.name, 'country', c.country)
+                    order by c.created_at) as records
+    from companies c
+    where c.merged_into_id is null and c.archived_at is null
+    group by c.normalized_name
+    having count(*) > 1
+    order by count(*) desc
+    limit ${limit}
+  `);
+  return rows as unknown as { normalized_name: string; records: { id: string; name: string }[] }[];
+}
+
+export async function possibleDuplicatePeople(q: ScopedQuery, limit = 50) {
+  const rows = await q.directory.execute(sql`
+    select p.normalized_name, p.company_id,
+           json_agg(json_build_object('id', p.id, 'name', p.full_name, 'jobTitle', p.job_title)
+                    order by p.created_at) as records
+    from people p
+    where p.merged_into_id is null and p.archived_at is null
+    group by p.normalized_name, p.company_id
+    having count(*) > 1
+    order by count(*) desc
+    limit ${limit}
+  `);
+  return rows as unknown as {
+    normalized_name: string;
+    company_id: string | null;
+    records: { id: string; name: string }[];
+  }[];
 }
 
 /* ------------------------------------------------------------------ reading */

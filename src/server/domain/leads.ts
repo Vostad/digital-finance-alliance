@@ -96,6 +96,13 @@ export type CreateLeadResult = {
   /** Which functions already had an open workstream and were therefore
       skipped rather than duplicated. Reported, never silently swallowed. */
   skippedFunctions: { function: WorkFunction; reason: string }[];
+  /**
+   * D7 — name candidates that existed when a new company was created without
+   * human confirmation. Returned so the caller can surface them; they also
+   * appear in `possibleDuplicateCompanies` regardless of whether anyone read
+   * this field.
+   */
+  companyCandidates: { id: string; name: string }[];
 };
 
 export async function createLead(
@@ -135,7 +142,8 @@ export async function createLead(
   const email = input.email && looksLikeEmail(input.email) ? normalizeEmail(input.email) : null;
 
   /* 1 · COMPANY */
-  let companyId = input.acceptCompanyMatchId ?? input.companyId ?? null;
+  let companyId = input.companyId ?? null;
+  let companyCandidates: { id: string; name: string }[] = [];
   if (!companyId && input.companyName?.trim()) {
     const company = await resolveCompany(
       q,
@@ -143,10 +151,14 @@ export async function createLead(
         name: input.companyName,
         domain: email ? companyDomainFromEmail(email) : null,
         country: input.country ?? null,
+        /* D7 — the operator's confirmation, when there was one. Without it a
+           name match creates a separate company and reports the collision. */
+        acceptMatchId: input.acceptCompanyMatchId ?? null,
       },
       ctx,
     );
     companyId = company.id;
+    companyCandidates = company.candidates.map((c) => ({ id: c.id, name: c.name }));
   }
 
   /* 2 · PERSON. resolvePerson raises DuplicateError on a strong match, which
@@ -228,6 +240,7 @@ export async function createLead(
     personCreated: person.created,
     opportunityIds,
     skippedFunctions,
+    companyCandidates,
   };
 }
 

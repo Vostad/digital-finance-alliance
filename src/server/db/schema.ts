@@ -229,10 +229,24 @@ export const editions = pgTable(
     startsOn: date("starts_on"),
     endsOn: date("ends_on"),
     status: editionStatus("status").notNull().default("planning"),
+    /**
+     * D5 — THE EXPLICIT PUBLIC INTAKE MAPPING.
+     *
+     * A public form declares an intake key; the server resolves it to exactly
+     * one edition through this column. Nullable, because most editions have no
+     * public form, and UNIQUE, because a key that resolved to two editions
+     * would be the ambiguity this replaces.
+     *
+     * Never pick an edition by "whichever is currently active": two active
+     * editions would make the choice silent and arbitrary, and the wrong one
+     * would only be discovered after the leads were filed.
+     */
+    publicIntakeKey: text("public_intake_key"),
     ...stamps,
   },
   (t) => [
     uniqueIndex("editions_event_slug_key").on(t.eventId, t.slug),
+    uniqueIndex("editions_public_intake_key").on(t.publicIntakeKey),
     index("editions_event_idx").on(t.eventId),
   ],
 );
@@ -355,8 +369,28 @@ export const pipelineStages = pgTable(
     isOpen: boolean("is_open").notNull().default(true),
     isWon: boolean("is_won").notNull().default(false),
     isLost: boolean("is_lost").notNull().default(false),
-    /** §22 — CANCELLED is a distinct state from LOST. */
+    /** §4 — CANCELLED is a distinct state from LOST. Sponsor only. */
     isCancelled: boolean("is_cancelled").notNull().default(false),
+    /**
+     * D2 — fulfilment AFTER converting. Delegate ATTENDED.
+     *
+     * Not `is_won`: the conversion already happened at CONFIRMED and stamped
+     * `won_at`. Marking this won as well would count the same delegate's
+     * achievement twice in any query that reads the flag rather than the
+     * timestamp. It is a separate operational KPI, reported beside the target
+     * and never folded into it.
+     */
+    isAttendance: boolean("is_attendance").notNull().default(false),
+    /**
+     * D4 — withdrawal AFTER converting. Speaker WITHDRAWN.
+     *
+     * Explicitly NOT `is_lost`. DECLINED is a loss: they never confirmed.
+     * WITHDRAWN is attrition: they confirmed and then left. Aggregating the
+     * two would misreport both the loss rate and the conversion rate. It
+     * removes the achievement (see the achievement rule in §4) and feeds a
+     * withdrawal metric of its own.
+     */
+    isAttrition: boolean("is_attrition").notNull().default(false),
     ...stamps,
   },
   (t) => [

@@ -51,6 +51,9 @@ export const submitWebsiteLead = createServerFn({ method: "POST" })
   .validator(
     z.object({
       kind: z.enum(["prospectus", "apply"]),
+      /* D5 — an allowlist, not free text. A key outside it never reaches the
+         database lookup, and a key inside it still has to have a mapping. */
+      intakeKey: z.enum(["mena"]),
       name: z.string().min(1).max(200),
       email: z.string().min(3).max(320),
       company: z.string().max(200).default(""),

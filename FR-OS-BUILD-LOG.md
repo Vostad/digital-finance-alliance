@@ -469,3 +469,74 @@ look successful.
 
 **Next:** Boundary 7 — Pipelines (largely delivered in Boundary 2; the
 remaining work is the board and stage-move UI).
+
+---
+
+## Boundaries 1 / 2 / 6 · REVISION — locked decisions D1–D7
+
+**Commit:** `76c0071`
+
+Seven rulings were issued after reviewing the reconstructed spec. Five of them
+contradicted code already shipped, so those boundaries were corrected before
+Boundary 7 began rather than layering new work on wrong foundations.
+
+| # | Decision | What changed |
+|---|---|---|
+| **D1** | Spec numbering is this document's own | `FR-OS-SPEC.md` rewritten; every `§46.3`-style reference removed; §15 Data Erasure added as its own section rather than a dangling cross-reference |
+| **D2** | Delegate achievement is CONFIRMED | ATTENDED is no longer `is_won`; new `is_attendance` flag |
+| **D3** | Sponsor ladder locked | already correct — no change |
+| **D4** | Speaker WITHDRAWN is attrition, not loss | no longer `is_lost`; new `is_attrition` flag; withdrawal reasons seeded |
+| **D5** | Explicit intake mapping | `editions.public_intake_key`, unique; the "whichever edition is active" guess is gone |
+| **D6** | Merge reversal genuinely implemented | `mergeCompanies`, `reverseMerge`, `reversibleMerges`, real `merges` snapshots |
+| **D7** | Name is a heuristic, never identity | a name match can no longer attach; `possibleDuplicate*` review queue |
+
+**The achievement rule that makes D2 and D4 both true**
+
+```
+won_at IS NOT NULL  AND  the current stage is not is_attrition
+```
+
+Reading the **timestamp** rather than the current stage flag is the whole
+trick. A delegate moving CONFIRMED → ATTENDED keeps the one achievement they
+earned; a speaker moving CONFIRMED → WITHDRAWN loses it. A flag-only rule
+cannot express both at once, and a naive `is_won` on ATTENDED would have made
+achievement drop when a delegate actually turned up.
+
+**D4 also forced a transition-rule correction.** "WON is terminal" had been
+applied to all three functions. CONFIRMED is the won stage for delegate and
+speaker too, so the rule made D2 and D4 literally unreachable. It is now
+**sponsor-only**, with delegate and speaker permitted exactly the successors
+§4 names.
+
+**D6 — what the snapshot buys.** `merges.snapshot` records the ids of the rows
+each merge actually moved. The reversal moves back precisely those. A reversal
+that guessed "move every email back" would steal the survivor's own address the
+first time two records genuinely shared one. The test asserts the survivor
+keeps its own emails and the loser gets back exactly the one it arrived with.
+
+**D7 — the heuristic still finds, it just cannot act.** `bank` remains a
+stripped suffix, so `ABC Bank` and `ABC` still collide as *candidates*. The
+test asserts they are created as **separate** companies, that the collision is
+reported to the caller, that it appears in the review queue, that a name match
+is never rated `certain`, and that a domain match still attaches instantly.
+
+**Migrations** — `0009` (columns + unique index), `0010` (apply D2/D4/D5 to
+reference data, guarded, with the invariants re-asserted in SQL so a later edit
+reverting them fails the migration).
+
+**Tests** — 136 unit (11 new for D2/D4 transitions), 166 integration (26 new in
+`integration/merge.test.ts` for D6/D7).
+
+| | |
+|---|---|
+| `npm test` | 136 passed |
+| `npm run test:integration` | 166 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0 |
+
+**Two functional test failures, fixed in place** — both were my expectations of
+the company-merge counts. The corrected assertion is stronger: `abc` owns zero
+domains *because* the human-confirmed domain attached to `abcBank`, so the zero
+is evidence D7 worked.
+
+**Next:** Boundary 7 — Pipelines.

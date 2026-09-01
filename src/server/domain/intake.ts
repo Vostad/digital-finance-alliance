@@ -20,7 +20,7 @@
 
 import { and, eq, gte, sql } from "drizzle-orm";
 
-import { formSubmissions } from "../db/schema";
+import { editions, formSubmissions } from "../db/schema";
 import type { ScopedQuery } from "../auth/scoped";
 import type { WorkFunction } from "../auth/permissions";
 import { applicationAcknowledgement, prospectusDelivery, queue } from "./email";
@@ -35,6 +35,9 @@ type Maybe<T> = T | null | undefined;
 
 export type IntakeInput = {
   kind: FormKind;
+  /** D5 — which public form this came from. Resolved server-side to exactly
+      one edition; never inferred from which edition happens to be active. */
+  intakeKey: string;
   name: string;
   email: string;
   company: string;
@@ -149,9 +152,17 @@ export async function receiveWebsiteLead(
   let opportunityId: string | null = null;
 
   try {
-    const edition = await currentEdition(q);
+    const edition = await editionForIntakeKey(q, input.intakeKey);
     if (!edition) {
-      throw new ValidationError("No edition is currently accepting submissions.");
+      /* Refused deliberately rather than falling back to a guess. The raw
+         submission above is already stored, so nothing is lost — a Super Admin
+         sees exactly what arrived and which key had no mapping. */
+      throw new ValidationError(
+        `No edition is mapped to the intake key "${input.intakeKey}". Configure the mapping before this form goes live.`,
+      );
+    }
+    if (edition.status !== "active") {
+      throw new ValidationError(`${edition.name} is not currently accepting submissions.`);
     }
 
     const lead = await createLead(
@@ -208,22 +219,23 @@ export async function receiveWebsiteLead(
 }
 
 /**
- * Which edition a website submission belongs to.
+ * D5 — THE EXPLICIT EDITION MAPPING.
  *
- * The active edition of the MENA event, because that is the event the public
- * microsite at /forums/mena is selling. Falls back to the most recent active
- * edition so the form keeps working across a changeover rather than dropping
- * submissions in the gap.
+ * A public form declares an intake key; this resolves that key to exactly one
+ * edition through `editions.public_intake_key`. `/forums/mena` maps to MENA
+ * 2026, and nothing else does.
+ *
+ * The previous implementation picked "whichever edition is currently active,
+ * preferring MENA". That is a silent choice: the moment two editions are
+ * active it files leads against one of them arbitrarily, and the mistake is
+ * only discovered after the leads are in the wrong place. An unmapped key is
+ * refused instead — loudly, and with the raw submission still stored.
  */
-export async function currentEdition(q: ScopedQuery) {
-  const rows = await q.directory.execute(sql`
-    select e.id, e.name
-    from editions e
-    join events ev on ev.id = e.event_id
-    where e.status = 'active' and ev.status = 'active'
-    order by (ev.slug like 'mena%') desc, e.starts_on asc nulls last
-    limit 1
-  `);
-  const row = (rows as unknown as { id: string; name: string }[])[0];
-  return row ?? null;
+export async function editionForIntakeKey(q: ScopedQuery, intakeKey: string) {
+  const rows = await q.directory
+    .select({ id: editions.id, name: editions.name, status: editions.status })
+    .from(editions)
+    .where(eq(editions.publicIntakeKey, intakeKey))
+    .limit(1);
+  return rows[0] ?? null;
 }

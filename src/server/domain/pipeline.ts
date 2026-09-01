@@ -27,6 +27,10 @@ export type Stage = {
   isWon: boolean;
   isLost: boolean;
   isCancelled: boolean;
+  /** D2 — fulfilment after converting. Delegate ATTENDED. */
+  isAttendance: boolean;
+  /** D4 — withdrawal after converting. Speaker WITHDRAWN. Not a loss. */
+  isAttrition: boolean;
 };
 
 const TTL_MS = 60_000;
@@ -46,6 +50,8 @@ export async function loadStages(q: ScopedQuery): Promise<Record<WorkFunction, S
       isWon: pipelineStages.isWon,
       isLost: pipelineStages.isLost,
       isCancelled: pipelineStages.isCancelled,
+      isAttendance: pipelineStages.isAttendance,
+      isAttrition: pipelineStages.isAttrition,
     })
     .from(pipelineStages)
     .orderBy(asc(pipelineStages.sortOrder));
@@ -92,15 +98,11 @@ export async function loadCancellationReasons(q: ScopedQuery) {
 }
 
 /**
- * §46.3 — THE TRANSITION RULES, in one place.
+ * THE TRANSITION RULES (§4), in one place.
  *
- * Stated as a function of (from, to) so there is exactly one implementation
- * for the API, the UI and the tests to agree on. Returns null when the move is
- * legal, or the sentence to show the person who attempted it.
- *
- *   CANCELLED is reachable ONLY from WON, and only for sponsor.
- *   An opportunity that was never WON becomes LOST, not CANCELLED.
- *   WON is otherwise terminal and cannot move backwards.
+ * Stated as a function of (function, from, to) so there is exactly one
+ * implementation for the API, the UI and the tests to agree on. Returns null
+ * when the move is legal, or the sentence to show the person who attempted it.
  */
 export function transitionError(
   fn: WorkFunction,
@@ -110,6 +112,7 @@ export function transitionError(
   if (!from) return null;
   if (from.key === to.key) return null;
 
+  /* CANCELLED — sponsor only, and only out of WON. */
   if (to.isCancelled) {
     if (fn !== "sponsor") return "Only sponsor opportunities can be cancelled.";
     if (!from.isWon) {
@@ -118,13 +121,66 @@ export function transitionError(
     return null;
   }
 
-  if (from.isWon && !to.isCancelled) {
-    return "Won is terminal. To undo a won deal, move it to Cancelled — that reverses its commission on the ledger.";
-  }
-
+  /* Terminal states nothing moves out of. A cancelled deal, a delegate who
+     attended and a speaker who withdrew are all finished; the remedy in each
+     case is a NEW workstream, not resurrecting the old one. */
   if (from.isCancelled) {
     return "Cancelled is terminal. Start a new workstream for this person and edition instead.";
+  }
+  if (from.isAttendance) {
+    return "Attended is terminal — the edition happened. Start a new workstream for the next edition.";
+  }
+  if (from.isAttrition) {
+    return "Withdrawn is terminal. Start a new workstream if they become available again.";
+  }
+
+  /**
+   * D4 — WON IS TERMINAL FOR SPONSOR ONLY.
+   *
+   * A sponsor deal that is won is closed money, and the only way out is
+   * CANCELLED, which reverses its commission. But CONFIRMED is the won stage
+   * for delegates and speakers too, and both have legitimate successors:
+   * a delegate goes on to ATTEND, a speaker may WITHDRAW. Applying the sponsor
+   * rule to all three would make D2 and D4 unreachable — the very outcomes the
+   * pipeline exists to record.
+   */
+  if (from.isWon) {
+    if (fn === "sponsor") {
+      return "Won is terminal. To undo a won deal, move it to Cancelled — that reverses its commission on the ledger.";
+    }
+    if (!to.isAttendance && !to.isAttrition) {
+      return fn === "delegate"
+        ? "A confirmed delegate can only go on to Attended, or Withdrawn if they drop out."
+        : "A confirmed speaker can only go on to Withdrawn.";
+    }
+    return null;
+  }
+
+  /* Attendance and attrition are outcomes OF conversion. Reaching either
+     without having converted first would produce an attendance with no
+     confirmation behind it, and an attrition rate with no denominator. */
+  if (to.isAttendance || to.isAttrition) {
+    const label = to.isAttendance ? "Attended" : "Withdrawn";
+    return `${label} follows Confirmed. Confirm this workstream first.`;
   }
 
   return null;
 }
+
+/**
+ * ACHIEVEMENT (§4, §9), as SQL.
+ *
+ *   won_at IS NOT NULL   AND   the current stage is not attrition
+ *
+ * Reading the timestamp rather than the current stage flag is what makes D2
+ * and D4 true simultaneously: a delegate who moves CONFIRMED -> ATTENDED keeps
+ * the one achievement they earned, and a speaker who moves CONFIRMED ->
+ * WITHDRAWN loses it. A flag-only rule cannot express both.
+ */
+export const ACHIEVEMENT_SQL = `
+  o.won_at is not null
+  and not exists (
+    select 1 from pipeline_stages ps
+    where ps.function = o.function and ps.key = o.stage_key and ps.is_attrition
+  )
+`;

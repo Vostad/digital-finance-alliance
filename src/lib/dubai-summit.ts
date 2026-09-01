@@ -548,6 +548,9 @@ export async function submitLead(
 
   const common = {
     kind: payload.kind,
+    /* D5 — this page is the MENA form. The server resolves the key to an
+       edition; the page never names an edition itself. */
+    intakeKey: "mena" as const,
     name: payload.name,
     email: payload.email,
     elapsedMs: openedAt ? Date.now() - openedAt : undefined,

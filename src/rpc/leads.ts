@@ -24,6 +24,14 @@ import {
   permittedEditions,
   previewLead,
 } from "@/server/domain/leads";
+import {
+  mergeCompanies,
+  mergePeople,
+  possibleDuplicateCompanies,
+  possibleDuplicatePeople,
+  reverseMerge,
+  reversibleMerges,
+} from "@/server/domain/directory";
 import { listOpportunities } from "@/server/domain/opportunities";
 import { searchDirectory } from "@/server/domain/directory";
 import { loadCancellationReasons, loadLossReasons, stagesFor } from "@/server/domain/pipeline";
@@ -168,5 +176,56 @@ export const leadFormOptions = createServerFn({ method: "GET" }).handler(() =>
       lossReasons: { sponsor: sponsorLoss, delegate: delegateLoss, speaker: speakerLoss },
       cancellationReasons: cancellation,
     };
+  }),
+);
+
+/* ------------------------------------------------------- D6 / D7 · duplicates */
+
+/** The review queue D7 requires: collisions the name heuristic surfaced but
+    was never allowed to act on. */
+export const duplicateQueue = createServerFn({ method: "GET" }).handler(() =>
+  sealed(async () => {
+    const s = await q();
+    const [companies, people] = await Promise.all([
+      possibleDuplicateCompanies(s.q),
+      possibleDuplicatePeople(s.q),
+    ]);
+    return { companies, people };
+  }),
+);
+
+export const mergeTwoPeople = createServerFn({ method: "POST" })
+  .validator(z.object({ sourceId: z.string().uuid(), targetId: z.string().uuid() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return mergePeople(s.q, data.sourceId, data.targetId, s.ctx);
+    }),
+  );
+
+export const mergeTwoCompanies = createServerFn({ method: "POST" })
+  .validator(z.object({ sourceId: z.string().uuid(), targetId: z.string().uuid() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return mergeCompanies(s.q, data.sourceId, data.targetId, s.ctx);
+    }),
+  );
+
+/** D6 — the reversal, exposed. A capability described in the spec and absent
+    from the API would be exactly the mismatch D6 exists to forbid. */
+export const undoMerge = createServerFn({ method: "POST" })
+  .validator(z.object({ mergeId: z.string().uuid() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await q();
+      return reverseMerge(s.q, data.mergeId, s.ctx);
+    }),
+  );
+
+export const undoableMerges = createServerFn({ method: "GET" }).handler(() =>
+  sealed(async () => {
+    const s = await q();
+    return reversibleMerges(s.q);
   }),
 );

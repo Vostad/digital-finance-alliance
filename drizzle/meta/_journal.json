@@ -64,6 +64,20 @@
       "when": 1788247352703,
       "tag": "0008_seed_financial_rails_events",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788254670983,
+      "tag": "0009_attrition_attendance_and_intake_mapping",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788254694771,
+      "tag": "0010_apply_locked_decisions",
+      "breakpoints": true
     }
   ]
 }

@@ -25,14 +25,23 @@ beforeAll(async () => {
     const system = ctx("superAdmin");
 
     /* The fixture's editions are `planning`; intake needs an active one. */
-    await tx.execute(sql`update editions set status = 'active' where id = ${ids.editionMena}`);
-    await tx.execute(sql`update events set slug = 'mena-live' where id = ${ids.eventMena}`);
+    /* D5 — the fixture's own edition carries the mapping. The seeded MENA
+       2026 row also has key 'mena', so the fixture's must be set inside this
+       transaction and the seeded one temporarily cleared: the key is UNIQUE,
+       which is the constraint that makes the mapping unambiguous. */
+    await tx.execute(
+      sql`update editions set public_intake_key = null where public_intake_key = 'mena'`,
+    );
+    await tx.execute(
+      sql`update editions set status = 'active', public_intake_key = 'mena' where id = ${ids.editionMena}`,
+    );
 
     /* ---- 1 · REQUEST THE PROSPECTUS → sponsor, unassigned ---- */
     const prospectus = await receiveWebsiteLead(
       sa,
       {
         kind: "prospectus",
+        intakeKey: "mena",
         name: "Layla Haddad",
         email: "layla@temenos.com",
         company: "Temenos",
@@ -61,6 +70,7 @@ beforeAll(async () => {
       sa,
       {
         kind: "apply",
+        intakeKey: "mena",
         name: "Omar Said",
         email: "omar@mashreqbank.com",
         company: "Mashreq Bank",
@@ -98,6 +108,7 @@ beforeAll(async () => {
       sa,
       {
         kind: "prospectus",
+        intakeKey: "mena",
         name: "KARIM NASR",
         email: "Karim@EmiratesNBD.com",
         company: "Emirates NBD Bank",
@@ -115,6 +126,7 @@ beforeAll(async () => {
       sa,
       {
         kind: "prospectus",
+        intakeKey: "mena",
         name: "Layla Haddad",
         email: "layla@temenos.com",
         company: "Temenos",
@@ -145,7 +157,14 @@ beforeAll(async () => {
       try {
         await receiveWebsiteLead(
           sa,
-          { kind: "prospectus", name: "Bot", email: "bot@spam.test", company: "Spam", ...input },
+          {
+            kind: "prospectus",
+            intakeKey: "mena",
+            name: "Bot",
+            email: "bot@spam.test",
+            company: "Spam",
+            ...input,
+          },
           system,
         );
         R[`spam_${label}`] = false;
@@ -165,6 +184,7 @@ beforeAll(async () => {
           sa,
           {
             kind: "apply",
+            intakeKey: "mena",
             name: `Flood ${i}`,
             email: `flood${i}@example.com`,
             company: "Flood",
@@ -191,7 +211,14 @@ beforeAll(async () => {
       try {
         await receiveWebsiteLead(
           sa,
-          { kind: "prospectus", company: "C", elapsedMs: 9000, ipHash: "ip-v", ...bad },
+          {
+            kind: "prospectus",
+            intakeKey: "mena",
+            company: "C",
+            elapsedMs: 9000,
+            ipHash: "ip-v",
+            ...bad,
+          },
           system,
         );
         R[`invalid_${label}`] = false;

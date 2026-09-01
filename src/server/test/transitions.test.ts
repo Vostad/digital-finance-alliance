@@ -1,5 +1,5 @@
 /**
- * §46.3 — THE WON / CANCELLED TRANSITION RULES.
+ * THE TRANSITION RULES (§4), including locked decisions D2 and D4.
  *
  * `transitionError` is a pure function of (function, from, to), which is what
  * lets the API, the UI and these tests agree on one implementation instead of
@@ -19,6 +19,8 @@ const stage = (key: string, flags: Partial<Stage> = {}): Stage => ({
   isWon: false,
   isLost: false,
   isCancelled: false,
+  isAttendance: false,
+  isAttrition: false,
   ...flags,
 });
 
@@ -28,6 +30,14 @@ const NEGOTIATION = stage("negotiation", { isOpen: true, defaultProbability: 80 
 const WON = stage("won", { isWon: true, defaultProbability: 100 });
 const LOST = stage("lost", { isLost: true });
 const CANCELLED = stage("cancelled", { isCancelled: true });
+
+/* Delegate and speaker. CONFIRMED is their won stage — and unlike sponsor WON,
+   it has legitimate successors. */
+const CONFIRMED = stage("confirmed", { isWon: true, defaultProbability: 100 });
+const INTERESTED = stage("interested", { isOpen: true, defaultProbability: 35 });
+const ATTENDED = stage("attended", { isAttendance: true, defaultProbability: 100 });
+const WITHDRAWN = stage("withdrawn", { isAttrition: true });
+const DECLINED = stage("declined", { isLost: true });
 
 describe("ordinary movement through an open pipeline", () => {
   it("moves forward", () => {
@@ -76,7 +86,67 @@ describe("CANCELLED is a SPONSOR stage only", () => {
   });
 });
 
-describe("WON is otherwise terminal", () => {
+describe("D2 — a confirmed delegate goes on to ATTENDED", () => {
+  it("CONFIRMED → ATTENDED is legal", () => {
+    expect(transitionError("delegate", CONFIRMED, ATTENDED)).toBeNull();
+  });
+
+  it("ATTENDED cannot be reached without confirming first", () => {
+    /* An attendance with no confirmation behind it is a number with no
+       conversion to divide by. */
+    expect(transitionError("delegate", INTERESTED, ATTENDED)).toMatch(/follows Confirmed/i);
+  });
+
+  it("ATTENDED is terminal — the edition happened", () => {
+    expect(transitionError("delegate", ATTENDED, INTERESTED)).toMatch(/Attended is terminal/i);
+    expect(transitionError("delegate", ATTENDED, CONFIRMED)).toMatch(/Attended is terminal/i);
+  });
+
+  it("a confirmed delegate cannot slide back into an open stage", () => {
+    expect(transitionError("delegate", CONFIRMED, INTERESTED)).toMatch(/only go on to Attended/i);
+  });
+});
+
+describe("D4 — a confirmed speaker who leaves is WITHDRAWN, not lost", () => {
+  it("CONFIRMED → WITHDRAWN is legal", () => {
+    expect(transitionError("speaker", CONFIRMED, WITHDRAWN)).toBeNull();
+  });
+
+  it("WITHDRAWN cannot be reached without confirming first", () => {
+    /* Someone who never confirmed and then said no is DECLINED — a loss.
+       Letting them reach WITHDRAWN would inflate attrition and deflate the
+       loss rate at the same time. */
+    expect(transitionError("speaker", INTERESTED, WITHDRAWN)).toMatch(/follows Confirmed/i);
+  });
+
+  it("DECLINED remains reachable from an open stage — it IS a loss", () => {
+    expect(transitionError("speaker", INTERESTED, DECLINED)).toBeNull();
+  });
+
+  it("WITHDRAWN is terminal", () => {
+    expect(transitionError("speaker", WITHDRAWN, CONFIRMED)).toMatch(/Withdrawn is terminal/i);
+  });
+
+  it("a confirmed speaker cannot be marked DECLINED — that is not what happened", () => {
+    expect(transitionError("speaker", CONFIRMED, DECLINED)).toMatch(/only go on to Withdrawn/i);
+  });
+});
+
+describe("WON is terminal for SPONSOR ONLY", () => {
+  it("the sponsor rule does not leak onto delegate or speaker", () => {
+    /* Applying it to all three would make D2 and D4 unreachable — the very
+       outcomes the pipeline exists to record. */
+    expect(transitionError("delegate", CONFIRMED, ATTENDED)).toBeNull();
+    expect(transitionError("speaker", CONFIRMED, WITHDRAWN)).toBeNull();
+  });
+
+  it("and delegate/speaker cannot be cancelled either", () => {
+    expect(transitionError("delegate", CONFIRMED, CANCELLED)).toMatch(/Only sponsor/i);
+    expect(transitionError("speaker", CONFIRMED, CANCELLED)).toMatch(/Only sponsor/i);
+  });
+});
+
+describe("sponsor WON is otherwise terminal", () => {
   it.each([
     ["new", NEW],
     ["meeting", MEETING],
