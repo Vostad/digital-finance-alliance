@@ -753,3 +753,72 @@ holding real pipeline data.
 commercial rows, `verify:db` green.
 
 **Next:** Boundary 10 — Targets.
+
+---
+
+## Boundary 10 · Targets
+
+**Commit:** `a17e75f`
+
+**Built**
+
+- `src/server/domain/targets.ts` — `setTarget`, `updateTarget`,
+  `targetProgress`, `targetableUsers`.
+- `src/rpc/targets.ts`.
+- `/admin/targets` — every row shows TARGET · ACHIEVED · REMAINING · PIPELINE ·
+  FORECAST · PROGRESS, plus a "beside it" column carrying D2 attendance and D4
+  withdrawals.
+- `/admin/directory` — search, the D7 review queue, and the D6 un-merge. Both
+  were implemented at Boundary 1 but unreachable; a capability the spec
+  describes and no screen exposes is the mismatch D6 exists to forbid.
+
+**The property the tests hold to:** every figure beside a target is measured
+against the **same owner, function, edition and window the target names**. A
+progress number computed over a different scope than the target it sits next to
+is worse than no number.
+
+**Decisions worth recording**
+
+- A target always belongs to a person. There is no faceless event target —
+  a number with nobody accountable for it is a wish, and the event roll-up is a
+  sum over people who are.
+- **Only a Super Admin sets or changes targets.** An Admin who could set their
+  own team's numbers could set them low, and every progress figure in the
+  system becomes unfalsifiable. `updateTarget` audits the previous value,
+  because moving a target is how a miss becomes a hit on paper.
+- `progressPct` is **null**, not 0, when the target is zero. A percentage of
+  nothing is undefined, and printing 0% invites it to be read as failure.
+- Achievement excludes cancelled deals and attrition; D2 attendance and D4
+  withdrawals are reported in their own column beside the target.
+
+**Tests** — 137 unit, **225 integration** (23 new in
+`integration/targets.test.ts`), covering the sponsor money path, D2, D4,
+per-role visibility, and §39 scenario 28.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 225 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0 |
+
+### TWO INFRASTRUCTURE PROBLEMS FOUND AND FIXED
+
+**1 · `DIRECT_DATABASE_URL` no longer resolved — migrations were broken.**
+`db.<project-ref>.supabase.co` is IPv6-only on current Supabase projects and
+returns `ENOTFOUND` from an IPv4 network, which reads like a bad password
+rather than a routing failure. Repointed at the **session-mode pooler** — same
+host as the runtime string, port 5432 — verified it performs full DDL, and
+corrected `.env.example`, `supabase-setup.md` and `migrations.md`, all of which
+gave the now-wrong endpoint. The previous `.env` was backed up alongside it;
+both remain gitignored.
+
+**2 · A killed test run can wedge the whole suite.** `withFixture` holds an
+open transaction; killing vitest mid-run leaves it *idle in transaction*, and
+because `person_emails` is unique on `lower(email)`, the next run's identical
+insert blocks on that index **forever**. One suite sat at 580s with all 20
+tests skipped. Diagnosed via `pg_stat_activity`; the fix is to let a run finish
+or terminate the abandoned backend. Recorded here because it looks exactly like
+a code hang and is not one.
+
+**Next:** Boundary 11 — Commission.

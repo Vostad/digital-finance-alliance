@@ -11,10 +11,17 @@ Supabase → Project Settings.
 | Variable | Where | Notes |
 |---|---|---|
 | `DATABASE_URL` | Database → Connection string → **Transaction pooler** | Host ends `.pooler.supabase.com`, port **6543**. The app refuses to start on anything else. |
-| `DIRECT_DATABASE_URL` | Database → Connection string → **Direct connection** | Port 5432. drizzle-kit only. |
+| `DIRECT_DATABASE_URL` | Database → Connection string → **Session pooler** | Same host as above, port **5432**. drizzle-kit only. |
 | `SUPABASE_URL` | API → Project URL | |
 | `SUPABASE_ANON_KEY` | API → Project API keys → `anon` | Public. Safe to ship. |
 | `SUPABASE_SERVICE_ROLE_KEY` | API → Project API keys → `service_role` | **Secret.** Send it separately from the others, never in a shared document. |
+
+> **Do not use `db.<project-ref>.supabase.co` for migrations.** That host is
+> IPv6-only on current Supabase projects and does not resolve from an IPv4
+> network. It fails with `ENOTFOUND`, which reads like a credential problem
+> rather than a routing one — this build hit exactly that. The **session-mode
+> pooler** (same host as the runtime string, port 5432) is the supported
+> replacement and performs full DDL.
 
 Requirement 6 asked which connection is configured. The answer is enforced rather
 than promised: `src/server/env.server.ts` parses `DATABASE_URL` at first use and

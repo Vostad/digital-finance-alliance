@@ -46,7 +46,10 @@ export type Fixture = {
     editionMena2027: string;
     editionAsia: string;
   };
-  ctx: (who: keyof Fixture["ids"]) => AuthContext;
+  /** Both take the same overrides, deliberately. `targetProgress` and friends
+      read scope from the CONTEXT, not from the query, so a test that narrowed
+      one and not the other would silently assert nothing. */
+  ctx: (who: keyof Fixture["ids"], overrides?: Partial<AuthContext>) => AuthContext;
   q: (who: keyof Fixture["ids"], overrides?: Partial<AuthContext>) => ScopedQuery;
 };
 
@@ -188,7 +191,7 @@ export async function withFixture<T>(work: (f: Fixture) => Promise<T>): Promise<
       });
 
       try {
-        out = await work({ tx, ids, ctx: (who) => ctx(who), q });
+        out = await work({ tx, ids, ctx, q });
       } catch (error) {
         /* Capture and rethrow AFTER the rollback, so a genuine failure is
            reported rather than being swallowed as a rollback. */

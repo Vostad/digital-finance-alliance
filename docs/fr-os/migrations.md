@@ -35,7 +35,8 @@ If you need a change, change `schema.ts` and generate.
 
 ```bash
 npm run db:generate    # schema.ts changed → write the SQL
-npm run db:migrate     # apply pending migrations (uses DIRECT_DATABASE_URL)
+npm run db:migrate     # apply pending migrations (uses DIRECT_DATABASE_URL —
+                       # the SESSION-mode pooler, port 5432, not db.<ref>...)
 npm run db:studio      # browse data
 ```
 
