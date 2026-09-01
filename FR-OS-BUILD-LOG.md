@@ -985,3 +985,55 @@ set that was contacted.
 | `npm run build` | exit 0 |
 
 **Next:** Boundary 14 — Audit / Export / Erasure.
+
+---
+
+## Boundary 14 · Audit / Export / Erasure
+
+**Commit:** `accb88a`
+
+**Built** — `src/server/domain/governance.ts` (`auditTrail`, `historyFor`,
+`exportCsv`, `erasePerson`, `erasureRegister`), `src/rpc/governance.ts`, and
+`/admin/governance`. The route **redirects** a non-Super-Admin rather than
+rendering a shell it cannot fill; the server refuses each call independently
+regardless.
+
+**Decisions worth recording**
+
+- **The audit trail is Super Admin only.** An Admin reading it would see target
+  changes, commission adjustments and role changes across the whole business,
+  none of which their event scope entitles them to — and it is one table, so
+  there is no partial view that is both useful and safe. `historyFor` gives the
+  scoped, per-record view instead: seeing who moved a deal you own is part of
+  working it.
+- **Export goes through the same scoped queries the screens use**, never a raw
+  table read. One download is the easiest way to defeat every permission in the
+  system.
+- **Exporting is itself audited.** A copy of the pipeline leaving the building
+  is an event somebody may need to account for.
+- **CSV injection is neutralised, not dropped.** A cell beginning `=`, `+`, `-`
+  or `@` executes as a formula in Excel and Sheets, and this data arrives from a
+  public web form. The test plants `=cmd|'/c calc'!A1` as a person's name and
+  asserts it is still present *and* prefixed.
+- **Erasure destroys the person, not the business record.** Name, job title,
+  phone, country and every email address are cleared; every opportunity,
+  activity, commission entry and audit row survives under the same person id.
+  The test asserts the 8,500 commission earned on that person's deal is still
+  there afterwards.
+- **The erasure register stores field NAMES only.** A test asserts the erased
+  person's name appears nowhere in the register — storing what was erased is
+  the obvious mistake, and it would defeat the entire purpose.
+
+**Tests** — 137 unit, **308 integration** (22 new). §39 scenarios 29–31 and the
+unauthorized-export case covered.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 308 passed |
+| `npm run build` | exit 0 |
+
+**One test corrected:** the audit-action list was sampled before the export and
+erasure the same fixture went on to perform. Moved to the end.
+
+**Next:** Boundary 15 — Final UX polish.

@@ -26,6 +26,7 @@ export const NAV: NavItem[] = [
   { to: "/admin/forecast", label: "Forecast" },
   { to: "/admin/insights", label: "Insights" },
   { to: "/admin/directory", label: "Directory" },
+  { to: "/admin/governance", label: "Governance" },
 ];
 
 export function Shell({

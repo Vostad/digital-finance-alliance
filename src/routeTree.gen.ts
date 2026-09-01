@@ -24,6 +24,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDirectoryRouteImport } from './routes/admin.directory'
 import { Route as AdminForecastRouteImport } from './routes/admin.forecast'
+import { Route as AdminGovernanceRouteImport } from './routes/admin.governance'
 import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
@@ -113,6 +114,11 @@ const AdminDirectoryRoute = AdminDirectoryRouteImport.update({
 const AdminForecastRoute = AdminForecastRouteImport.update({
   id: '/admin/forecast',
   path: '/admin/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminGovernanceRoute = AdminGovernanceRouteImport.update({
+  id: '/admin/governance',
+  path: '/admin/governance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminInsightsRoute = AdminInsightsRouteImport.update({
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/governance': typeof AdminGovernanceRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByTo {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/governance': typeof AdminGovernanceRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/forecast': typeof AdminForecastRoute
+  '/admin/governance': typeof AdminGovernanceRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pipeline': typeof AdminPipelineRoute
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/governance'
     | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/governance'
     | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/admin/directory'
     | '/admin/forecast'
+    | '/admin/governance'
     | '/admin/insights'
     | '/admin/login'
     | '/admin/pipeline'
@@ -407,6 +419,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   AdminDirectoryRoute: typeof AdminDirectoryRoute
   AdminForecastRoute: typeof AdminForecastRoute
+  AdminGovernanceRoute: typeof AdminGovernanceRoute
   AdminInsightsRoute: typeof AdminInsightsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPipelineRoute: typeof AdminPipelineRoute
@@ -532,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminForecastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/governance': {
+      id: '/admin/governance'
+      path: '/admin/governance'
+      fullPath: '/admin/governance'
+      preLoaderRoute: typeof AdminGovernanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/insights': {
       id: '/admin/insights'
       path: '/admin/insights'
@@ -655,6 +675,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   AdminDirectoryRoute: AdminDirectoryRoute,
   AdminForecastRoute: AdminForecastRoute,
+  AdminGovernanceRoute: AdminGovernanceRoute,
   AdminInsightsRoute: AdminInsightsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPipelineRoute: AdminPipelineRoute,
