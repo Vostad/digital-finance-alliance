@@ -59,7 +59,7 @@ export const Route = createFileRoute("/admin/targets")({
 const pct = (v: number | null) => (v == null ? "—" : `${Math.round(v * 100)}%`);
 
 function TargetsPage() {
-  const { rows, options, form, canSet } = Route.useLoaderData();
+  const { user, rows, options, form, canSet } = Route.useLoaderData();
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +91,7 @@ function TargetsPage() {
 
   return (
     <Shell
+      role={user?.role}
       title="Targets"
       subtitle={
         canSet

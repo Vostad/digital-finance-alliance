@@ -36,23 +36,27 @@ export const Route = createFileRoute("/admin/forecast")({
     if (!user) throw redirect({ to: "/admin/login" });
     return { user };
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     const [view, overridden] = await Promise.all([
       forecastView({ data: {} }),
       overrides({ data: {} }),
     ]);
-    return { view, overridden };
+    return { user: context.user, view, overridden };
   },
   component: ForecastPage,
 });
 
 function ForecastPage() {
-  const { view, overridden } = Route.useLoaderData();
+  const { user, view, overridden } = Route.useLoaderData();
   const o = view.overall;
   const judgementGap = o.weightedPipeline - o.weightedAtLadder;
 
   return (
-    <Shell title="Forecast" subtitle="Sponsor. Closed revenue plus weighted open pipeline.">
+    <Shell
+      role={user?.role}
+      title="Forecast"
+      subtitle="Sponsor. Closed revenue plus weighted open pipeline."
+    >
       <StatRow>
         <Stat label="Total pipeline" value={money(o.totalPipeline)} hint={`${o.openCount} open`} />
         <Stat

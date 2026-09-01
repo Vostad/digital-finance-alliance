@@ -71,6 +71,7 @@ function InsightsPage() {
 
   return (
     <Shell
+      role={user?.role}
       title="Insights"
       subtitle={`${fn} · computed from ${stats.total} workstream${stats.total === 1 ? "" : "s"} you can see`}
       actions={

@@ -75,6 +75,7 @@ function TodayPage() {
 
   return (
     <Shell
+      role={user?.role}
       title={`Today · ${user.fullName}`}
       subtitle={`${ROLE_LABEL[user.role]}${
         user.role === "super_admin"

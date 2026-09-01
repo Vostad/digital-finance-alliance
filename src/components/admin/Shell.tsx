@@ -14,10 +14,16 @@ import { cn } from "@/lib/utils";
 import { logout } from "@/rpc/auth";
 import { TEXT } from "./primitives";
 
-export type NavItem = { to: string; label: string };
+export type NavItem = { to: string; label: string; superAdminOnly?: boolean };
 
-/** Only what every role can reach. Role-specific destinations are rendered by
-    the screens themselves, where the permission is already known. */
+/**
+ * The destinations, and who may reach them.
+ *
+ * A link that bounces you back is worse than no link: it costs a click, a page
+ * load, and a moment wondering what you did wrong. Governance is the only
+ * Super-Admin-only destination, and it redirects on the server too — this
+ * hides the door as well as locking it.
+ */
 export const NAV: NavItem[] = [
   { to: "/admin", label: "Today" },
   { to: "/admin/pipeline", label: "Pipeline" },
@@ -26,18 +32,25 @@ export const NAV: NavItem[] = [
   { to: "/admin/forecast", label: "Forecast" },
   { to: "/admin/insights", label: "Insights" },
   { to: "/admin/directory", label: "Directory" },
-  { to: "/admin/governance", label: "Governance" },
+  { to: "/admin/governance", label: "Governance", superAdminOnly: true },
 ];
+
+export function navFor(role: string): NavItem[] {
+  return NAV.filter((item) => !item.superAdminOnly || role === "super_admin");
+}
 
 export function Shell({
   title,
   subtitle,
   actions,
+  role,
   children,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: string | undefined;
   actions?: ReactNode;
+  /** Drives which destinations are shown. Omitted means the safe subset. */
+  role?: string | undefined;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -52,7 +65,7 @@ export function Shell({
           </Link>
 
           <nav className="-mx-2 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2">
-            {NAV.map((item) => {
+            {navFor(role ?? "team_member").map((item) => {
               const active =
                 item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
               return (

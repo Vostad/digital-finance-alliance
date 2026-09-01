@@ -39,9 +39,9 @@ export const Route = createFileRoute("/admin/governance")({
     if (user.role !== "super_admin") throw redirect({ to: "/admin" });
     return { user };
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     const [trail, register] = await Promise.all([audit({ data: { limit: 200 } }), erasures()]);
-    return { trail, register };
+    return { user: context.user, trail, register };
   },
   component: GovernancePage,
 });
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/admin/governance")({
 const EXPORTS = ["opportunities", "people", "companies", "commission"] as const;
 
 function GovernancePage() {
-  const { trail, register } = Route.useLoaderData();
+  const { user, trail, register } = Route.useLoaderData();
   const router = useRouter();
   const [filter, setFilter] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -87,7 +87,11 @@ function GovernancePage() {
   }
 
   return (
-    <Shell title="Governance" subtitle="Audit trail, export and the erasure register.">
+    <Shell
+      role={user?.role}
+      title="Governance"
+      subtitle="Audit trail, export and the erasure register."
+    >
       <Panel title="Export">
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {EXPORTS.map((kind) => (

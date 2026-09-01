@@ -57,7 +57,7 @@ export const Route = createFileRoute("/admin/directory")({
 type Results = Awaited<ReturnType<typeof search>>;
 
 function DirectoryPage() {
-  const { queue, reversible, canMerge } = Route.useLoaderData();
+  const { user, queue, reversible, canMerge } = Route.useLoaderData();
   const router = useRouter();
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<Results | null>(null);
@@ -85,7 +85,11 @@ function DirectoryPage() {
   }
 
   return (
-    <Shell title="Directory" subtitle="People, companies, and the duplicates worth a second look.">
+    <Shell
+      role={user?.role}
+      title="Directory"
+      subtitle="People, companies, and the duplicates worth a second look."
+    >
       <form onSubmit={runSearch} className="flex max-w-[36rem] items-end gap-3">
         <div className="min-w-0 flex-1">
           <Label>Search</Label>

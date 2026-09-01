@@ -1037,3 +1037,59 @@ unauthorized-export case covered.
 erasure the same fixture went on to perform. Moved to the end.
 
 **Next:** Boundary 15 — Final UX polish.
+
+---
+
+## Boundary 15 · Final UX polish
+
+**Commit:** `a3787d8`
+
+**§46.4 audit — every screen, every width, measured rather than eyeballed.**
+
+Nine screens (`/admin`, pipeline, leads, targets, forecast, insights, directory,
+governance, add-lead) at **390 · 768 · 1024 · 1440**:
+
+| | |
+|---|---|
+| Screens returning 200 with an `h1` and a real title | **9 / 9** |
+| Anything below 13px | **none, at any width** |
+| Page scrolling sideways | **none, at any width** — wide content scrolls inside its own container |
+| Distinct font sizes | **13 · 14 · 15 · 17 · 19 · 22 · 26** |
+
+That scale is the Boundary 9 fix bearing out: it was 13/14/17/22/26 with 85
+elements at the floor, and now carries a real hierarchy — labels and meta at 13,
+data at 14, emphasis at 15, headings at 17/19, page titles at 22, figures at 26.
+
+**One real UX defect found by using the app as a Team Member.** The navigation
+showed **Governance** to every role. The route redirects and the server refuses
+independently, so nothing was exposed — but a link that bounces you back costs a
+click, a page load, and a moment wondering what you did wrong. §46.4 asks for no
+unnecessary UI and no unnecessary clicks.
+
+`navFor(role)` now hides it. The door was already locked; this hides it too.
+Backed by a unit test asserting a Super Admin sees every destination, an Admin
+and a Team Member see neither Governance nor anything else they cannot use, and
+**an unknown role gets the safe subset** — defaulting open is how a permission
+bug ships.
+
+**Role legibility, checked by signing in as each**
+
+- **Super Admin** — headline figures, what needs doing, unassigned inbox, team
+  standing, and every destination.
+- **Team Member** — *"Today · DEMO Ahmed / Team Member"*, a function switcher
+  showing only their granted SPONSOR and SPEAKER, `+ ADD LEAD`, and their own
+  work. No team panel, no inbox, no Governance.
+
+**Tests** — **142 unit** (5 new for the nav rule), 308 integration.
+
+| | |
+|---|---|
+| `npm test` | 142 passed |
+| `npm run test:integration` | 308 passed |
+| `npm run verify:db` | all passed |
+| `npm run build` | exit 0 |
+
+**DEMO fixture** — re-seeded for the audit, every record prefixed `DEMO`, then
+**deleted**. Zero commercial rows.
+
+**Next:** Boundary 16 — Full verification.

@@ -17,16 +17,20 @@ export const Route = createFileRoute("/admin/leads/")({
     if (!user) throw redirect({ to: "/admin/login" });
     return { user };
   },
-  loader: async () => ({ rows: await listWorkstreams({ data: {} }) }),
+  loader: async ({ context }) => ({
+    user: context.user,
+    rows: await listWorkstreams({ data: {} }),
+  }),
   component: LeadsPage,
 });
 
 function LeadsPage() {
-  const { rows } = Route.useLoaderData();
+  const { user, rows } = Route.useLoaderData();
   const router = useRouter();
 
   return (
     <Shell
+      role={user?.role}
       title="Leads"
       subtitle={`${rows.length} workstream${rows.length === 1 ? "" : "s"}`}
       actions={

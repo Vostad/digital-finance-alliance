@@ -48,6 +48,7 @@ function PipelinePage() {
 
   return (
     <Shell
+      role={user?.role}
       title="Pipeline"
       subtitle={`${data.cards.length} workstream${data.cards.length === 1 ? "" : "s"} you can see`}
       actions={

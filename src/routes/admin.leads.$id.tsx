@@ -39,7 +39,10 @@ export const Route = createFileRoute("/admin/leads/$id")({
     if (!user) throw redirect({ to: "/admin/login" });
     return { user };
   },
-  loader: async ({ params }) => ({ data: await workstream({ data: { id: params.id } }) }),
+  loader: async ({ params, context }) => ({
+    user: context.user,
+    data: await workstream({ data: { id: params.id } }),
+  }),
   component: WorkstreamPage,
 });
 
@@ -54,7 +57,7 @@ const ACTIVITY_TYPES = [
 ] as const;
 
 function WorkstreamPage() {
-  const { data } = Route.useLoaderData();
+  const { user, data } = Route.useLoaderData();
   const router = useRouter();
   const opp = data.opportunity;
 
@@ -130,6 +133,7 @@ function WorkstreamPage() {
 
   return (
     <Shell
+      role={user?.role}
       title={opp.personName}
       subtitle={`${opp.companyName ?? "No company"} · ${opp.function} · ${opp.editionName}`}
       actions={

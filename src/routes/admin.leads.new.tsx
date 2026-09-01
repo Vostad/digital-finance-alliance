@@ -28,14 +28,14 @@ export const Route = createFileRoute("/admin/leads/new")({
     if (!user) throw redirect({ to: "/admin/login" });
     return { user };
   },
-  loader: async () => ({ options: await leadFormOptions() }),
+  loader: async ({ context }) => ({ user: context.user, options: await leadFormOptions() }),
   component: NewLeadPage,
 });
 
 type Matches = Awaited<ReturnType<typeof previewDuplicates>>;
 
 function NewLeadPage() {
-  const { options } = Route.useLoaderData();
+  const { user, options } = Route.useLoaderData();
   const router = useRouter();
 
   const [functions, setFunctions] = useState<string[]>([]);
@@ -109,7 +109,11 @@ function NewLeadPage() {
   }
 
   return (
-    <Shell title="Add lead" subtitle="One person. One company. A workstream per function.">
+    <Shell
+      role={user?.role}
+      title="Add lead"
+      subtitle="One person. One company. A workstream per function."
+    >
       <form ref={form} onSubmit={submit} className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-5">
           <Panel title="Person">
