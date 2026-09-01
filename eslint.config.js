@@ -36,5 +36,53 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+
+  /**
+   * FINANCIAL RAILS OS — the authorization boundary, enforced by tooling.
+   *
+   * §37 requires every write to be checked server-side. The way that is kept
+   * true over time is by making the unchecked path unavailable: application
+   * code cannot import the raw database handle or the service-role client at
+   * all, so querying unscoped is a lint error rather than an oversight.
+   *
+   * The scoped layer itself (src/server/auth, src/server/db) is exempt below —
+   * it is the thing doing the scoping.
+   */
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/server/auth/**", "src/server/db/**", "src/server/env.server.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "server-only",
+              message:
+                "TanStack Start does not use the Next.js `server-only` package. Rename the module to `*.server.ts` or mark it with `@tanstack/react-start/server-only`.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["**/server/db/client", "@/server/db/client"],
+              message:
+                "Do not import the raw `db` handle. Use scopedQuery(ctx) from @/server/auth/scoped — it applies the visibility filter that authorization depends on.",
+            },
+            {
+              group: ["**/server/auth/supabase.server", "@/server/auth/supabase.server"],
+              message:
+                "The service-role Supabase client bypasses RLS and can mint a session for any user. Use the helpers in @/server/auth instead of reaching for it directly.",
+            },
+            {
+              group: ["**/server/env.server", "@/server/env.server"],
+              message:
+                "Secrets are read in one place. If you need a value from the environment, expose it through a server function rather than importing serverEnv here.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   eslintPluginPrettier,
 );

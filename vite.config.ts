@@ -7,6 +7,11 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // PINNED. The wrapper defaults to `cloudflare-module`, but production is a
+  // Vercel Node function and Workers cannot open the TCP socket the Postgres
+  // driver needs. Left unpinned, a stray `wrangler deploy` ships a build that
+  // cannot reach the database at all.
+  nitro: { preset: "vercel" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

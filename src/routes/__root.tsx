@@ -179,14 +179,20 @@ function RootComponent() {
   // chrome untouched. The /forums INDEX (no slug) stays chromed either way.
   const isEventMicrosite = /^\/forums?\/[^/]+\/?$/.test(pathname);
 
+  // Financial Rails OS is an internal admin surface, not a page of the public
+  // site. It shares the router and the design tokens; it must never inherit the
+  // marketing navigation or footer.
+  const isAdmin = /^\/admin(\/|$)/.test(pathname);
+  const bare = isEventMicrosite || isAdmin;
+
   return (
     <QueryClientProvider client={queryClient}>
-      {isEventMicrosite ? null : <Nav />}
+      {bare ? null : <Nav />}
       <main>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </main>
-      {isEventMicrosite ? null : <Footer />}
+      {bare ? null : <Footer />}
     </QueryClientProvider>
   );
 }
