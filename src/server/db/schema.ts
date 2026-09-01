@@ -368,6 +368,26 @@ export const pipelineStages = pgTable(
   ],
 );
 
+/**
+ * §46.3 — why a WON sponsor deal was undone.
+ *
+ * Deliberately NOT rows in loss_reasons. A cancellation is a deal that was
+ * won and then collapsed; a loss is a deal that was never won. Merging them
+ * would corrupt win rate, closed revenue and target achievement the moment
+ * anyone wrote `WHERE reason IS NOT NULL`.
+ */
+export const cancellationReasons = pgTable(
+  "cancellation_reasons",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    ...stamps,
+  },
+  (t) => [uniqueIndex("cancellation_reasons_key").on(t.key)],
+);
+
 export const lossReasons = pgTable(
   "loss_reasons",
   {
@@ -419,6 +439,9 @@ export const opportunities = pgTable(
     /** §16 — so the forecast can be read both ways. */
     probabilityOverridden: boolean("probability_overridden").notNull().default(false),
     lossReasonKey: text("loss_reason_key"),
+    /** §46.3 — a cancellation is NOT a loss. Separate reference set, separate
+        column, so win-rate reporting can never aggregate the two together. */
+    cancellationReasonKey: text("cancellation_reason_key"),
     nextAction: text("next_action"),
     nextActionDueAt: timestamp("next_action_due_at", { withTimezone: true }),
     /** The rate-locking date. §22 */
@@ -454,6 +477,36 @@ export const opportunities = pgTable(
     check(
       "opportunities_probability_range",
       sql`${t.probability} >= 0 AND ${t.probability} <= 100`,
+    ),
+    /**
+     * GATE 2 APPROVED ADDITION 2 — a WON sponsor deal must carry its final
+     * value. This is the commission base and the closed-revenue figure; a WON
+     * row without it is a number the business cannot report and a commission
+     * that cannot be computed. Sponsor only: delegate and speaker are counted,
+     * not priced.
+     *
+     * It was approved at Gate 2 and, on inspection at the start of the final
+     * build, had not actually been implemented. Added here.
+     */
+    check(
+      "opportunities_won_requires_final_value",
+      sql`${t.function} <> 'sponsor' OR ${t.stageKey} <> 'won' OR ${t.finalValue} IS NOT NULL`,
+    ),
+    /**
+     * §14 — terminal LOST is not permitted without a reason. The three
+     * functions name their terminal-negative stage differently (sponsor
+     * `lost`, delegate `declined`/`lost`, speaker `declined`/`withdrawn`), so
+     * the keys are enumerated rather than joined against pipeline_stages —
+     * a CHECK cannot read another table.
+     */
+    check(
+      "opportunities_lost_requires_reason",
+      sql`${t.stageKey} NOT IN ('lost', 'declined', 'withdrawn') OR ${t.lossReasonKey} IS NOT NULL`,
+    ),
+    /** §46.3 — CANCELLED requires a cancellation reason. */
+    check(
+      "opportunities_cancelled_requires_reason",
+      sql`${t.stageKey} <> 'cancelled' OR ${t.cancellationReasonKey} IS NOT NULL`,
     ),
   ],
 );
@@ -799,6 +852,7 @@ export const APPLICATION_TABLES = [
   "person_emails",
   "pipeline_stages",
   "loss_reasons",
+  "cancellation_reasons",
   "opportunities",
   "activities",
   "form_submissions",

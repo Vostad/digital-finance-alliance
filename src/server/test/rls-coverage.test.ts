@@ -7,7 +7,7 @@
  * before anyone runs anything against a real database.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +16,15 @@ import { APPLICATION_TABLES } from "../db/schema";
 const root = process.cwd();
 const schemaSource = readFileSync(join(root, "src/server/db/schema.ts"), "utf8");
 const rlsSource = readFileSync(join(root, "drizzle/0001_rls_default_deny.sql"), "utf8");
+
+/** Every migration, concatenated. A table added after 0001 is locked down in
+    whichever migration introduced it, so RLS coverage must be checked across
+    the whole history rather than against one file. */
+const allMigrations = readdirSync(join(root, "drizzle"))
+  .filter((f) => f.endsWith(".sql"))
+  .sort()
+  .map((f) => readFileSync(join(root, "drizzle", f), "utf8"))
+  .join("\n");
 const initialSource = readFileSync(join(root, "drizzle/0000_initial_schema.sql"), "utf8");
 
 /** Both migrations explain themselves at length, and those comments quote the
@@ -38,21 +47,20 @@ describe("every table is accounted for", () => {
     expect([...declaredTables].sort()).toEqual([...APPLICATION_TABLES].sort());
   });
 
-  it("declares the 23 application tables (auth.users is Supabase's, not ours)", () => {
-    expect(declaredTables).toHaveLength(23);
+  it("declares every application table (auth.users is Supabase's, not ours)", () => {
+    expect(declaredTables).toHaveLength(APPLICATION_TABLES.length);
     expect(declaredTables).not.toContain("auth");
   });
 });
 
 describe("RLS is on, everywhere, with nothing switched back on", () => {
-  it.each([...APPLICATION_TABLES])("%s has RLS enabled", (table) => {
+  it.each([...APPLICATION_TABLES])("%s has RLS enabled somewhere in the migrations", (table) => {
     const pattern = new RegExp(`ALTER TABLE "${table}"\\s+ENABLE ROW LEVEL SECURITY`);
-    expect(rlsSource).toMatch(pattern);
+    expect(allMigrations).toMatch(pattern);
   });
 
   it("creates NO policies — deny by omission is the whole design", () => {
-    expect(rlsStatements).not.toMatch(/CREATE POLICY/i);
-    expect(initialStatements).not.toMatch(/CREATE POLICY/i);
+    expect(stripComments(allMigrations)).not.toMatch(/CREATE POLICY/i);
   });
 
   it("does not FORCE row level security, which would lock the app out too", () => {
