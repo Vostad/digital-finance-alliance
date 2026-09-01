@@ -130,7 +130,7 @@ export function scopedQuery(ctx: AuthContext) {
      * preceded by the relevant assert — creating a person is open to every
      * active user, merging two is not.
      */
-    directory: db,
+    directory: db as DirectoryHandle,
 
     /**
      * The escape hatch, named so it cannot be used by accident and greps in one
@@ -144,6 +144,16 @@ export function scopedQuery(ctx: AuthContext) {
   };
 }
 
+type Database = typeof db;
+
+/**
+ * A connection or a transaction. Every operation the domain layer performs —
+ * select, insert, update, and opening a nested transaction — behaves
+ * identically on both, and the integration fixture substitutes a transaction
+ * so its rows are visible to the code under test and vanish on rollback.
+ */
+export type DirectoryHandle = Database | Tx;
+
 export type ScopedQuery = ReturnType<typeof scopedQuery>;
 
 /**
@@ -152,5 +162,5 @@ export type ScopedQuery = ReturnType<typeof scopedQuery>;
  * commit together or not at all — and they get it from here rather than from
  * db/client, which eslint keeps out of their reach.
  */
-export type Tx = Parameters<Parameters<ScopedQuery["directory"]["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export type { AuthError };

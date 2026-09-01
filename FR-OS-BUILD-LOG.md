@@ -152,3 +152,75 @@ no code defect.
 Boundary 14). People/company screens land with Dashboards, Boundary 9.
 
 **Next:** Boundary 2 — Opportunities / Workstreams.
+
+---
+
+## Boundary 2 · Opportunities / Workstreams
+
+**Commit:** `5558c71`
+
+**Built**
+
+- `src/server/domain/pipeline.ts` — stages, loss reasons and cancellation
+  reasons read from the database and cached for 60s. Nothing about the ladder
+  is compiled into the bundle: an operator may tune a stage probability (§4),
+  and a hardcoded copy would silently disagree with the forecast.
+- `src/server/domain/pipeline.ts` → `transitionError(fn, from, to)` — §46.3 in
+  ONE pure function, so the API, the UI and the tests cannot drift apart.
+- `src/server/domain/opportunities.ts` — create, change stage, load-for-write,
+  filtered list, clone-into-edition.
+- `src/server/test/integration/fixture.ts` — the shared live fixture. Users,
+  events, editions, scopes; everything inside a rolled-back transaction.
+  Reused by every boundary from here.
+
+**Rules now enforced on the server, before the database sees the write**
+
+| Rule | Behaviour |
+|---|---|
+| WON sponsor needs `final_value` | refused with a sentence naming what to supply |
+| WON is terminal | cannot move backwards, cannot become LOST |
+| CANCELLED only from WON | and refused entirely for delegate and speaker |
+| CANCELLED needs a reason | refused without one |
+| LOST needs a reason | refused without one |
+| CANCELLED does not block a retry | a new sponsor workstream opens normally |
+
+The CHECK constraints from Boundary 0 sit behind all of this. They are not
+redundant — they are what holds if a future code path forgets to come through
+`changeStage`.
+
+**Decisions worth recording**
+
+- A second **open** workstream for the same person, edition and function is
+  refused; a closed one never blocks a retry. Two people working the same live
+  deal without knowing it is the failure being prevented — not a person
+  returning next year.
+- Not-found and not-permitted answer identically in `loadForWrite`.
+  Distinguishing them tells an unauthorised caller which ids exist.
+- Moving back into an open stage clears `loss_reason_key` and `lost_at`, so a
+  reopened deal cannot carry a stale loss reason into reporting.
+- A renewal clone starts at the **entry** stage, carries the previous final
+  value as the new estimate, and records `cloned_from_id`. The historical
+  opportunity is untouched.
+- `scopedQuery.directory` is now typed as connection-or-transaction, which is
+  what lets the integration fixture substitute a transaction.
+
+**Tests** — 124 unit (21 new in `transitions.test.ts`), 64 integration
+(26 new in `integration/opportunities.test.ts`). §39 scenarios 1, 6, 7, 8, 12,
+13, 17, 19 covered.
+
+| | |
+|---|---|
+| `npm test` | 124 passed |
+| `npm run test:integration` | 64 passed |
+| `tsc --noEmit` | clean |
+
+**One functional test failure, fixed in place** (§46.2): a status-change count
+off by one — I had counted a refused transition as if it wrote a row. It does
+not, and the corrected assertion now proves that refused transitions leave no
+trace at all.
+
+**Deferred:** assignment lands in Boundary 4, activities in Boundary 5, the
+commission reversal that CANCELLED must trigger in Boundary 11 (the stage
+machine already returns `cancelledCommission` for it to hook).
+
+**Next:** Boundary 3 — Manual Lead Creation.

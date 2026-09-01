@@ -14,7 +14,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/server/db/client";
 import { authUsers, companies, people, personEmails, users } from "@/server/db/schema";
-import { scopedQuery } from "@/server/auth/scoped";
+import { scopedQuery, type Tx } from "@/server/auth/scoped";
 import {
   DuplicateError,
   findCompanyMatches,
@@ -48,7 +48,7 @@ function ctxFor(role: Role, userId: string): AuthContext {
 type Result = Record<string, unknown>;
 const R: Result = {};
 
-async function inRollback<T>(work: (tx: unknown) => Promise<T>) {
+async function inRollback<T>(work: (tx: Tx) => Promise<T>) {
   let out: T | undefined;
   try {
     await db.transaction(async (tx) => {
@@ -67,16 +67,12 @@ beforeAll(async () => {
        must be visible to it. Inside one transaction that is true only if the
        same connection is used — so the queries below go through a scopedQuery
        built over `tx` by swapping the handle. */
-    const q = { ...scopedQuery(ctxFor("super_admin", SUPER)), directory: tx } as ReturnType<
-      typeof scopedQuery
-    >;
-    const member = { ...scopedQuery(ctxFor("team_member", MEMBER)), directory: tx } as ReturnType<
-      typeof scopedQuery
-    >;
+    const q = { ...scopedQuery(ctxFor("super_admin", SUPER)), directory: tx as Tx };
+    const member = { ...scopedQuery(ctxFor("team_member", MEMBER)), directory: tx as Tx };
     const superCtx = ctxFor("super_admin", SUPER);
 
-    await (tx as typeof db).insert(authUsers).values([{ id: SUPER }, { id: MEMBER }]);
-    await (tx as typeof db).insert(users).values([
+    await tx.insert(authUsers).values([{ id: SUPER }, { id: MEMBER }]);
+    await tx.insert(users).values([
       {
         id: SUPER,
         email: "s@fixture.test",
@@ -117,9 +113,7 @@ beforeAll(async () => {
     R["sameId"] = second.id === first.id;
 
     /* 3 · The company must not have forked on "ABC Bank" vs "ABC Bank Ltd". */
-    const companyRows = await (tx as typeof db)
-      .select({ n: sql<number>`count(*)::int` })
-      .from(companies);
+    const companyRows = await tx.select({ n: sql<number>`count(*)::int` }).from(companies);
     const companyCount = companyRows[0]?.n ?? -1;
     /* Sampled HERE, deliberately — before any later fixture adds a company.
        One company after "ABC Bank" and "ABC Bank Ltd" is the whole claim. */
@@ -147,7 +141,7 @@ beforeAll(async () => {
     );
     R["acceptedSameId"] = accepted.id === first.id;
 
-    const emails = await (tx as typeof db)
+    const emails = await tx
       .select({ email: personEmails.email })
       .from(personEmails)
       .where(eq(personEmails.personId, first.id));
@@ -194,13 +188,13 @@ beforeAll(async () => {
       superCtx,
     );
     await mergePeople(q, stray.id, first.id, superCtx);
-    const [survivor] = await (tx as typeof db)
+    const [survivor] = await tx
       .select({ mergedIntoId: people.mergedIntoId, archivedAt: people.archivedAt })
       .from(people)
       .where(eq(people.id, stray.id));
     R["sourceStillExists"] = Boolean(survivor);
     R["sourcePointsAtTarget"] = survivor?.mergedIntoId === first.id;
-    const mergedEmails = await (tx as typeof db)
+    const mergedEmails = await tx
       .select({ email: personEmails.email })
       .from(personEmails)
       .where(eq(personEmails.personId, first.id));
