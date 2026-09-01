@@ -69,3 +69,47 @@ export const emailStatus = createServerFn({ method: "GET" }).handler(() =>
     return outboxSummary(s.q.directory);
   }),
 );
+
+/* ------------------------------------------------------------ §11 · forecast */
+
+export const forecastView = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      editionId: z.string().uuid().nullable().optional(),
+      function: WORK_FUNCTION.nullable().optional(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await session();
+      const { forecast } = await import("@/server/domain/forecast");
+      return forecast(s.q, s.ctx, data);
+    }),
+  );
+
+/** §11 — the override, recorded. Setting it back to the ladder clears the flag
+    rather than recording a "manual" value that happens to match. */
+export const setProbability = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      opportunityId: z.string().uuid(),
+      probability: z.number().int().min(0).max(100).nullable(),
+    }),
+  )
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await session();
+      const { overrideProbability } = await import("@/server/domain/forecast");
+      return overrideProbability(s.q, data.opportunityId, data.probability, s.ctx);
+    }),
+  );
+
+export const overrides = createServerFn({ method: "POST" })
+  .validator(z.object({ function: WORK_FUNCTION.optional() }))
+  .handler(({ data }) =>
+    sealed(async () => {
+      const s = await session();
+      const { overriddenOpportunities } = await import("@/server/domain/forecast");
+      return overriddenOpportunities(s.q, data.function ?? "sponsor");
+    }),
+  );

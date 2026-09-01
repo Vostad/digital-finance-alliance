@@ -54,6 +54,7 @@ async function inRollback<T>(
   let out: T | undefined;
   try {
     await db.transaction(async (tx) => {
+      await tx.execute(sql`set local idle_in_transaction_session_timeout = '60s'`);
       out = await work(tx);
       tx.rollback();
     });

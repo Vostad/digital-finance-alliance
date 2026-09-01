@@ -15,7 +15,7 @@
  * `public.users.id`. They hold nothing but an id and vanish with the rollback.
  */
 
-import { TransactionRollbackError } from "drizzle-orm";
+import { TransactionRollbackError, sql } from "drizzle-orm";
 
 import { db } from "@/server/db/client";
 import {
@@ -87,6 +87,27 @@ export async function withFixture<T>(work: (f: Fixture) => Promise<T>): Promise<
 
   try {
     await db.transaction(async (tx) => {
+      /**
+       * A DEVELOPER INTERRUPT MUST NOT WEDGE THE DATABASE.
+       *
+       * This transaction holds locks — notably on `person_emails`, which is
+       * unique on `lower(email)`, so a fixture inserting `john.smith@…` blocks
+       * any later run inserting the same address. Kill vitest mid-run (Ctrl-C,
+       * a timeout, a crashed watcher) and the backend is left *idle in
+       * transaction*, holding that index until someone notices. The next run
+       * then hangs indefinitely and looks exactly like a code defect. This
+       * build lost a suite to it for ten minutes.
+       *
+       * Postgres will end it for us. `SET LOCAL` scopes the timeout to this
+       * transaction, so it cannot leak onto a pooled connection and affect
+       * application queries — which matters because the transaction pooler
+       * hands the same backend to somebody else the moment we are done.
+       *
+       * 60s is far longer than any fixture here takes and far shorter than a
+       * person's patience.
+       */
+      await tx.execute(sql`set local idle_in_transaction_session_timeout = '60s'`);
+
       const ids = {
         superAdmin: uuid(),
         adminMena: uuid(),

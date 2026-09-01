@@ -887,3 +887,57 @@ owner on a sponsor deal. Boundary 4 refused it, correctly — an owner must hold
 the function.
 
 **Next:** Boundary 12 — Forecast.
+
+---
+
+## Boundary 12 · Forecast
+
+**Commit:** `b1f9776`
+
+**FIRST — the interrupt hazard from Boundary 10 is now FIXED, not documented.**
+
+Every fixture transaction sets `SET LOCAL idle_in_transaction_session_timeout =
+'60s'`, so a killed test run is reclaimed by Postgres instead of holding the
+unique email index indefinitely. `SET LOCAL` scopes it to the transaction, so it
+cannot leak onto a pooled connection and affect application queries — which
+matters, because the transaction pooler hands that backend to somebody else the
+moment we are done.
+
+`integration/interrupt.test.ts` proves it is **enforced**, not merely accepted:
+it opens a transaction with a 1s timeout, sits idle past it, and asserts the
+next statement fails. Postgres terminates the backend, so postgres.js reports
+`CONNECTION_CLOSED` rather than `25P03` — the stronger evidence, since the
+session was reclaimed rather than merely errored. A third test asserts no
+session anywhere is idle in transaction beyond the guard.
+
+**Built** — `src/server/domain/forecast.ts`, the `forecastView` /
+`setProbability` / `overrides` RPCs, and `/admin/forecast`.
+
+**Decisions worth recording**
+
+- **CLOSED REVENUE is the only figure here describing money the business
+  actually has**, and it excludes cancelled deals. The test wins 70k and
+  cancels a 40k, and asserts revenue is 70k rather than 110k.
+- **Both weightings are kept.** `weightedPipeline` follows the probability on
+  the opportunity; `weightedAtLadder` forces the same sum back onto the
+  configured stage defaults. The gap between them **is** the human adjustment,
+  and the screen shows all three.
+- **Setting a probability back to the ladder CLEARS the override flag.**
+  Otherwise the count of human-adjusted deals inflates with every deal somebody
+  looked at and agreed with.
+- Editions with nothing open, nothing closed and no target are skipped — an
+  empty row on a forecast screen is noise.
+- The word FORECAST and the sentence *"not committed revenue and no part of it
+  is guaranteed"* are returned by the domain layer, not written into one
+  template, so no screen can render the number without them.
+
+**Tests** — 137 unit, **267 integration** (19 forecast + 3 interrupt guard).
+Passed first run.
+
+| | |
+|---|---|
+| `npm test` | 137 passed |
+| `npm run test:integration` | 267 passed |
+| `npm run build` | exit 0 |
+
+**Next:** Boundary 13 — Productivity.

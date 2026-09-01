@@ -52,6 +52,9 @@ async function inRollback<T>(work: (tx: Tx) => Promise<T>) {
   let out: T | undefined;
   try {
     await db.transaction(async (tx) => {
+      /* Same guard as the shared fixture: an interrupted run must not leave a
+         backend idle in transaction holding the unique email index. */
+      await tx.execute(sql`set local idle_in_transaction_session_timeout = '60s'`);
       out = await work(tx);
       tx.rollback();
     });
