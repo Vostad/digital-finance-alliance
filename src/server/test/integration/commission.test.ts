@@ -108,7 +108,12 @@ beforeAll(async () => {
     const summaryBefore = await commissionSummary(sa, saCtx, ids.memberSponsor);
     R["balanceBeforeCancel"] = summaryBefore.balance;
 
-    await changeStage(sa, b, { stageKey: "cancelled", cancellationReasonKey: "non_payment" }, saCtx);
+    await changeStage(
+      sa,
+      b,
+      { stageKey: "cancelled", cancellationReasonKey: "non_payment" },
+      saCtx,
+    );
 
     const entriesBAfter = await tx
       .select({
@@ -179,7 +184,9 @@ beforeAll(async () => {
       R["memberSawAnother"] = false;
     }
     const grantedAdmin = ctx("adminMena", { canViewCommission: true });
-    R["adminWithGrantSees"] = (await ledger(q("adminMena", { canViewCommission: true }), {})).length;
+    R["adminWithGrantSees"] = (
+      await ledger(q("adminMena", { canViewCommission: true }), {})
+    ).length;
     R["adminWithoutGrantSees"] = (await ledger(q("adminMena"), {})).length;
 
     /* ---- the simulator uses the SAME rule and the SAME arithmetic ---- */
@@ -254,8 +261,7 @@ describe("§10 — sponsor only in V1", () => {
 
 describe("visibility", () => {
   it("an owner sees their own ledger", () => expect(R["ownerSeesOwn"]).toBeGreaterThan(0));
-  it("a Team Member cannot read another person's", () =>
-    expect(R["memberSawAnother"]).toBe(false));
+  it("a Team Member cannot read another person's", () => expect(R["memberSawAnother"]).toBe(false));
   it("an Admin WITHOUT the grant sees none of the team's", () =>
     expect(R["adminWithoutGrantSees"]).toBe(0));
   it("an Admin WITH the grant sees their scoped events'", () =>

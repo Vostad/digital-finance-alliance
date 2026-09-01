@@ -63,7 +63,12 @@ beforeAll(async () => {
     await changeStage(sa, wonDeal, { stageKey: "won", finalValue: "70000.00" }, saCtx);
     const dead = await open("Forecast Cancelled", "40000.00");
     await changeStage(sa, dead, { stageKey: "won", finalValue: "40000.00" }, saCtx);
-    await changeStage(sa, dead, { stageKey: "cancelled", cancellationReasonKey: "deal_collapsed" }, saCtx);
+    await changeStage(
+      sa,
+      dead,
+      { stageKey: "cancelled", cancellationReasonKey: "deal_collapsed" },
+      saCtx,
+    );
 
     const base = await forecast(sa, saCtx, { editionId: ids.editionMena });
     R["overall"] = {

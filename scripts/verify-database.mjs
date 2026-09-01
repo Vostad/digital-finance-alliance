@@ -72,22 +72,42 @@ console.log("\n=== ANON KEY AGAINST POSTGREST ===");
 const URL_ = process.env.SUPABASE_URL;
 const ANON = process.env.SUPABASE_ANON_KEY;
 let leaks = 0;
-for (const t of ["users", "opportunities", "people", "companies", "commission_entries",
-                 "pipeline_stages", "settings", "audit_log"]) {
+for (const t of [
+  "users",
+  "opportunities",
+  "people",
+  "companies",
+  "commission_entries",
+  "pipeline_stages",
+  "settings",
+  "audit_log",
+]) {
   const res = await fetch(`${URL_}/rest/v1/${t}?select=*&limit=1`, {
     headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
   });
   const body = await res.text();
   let rows = null;
-  try { const j = JSON.parse(body); if (Array.isArray(j)) rows = j.length; } catch { /* not json */ }
+  try {
+    const j = JSON.parse(body);
+    if (Array.isArray(j)) rows = j.length;
+  } catch {
+    /* not json */
+  }
   const leaked = res.ok && rows !== null && rows > 0;
-  if (leaked) { leaks += 1; failures += 1; }
+  if (leaked) {
+    leaks += 1;
+    failures += 1;
+  }
   line(`GET /${t}`, `${leaked ? "LEAK" : "denied"}  HTTP ${res.status}`);
 }
 check("anon rows readable", leaks, 0);
 
 console.log("\n=== REFERENCE DATA (configuration, not commercial history) ===");
-for (const [fn, expected] of [["sponsor", 9], ["delegate", 8], ["speaker", 7]]) {
+for (const [fn, expected] of [
+  ["sponsor", 9],
+  ["delegate", 8],
+  ["speaker", 7],
+]) {
   const [{ count }] = await sql`
     select count(*)::int from pipeline_stages where function = ${fn}`;
   check(`${fn} pipeline stages`, count, expected);

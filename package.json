@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "verify:db": "node --env-file=.env --experimental-strip-types scripts/verify-database.mjs"
+    "verify:db": "node --env-file=.env --experimental-strip-types scripts/verify-database.mjs",
+    "audit:security": "node --env-file=.env scripts/security-audit.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

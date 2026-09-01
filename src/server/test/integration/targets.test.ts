@@ -22,7 +22,12 @@ beforeAll(async () => {
     const sa = q("superAdmin");
     const saCtx = ctx("superAdmin");
 
-    const open = async (name: string, fn: "sponsor" | "delegate" | "speaker", owner: string, value?: string) => {
+    const open = async (
+      name: string,
+      fn: "sponsor" | "delegate" | "speaker",
+      owner: string,
+      value?: string,
+    ) => {
       const lead = await createLead(
         sa,
         {
@@ -80,7 +85,13 @@ beforeAll(async () => {
     /* ---- delegate: counted, and D2 ---- */
     await setTarget(
       sa,
-      { userId: ids.memberDelegate, function: "delegate", editionId: ids.editionMena, targetValue: "3", ...YEAR },
+      {
+        userId: ids.memberDelegate,
+        function: "delegate",
+        editionId: ids.editionMena,
+        targetValue: "3",
+        ...YEAR,
+      },
       saCtx,
     );
     const d1 = await open("Delegate A", "delegate", ids.memberDelegate);
@@ -101,7 +112,13 @@ beforeAll(async () => {
     /* ---- speaker: D4 ---- */
     await setTarget(
       sa,
-      { userId: ids.memberSpeaker, function: "speaker", editionId: ids.editionMena, targetValue: "2", ...YEAR },
+      {
+        userId: ids.memberSpeaker,
+        function: "speaker",
+        editionId: ids.editionMena,
+        targetValue: "2",
+        ...YEAR,
+      },
       saCtx,
     );
     const s1 = await open("Speaker A", "speaker", ids.memberSpeaker);
@@ -111,7 +128,12 @@ beforeAll(async () => {
     const beforeWithdraw = (await targetProgress(sa, saCtx, { function: "speaker" }))[0];
     R["speakerAchievedBefore"] = beforeWithdraw?.achieved;
 
-    await changeStage(sa, s1, { stageKey: "withdrawn", withdrawalReasonKey: "cannot_travel" }, saCtx);
+    await changeStage(
+      sa,
+      s1,
+      { stageKey: "withdrawn", withdrawalReasonKey: "cannot_travel" },
+      saCtx,
+    );
     const afterWithdraw = (await targetProgress(sa, saCtx, { function: "speaker" }))[0];
     R["speakerAchievedAfter"] = afterWithdraw?.achieved;
     R["speakerWithdrawnBeside"] = afterWithdraw?.withdrawn;
@@ -121,9 +143,9 @@ beforeAll(async () => {
     R["sponsorMemberSees"] = (await targetProgress(q("memberSponsor"), ctx("memberSponsor"))).map(
       (t) => t.function,
     );
-    R["delegateMemberSees"] = (await targetProgress(q("memberDelegate"), ctx("memberDelegate"))).map(
-      (t) => t.function,
-    );
+    R["delegateMemberSees"] = (
+      await targetProgress(q("memberDelegate"), ctx("memberDelegate"))
+    ).map((t) => t.function);
     R["adminInScopeSees"] = (await targetProgress(q("adminMena"), ctx("adminMena"))).length;
     /* The query AND the context both narrowed — targetProgress reads scope
        from the context, so narrowing only one would assert nothing. */
@@ -140,7 +162,13 @@ beforeAll(async () => {
       try {
         await setTarget(
           q(who),
-          { userId: ids[who], function: "sponsor", editionId: ids.editionMena, targetValue: "1", ...YEAR },
+          {
+            userId: ids[who],
+            function: "sponsor",
+            editionId: ids.editionMena,
+            targetValue: "1",
+            ...YEAR,
+          },
           ctx(who),
         );
         R[`${label}CouldSet`] = true;
@@ -225,8 +253,7 @@ describe("D2 — attending does not add to the target", () => {
 describe("D4 — withdrawing removes achievement from the target", () => {
   it("two confirmations are two", () => expect(R["speakerAchievedBefore"]).toBe(2));
   it("and one after a withdrawal", () => expect(R["speakerAchievedAfter"]).toBe(1));
-  it("with the withdrawal reported beside it", () =>
-    expect(R["speakerWithdrawnBeside"]).toBe(1));
+  it("with the withdrawal reported beside it", () => expect(R["speakerWithdrawnBeside"]).toBe(1));
 });
 
 describe("who sees which targets", () => {
@@ -235,8 +262,7 @@ describe("who sees which targets", () => {
     expect(R["sponsorMemberSees"]).toEqual(["sponsor"]);
     expect(R["delegateMemberSees"]).toEqual(["delegate"]);
   });
-  it("an Admin sees targets inside their event scope", () =>
-    expect(R["adminInScopeSees"]).toBe(3));
+  it("an Admin sees targets inside their event scope", () => expect(R["adminInScopeSees"]).toBe(3));
   it("AN ADMIN WITH NO SCOPE SEES NONE — empty is not a wildcard", () =>
     expect(R["adminNoScopeSees"]).toBe(0));
 });
@@ -248,8 +274,7 @@ describe("§9 — only a Super Admin sets targets", () => {
     /* If they could set it low, every progress figure in the system becomes
        unfalsifiable. */
     expect(R["memberCouldMoveTheGoalposts"]).toBe(false));
-  it("a Super Admin can, and the change is audited", () =>
-    expect(R["targetMoved"]).toBe(150000));
+  it("a Super Admin can, and the change is audited", () => expect(R["targetMoved"]).toBe(150000));
 });
 
 describe("validation", () => {

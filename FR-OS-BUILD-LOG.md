@@ -1093,3 +1093,52 @@ bug ships.
 **deleted**. Zero commercial rows.
 
 **Next:** Boundary 16 — Full verification.
+
+---
+
+## Boundary 16 · Full verification
+
+**Commit:** `c46ecbf`
+
+**Built** — `scripts/security-audit.mjs` and `npm run audit:security`: §41 as a
+repeatable command rather than a one-off inspection.
+
+It checks the **deployment**, not the source that was supposed to produce it —
+the live database, the built bundle, and the tooling that enforces the
+authorization boundary.
+
+| §41 requirement | Result |
+|---|---|
+| Authentication | **11/11** admin routes resolve a session before load |
+| Authorization | the eslint boundary still **blocks 2/2** forbidden imports — probed, not assumed |
+| RLS | **26 tables**, 0 without RLS, **0 policies**, 0 grants to anon/authenticated |
+| Data isolation | anon key reads **0 of 10** tables through PostgREST |
+| Server-only secrets | **0** hits across 67 client files; service key **not** baked into server output |
+| Session invalidation | ctx reads the users row every request · non-active rejected · role never from a JWT claim · deactivation revokes the refresh token |
+| Commission privacy | no hardcoded rate · terms locked on the entry · reversals linked · **0** orphan reversals · **0** cancelled deals with a non-zero balance |
+| Export permissions | Super Admin only, and audited (Boundary 14) |
+| Erasure | Super Admin only; field names only (Boundary 14) |
+| Duplicate prevention | three layers (Boundary 1) |
+| Audit integrity | append-only, every action recorded (Boundary 14) |
+| No invented data | **0** rows in all seven commercial tables |
+
+**Final results**
+
+| | |
+|---|---|
+| `npm run audit:security` | **PASSED** |
+| `npm run verify:db` | **PASSED** |
+| `npm test` | **142 passed**, 7 files |
+| `npm run test:integration` | **308 passed**, 16 files |
+| `tsc --noEmit` | clean |
+| `eslint` | **0 errors** (11 pre-existing shadcn react-refresh warnings) |
+| `npm run build` | exit 0 — 67 client files, no secrets |
+
+**Production route map, read from the built artifact:** 11 `/admin/*` routes,
+`/forums/mena` serving the microsite, `/forums/financial-rails-mena` still
+present as its 301. The public site is untouched — `git status` shows no
+modification to `src/lib/dubai-summit.ts` or `src/components/site/`.
+
+**Database left with zero commercial rows.** Configuration only: 24 pipeline
+stages, 19 loss reasons, 6 withdrawal reasons, 5 cancellation reasons, 3 events
+and 3 editions taken from published facts.
