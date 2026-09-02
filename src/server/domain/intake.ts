@@ -23,7 +23,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { editions, formSubmissions } from "../db/schema";
 import type { ScopedQuery } from "../auth/scoped";
 import type { WorkFunction } from "../auth/permissions";
-import { applicationAcknowledgement, prospectusDelivery, queue } from "./email";
+import { applicationAcknowledgement, deliverNow, prospectusDelivery, queue } from "./email";
 import { looksLikeEmail, normalizeEmail } from "./identity";
 import { createLead } from "./leads";
 import { ValidationError } from "./opportunities";
@@ -100,7 +100,10 @@ export type IntakeResult = {
   submissionId: string;
   personId: string | null;
   opportunityId: string | null;
+  /** The intent was recorded. True even when delivery fails. */
   emailQueued: boolean;
+  /** The provider accepted it. False when no provider is configured. */
+  emailSent: boolean;
 };
 
 /**
@@ -215,7 +218,20 @@ export async function receiveWebsiteLead(
     relatedEntityId: submissionId,
   });
 
-  return { submissionId, personId, opportunityId, emailQueued: Boolean(queued) };
+  /* Send it now, so the acknowledgement arrives while the visitor is still on
+     the page. Awaited rather than fired and forgotten — a serverless function
+     can be frozen the instant it returns, and a floating promise is simply
+     lost. Everything above is already committed, so a failure here costs the
+     acknowledgement and nothing else; the row stays queued for the next drain. */
+  const emailSent = queued ? await deliverNow(q.directory, queued) : false;
+
+  return {
+    submissionId,
+    personId,
+    opportunityId,
+    emailQueued: Boolean(queued),
+    emailSent,
+  };
 }
 
 /**

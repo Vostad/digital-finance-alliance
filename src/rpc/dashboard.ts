@@ -148,3 +148,21 @@ export const productivityInsights = createServerFn({ method: "POST" })
       return insights(s.q, s.ctx, data);
     }),
   );
+
+/**
+ * Retry queued email.
+ *
+ * Super Admin only. Without this a transient provider outage strands every
+ * acknowledgement permanently — the rows sit unsent with nothing able to
+ * pick them up again.
+ */
+export const retryEmail = createServerFn({ method: "POST" }).handler(() =>
+  sealed(async () => {
+    const s = await session();
+    if (!canManageUsers(s.ctx)) {
+      throw new ValidationError("Only a Super Admin can retry queued email.");
+    }
+    const { drainOutbox } = await import("@/server/domain/email");
+    return drainOutbox(s.q.directory);
+  }),
+);

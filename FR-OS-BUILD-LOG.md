@@ -1142,3 +1142,74 @@ modification to `src/lib/dubai-summit.ts` or `src/components/site/`.
 **Database left with zero commercial rows.** Configuration only: 24 pipeline
 stages, 19 loss reasons, 6 withdrawal reasons, 5 cancellation reasons, 3 events
 and 3 editions taken from published facts.
+
+---
+
+## Post-build · Transactional email connected to Resend
+
+**Commit:** `4c27a87`
+
+**Scope, as authorised:** connect the existing outbox to Resend so prospectus
+delivery and application acknowledgements actually send. **No invite flow, no
+password-reset UI, no other change.**
+
+**Built**
+
+- `sendViaResend()` — one POST to `api.resend.com/emails`.
+- `drainOutbox()` — implemented. Records every outcome on the row: `sent_at`,
+  or an incremented `attempts` with the provider's own error text.
+- `deliverNow()` — sends one specific queued message immediately.
+- `receiveWebsiteLead()` now calls `deliverNow` after queueing, and returns
+  `emailSent` alongside `emailQueued`.
+- `retryEmail` RPC — Super Admin only.
+
+**Decisions worth recording**
+
+- **The outbox row id is the idempotency key.** If a send succeeds and the
+  process dies before stamping `sent_at`, the next drain retries the same row
+  and Resend recognises the key rather than delivering a second copy. Without
+  it, at-least-once delivery means sponsors occasionally get the prospectus
+  twice.
+- **`deliverNow` is awaited, not fired and forgotten.** A serverless function
+  can be frozen the instant it returns a response, and a floating promise is
+  simply lost. Everything above it is already committed, so the wait costs the
+  visitor a few hundred milliseconds and nothing else.
+- **`MAX_ATTEMPTS = 5`, then `failed_at`.** Without a ceiling, one typo'd
+  address from a public form is retried on every drain forever and the log
+  fills with the same error until nobody reads it.
+- **The provider's own error text is stored**, trimmed to 300 chars. It says
+  things like *"domain is not verified"* — exactly what someone debugging a
+  go-live needs to read.
+- **A 15-second timeout on the provider call.** A hung provider must not hold a
+  serverless function open until the platform kills it.
+- **A retry endpoint exists** because without one a transient provider outage
+  strands every acknowledgement permanently.
+- **Half-configured reads as not configured.** A key with no from-address would
+  send from nowhere; a from-address with no key cannot send. Either alone must
+  report `providerConfigured: false`, or the outbox summary tells a Super Admin
+  that mail works when it does not.
+
+**Email authentication approach — DKIM only, SPF untouched**
+
+`vostad.com` runs Google Workspace and already has an SPF record using a
+flattening service. A second `v=spf1` record is a permanent error that breaks
+SPF for the entire domain. DMARC passes if **either** SPF or DKIM aligns, so
+the domain is authenticated by DKIM (`d=vostad.com`) with the return-path on a
+subdomain. **The existing SPF record is not modified.**
+
+**Tests** — **147 unit** (5 new in `email.test.ts`), **311 integration** (3 new
+asserting honest degradation: lead captured, intent recorded, nothing claiming
+to have sent).
+
+| | |
+|---|---|
+| `npm test` | 147 passed |
+| `npm run test:integration` | 311 passed |
+| `npm run audit:security` | PASSED |
+| `npm run verify:db` | PASSED |
+| `npm run build` | exit 0 |
+| client bundle | 0 hits for `api.resend.com`, `EMAIL_PROVIDER_API_KEY`, `re_` |
+
+**Still not sending.** No key is configured, so `emailProviderConfigured()`
+returns false and `emailSent` is false. That is the correct state until the
+Resend account, DNS and environment variables exist.

@@ -53,6 +53,7 @@ beforeAll(async () => {
     );
     R["prospectusOpportunity"] = Boolean(prospectus.opportunityId);
     R["prospectusEmailQueued"] = prospectus.emailQueued;
+    R["prospectusEmailSent"] = prospectus.emailSent;
 
     const created = await tx
       .select({
@@ -301,6 +302,12 @@ describe("rate limiting", () => {
 describe("validation", () => {
   it("rejects a name too short to be one", () => expect(R["invalid_shortName"]).toBe(true));
   it("rejects an address that is not one", () => expect(R["invalid_badEmail"]).toBe(true));
+});
+
+describe("with no provider configured, email degrades honestly", () => {
+  it("the lead is still captured", () => expect(R["prospectusOpportunity"]).toBe(true));
+  it("the intent is still recorded", () => expect(R["prospectusEmailQueued"]).toBe(true));
+  it("but nothing claims to have been sent", () => expect(R["prospectusEmailSent"]).toBe(false));
 });
 
 describe("§46.5 — email is queued, never sent, and never blocks a lead", () => {
