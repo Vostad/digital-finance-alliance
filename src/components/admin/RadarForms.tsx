@@ -32,9 +32,30 @@ import {
   saveRoute,
 } from "@/rpc/radar-admin";
 
-const TODAY = () => new Date().toISOString().slice(0, 10);
-const asDate = (v: Date | string | null | undefined) =>
-  v ? new Date(v).toISOString().slice(0, 10) : TODAY();
+/**
+ * TODAY, AND EVERY DATE IN THESE FORMS, IN THE EDITOR'S OWN TIMEZONE.
+ *
+ * `toISOString()` is UTC, and that is wrong here in a way that is invisible
+ * until it is embarrassing: an editor in GST+4 working at 01:30 on the 4th is
+ * at 21:30 UTC on the 3rd, so every record entered late in the evening would be
+ * stamped a day early. On a product whose entire claim is "verified on this
+ * date, against this source", a verification date that is quietly off by one is
+ * not a cosmetic bug.
+ *
+ * Built from the local calendar parts rather than a locale format string, so it
+ * cannot be re-ordered by whatever locale the browser happens to run in — the
+ * `<input type="date">` value must be exactly `YYYY-MM-DD`.
+ */
+function localDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const TODAY = () => localDate(new Date());
+
+/** An existing timestamptz, shown as the calendar date it falls on for the
+    person reading it — the same rule, applied to a stored value. */
+const asDate = (v: Date | string | null | undefined) => (v ? localDate(new Date(v)) : TODAY());
 const split = (s: string) =>
   s
     .split(",")

@@ -808,6 +808,26 @@ export async function reverificationQueue() {
   return { rails, providers, routes, afterDays: REVERIFY_AFTER_DAYS };
 }
 
+/**
+ * THE OVERVIEW, INCLUDING WHO IS ASKING.
+ *
+ * The viewer is returned because the admin shell needs the role to draw its
+ * navigation, and a screen that does not receive it silently falls back to the
+ * least-privileged menu — which is what happened: /admin/radar rendered a Team
+ * Member's nav to a Super Admin. It is a display bug, not an authorization one
+ * (every RPC below still resolves identity server-side and refuses on its own),
+ * but a nav that lies about who you are is not acceptable either.
+ */
+export async function radarOverview() {
+  const ctx = await requireRadarEditor();
+  const [counts, stale] = await Promise.all([adminCounts(), reverificationQueue()]);
+  return {
+    viewer: { role: ctx.role, fullName: ctx.fullName },
+    counts,
+    stale,
+  };
+}
+
 export async function adminCounts() {
   await requireRadarEditor();
   const one = async (

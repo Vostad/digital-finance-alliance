@@ -17,14 +17,13 @@ import { z } from "zod";
 import { AuthError } from "@/server/auth/context";
 import {
   addCorridorEvent,
-  adminCounts,
   deleteLicence,
   listCorridorsForAdmin,
   listProvidersForAdmin,
   listRailsForAdmin,
   listRoutesForAdmin,
   listSubmissions,
-  reverificationQueue,
+  radarOverview,
   reviewSubmission,
   upsertCorridor,
   upsertLicence,
@@ -56,10 +55,7 @@ const provenance = {
 /* ------------------------------------------------------------ dashboard -- */
 
 export const radarAdminOverview = createServerFn({ method: "GET" }).handler(() =>
-  sealed(async () => ({
-    counts: await adminCounts(),
-    stale: await reverificationQueue(),
-  })),
+  sealed(() => radarOverview()),
 );
 
 export const adminCorridors = createServerFn({ method: "GET" }).handler(() =>

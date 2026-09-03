@@ -81,6 +81,7 @@ type Tab = "queue" | "stale" | "corridors" | "rails" | "providers";
     to `any` here and takes every child prop down with it. */
 type Overview = Awaited<ReturnType<typeof radarAdminOverview>>;
 type Data = {
+  viewer: Overview["viewer"];
   counts: Overview["counts"];
   stale: Overview["stale"];
   queue: Awaited<ReturnType<typeof submissionQueue>>;
@@ -113,7 +114,14 @@ function RadarAdmin() {
     data.stale.rails.length + data.stale.providers.length + data.stale.routes.length;
 
   return (
-    <Shell title="Rails Radar" subtitle="Structural intelligence — verified per record">
+    /* `role` drives which destinations the shell draws. Omitting it does not
+       fail — it silently renders the least-privileged nav, which is exactly the
+       bug this replaced. */
+    <Shell
+      title="Rails Radar"
+      subtitle="Structural intelligence — verified per record"
+      role={data.viewer.role}
+    >
       <StatRow>
         <Stat label="Corridors" value={data.counts.corridors} />
         <Stat label="Rails" value={data.counts.rails} />

@@ -296,6 +296,41 @@ The message still queues, so the path is fully exercisable — what is withheld 
 to hand it to a provider. That is the correct default, not an omission. **Do not add these two
 variables to Preview.**
 
+### GAP-5 — Two defaults that were wrong rather than absent · **CLOSED**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026, first hands-on use of the preview |
+| **Closed** | 4 September 2026 |
+| **Severity** | One display, one data integrity. |
+
+Both shipped through typecheck, lint, build and 334 tests, because neither is a missing value —
+each is a **default that is wrong**. Nothing threw.
+
+**1 · `/admin/radar` drew a Team Member's navigation for a Super Admin.**
+`<Shell>` takes an optional `role` and falls back to `navFor("team_member")`. `admin.radar.tsx`
+never passed it, so the same session showed all five destinations on `/admin` and "My Leads · My
+Targets" on `/admin/radar`. A display bug, not an authorization one — every RPC still resolves
+identity server-side and refuses independently — but a nav that misreports who you are is not
+acceptable either. `radarOverview()` now returns the viewer and the route passes the role.
+
+**2 · Verification dates were stamped in UTC.**
+Date defaults used `toISOString()`. An editor in GST+4 at 01:30 on the 4th is at 21:30 UTC on the
+3rd, so **every record entered in the evening was dated a day early**. On a product whose whole
+claim is "verified on this date, against this source", that is a data-integrity bug wearing the
+costume of a formatting nit — and it would have been baked into the first real corridor. Dates
+are now built from local calendar parts, for new records and when editing existing ones.
+
+**Neither was catchable by a type.** `role` is legitimately optional; both date expressions are
+well-typed strings. `src/server/test/admin-shell-contract.test.ts` covers both, and was
+negative-tested in each direction.
+
+**Found while writing it — recorded, not fixed:** `admin.leads.$id.tsx` renders
+`<Shell title="Not found">` with no role on its not-found early return, so that one screen draws
+the wrong nav for everybody. Its main render is correct. Real but minor, and CRM code — this
+branch is kept clean of CRM edits, so it is an explicit exception in the test rather than a
+silent pass. One line closes it when that file is next opened.
+
 ## 1. Decisions taken, and by whom
 
 | Decision | Outcome |
@@ -407,7 +442,7 @@ non-empty. A limit without its currency is refused.
 
 - `npx tsc --noEmit` — clean
 - `npx eslint` on all Radar files — clean (one warning matching the existing `admin/primitives.tsx` pattern)
-- `npx vitest run` — **334 passed** across 13 files: 50 Radar boundary, 13 Radar logic,
+- `npx vitest run` — **351 passed** across 14 files: 50 Radar boundary, 13 Radar logic,
   26 import-boundary, 76 rpc-reachability, plus the pre-existing suites
 - `npm run build` — succeeds; `check:client-bundle` finds no secrets
 - SSR verified locally: `/radar`, `/radar/corridors`, `/radar/privacy`, `/radar/sitemap.xml` all 200
