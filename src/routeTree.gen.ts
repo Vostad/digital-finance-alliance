@@ -44,7 +44,9 @@ import { Route as AdminLeadsIdRouteImport } from './routes/admin.leads.$id'
 import { Route as AdminLeadsNewRouteImport } from './routes/admin.leads.new'
 import { Route as RadarCorridorsIndexRouteImport } from './routes/radar.corridors.index'
 import { Route as RadarCorridorsSlugRouteImport } from './routes/radar.corridors.$slug'
+import { Route as RadarProvidersIndexRouteImport } from './routes/radar.providers.index'
 import { Route as RadarProvidersSlugRouteImport } from './routes/radar.providers.$slug'
+import { Route as RadarRailsIndexRouteImport } from './routes/radar.rails.index'
 import { Route as RadarRailsSlugRouteImport } from './routes/radar.rails.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -227,9 +229,19 @@ const RadarCorridorsSlugRoute = RadarCorridorsSlugRouteImport.update({
   path: '/radar/corridors/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RadarProvidersIndexRoute = RadarProvidersIndexRouteImport.update({
+  id: '/radar/providers/',
+  path: '/radar/providers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RadarProvidersSlugRoute = RadarProvidersSlugRouteImport.update({
   id: '/radar/providers/$slug',
   path: '/radar/providers/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarRailsIndexRoute = RadarRailsIndexRouteImport.update({
+  id: '/radar/rails/',
+  path: '/radar/rails/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RadarRailsSlugRoute = RadarRailsSlugRouteImport.update({
@@ -276,6 +288,8 @@ export interface FileRoutesByFullPath {
   '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads/': typeof AdminLeadsIndexRoute
   '/radar/corridors/': typeof RadarCorridorsIndexRoute
+  '/radar/providers/': typeof RadarProvidersIndexRoute
+  '/radar/rails/': typeof RadarRailsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -315,6 +329,8 @@ export interface FileRoutesByTo {
   '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads': typeof AdminLeadsIndexRoute
   '/radar/corridors': typeof RadarCorridorsIndexRoute
+  '/radar/providers': typeof RadarProvidersIndexRoute
+  '/radar/rails': typeof RadarRailsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -355,6 +371,8 @@ export interface FileRoutesById {
   '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads/': typeof AdminLeadsIndexRoute
   '/radar/corridors/': typeof RadarCorridorsIndexRoute
+  '/radar/providers/': typeof RadarProvidersIndexRoute
+  '/radar/rails/': typeof RadarRailsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -396,6 +414,8 @@ export interface FileRouteTypes {
     | '/radar/rails/$slug'
     | '/admin/leads/'
     | '/radar/corridors/'
+    | '/radar/providers/'
+    | '/radar/rails/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -435,6 +455,8 @@ export interface FileRouteTypes {
     | '/radar/rails/$slug'
     | '/admin/leads'
     | '/radar/corridors'
+    | '/radar/providers'
+    | '/radar/rails'
   id:
     | '__root__'
     | '/'
@@ -474,6 +496,8 @@ export interface FileRouteTypes {
     | '/radar/rails/$slug'
     | '/admin/leads/'
     | '/radar/corridors/'
+    | '/radar/providers/'
+    | '/radar/rails/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -514,6 +538,8 @@ export interface RootRouteChildren {
   RadarRailsSlugRoute: typeof RadarRailsSlugRoute
   AdminLeadsIndexRoute: typeof AdminLeadsIndexRoute
   RadarCorridorsIndexRoute: typeof RadarCorridorsIndexRoute
+  RadarProvidersIndexRoute: typeof RadarProvidersIndexRoute
+  RadarRailsIndexRoute: typeof RadarRailsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -763,11 +789,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RadarCorridorsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/radar/providers/': {
+      id: '/radar/providers/'
+      path: '/radar/providers'
+      fullPath: '/radar/providers/'
+      preLoaderRoute: typeof RadarProvidersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/radar/providers/$slug': {
       id: '/radar/providers/$slug'
       path: '/radar/providers/$slug'
       fullPath: '/radar/providers/$slug'
       preLoaderRoute: typeof RadarProvidersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar/rails/': {
+      id: '/radar/rails/'
+      path: '/radar/rails'
+      fullPath: '/radar/rails/'
+      preLoaderRoute: typeof RadarRailsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/radar/rails/$slug': {
@@ -818,6 +858,8 @@ const rootRouteChildren: RootRouteChildren = {
   RadarRailsSlugRoute: RadarRailsSlugRoute,
   AdminLeadsIndexRoute: AdminLeadsIndexRoute,
   RadarCorridorsIndexRoute: RadarCorridorsIndexRoute,
+  RadarProvidersIndexRoute: RadarProvidersIndexRoute,
+  RadarRailsIndexRoute: RadarRailsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

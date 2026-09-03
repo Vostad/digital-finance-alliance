@@ -124,14 +124,83 @@ added for rail, provider, corridor, route and licence; licence delete wired.
 the Radar RPC surface and fails if one has no UI reference, asserts every upsert passes an
 existing id, and re-asserts that reviewing a submission still cannot write to a live record.
 
-**Accepted, recorded rather than silenced:** two *read* endpoints remain unreferenced —
-`railIndex` and `providerIndex`. Radar has `/radar/corridors` but no `/radar/rails` or
-`/radar/providers` index, which is also a small internal-linking gap, since rail and provider
-detail pages sit in the sitemap with nothing linking to them until a corridor publishes. The
-test pins that list exactly: a third dead endpoint fails it, and so does building a page for
-one of these without removing it from the list. **No mutation is on that list, and the test
-asserts none ever can be.** Decision pending: build the two index pages, or delete the
-endpoints.
+**Follow-on:** the two read endpoints left unreferenced here — `railIndex` and `providerIndex` —
+were closed by **GAP-2**, and the test itself was generalised beyond Radar under **GAP-3**.
+Radar's own surface now carries no debt entry of any kind, and the suite asserts that.
+
+### GAP-2 — Orphan detail pages, and the rails index as the answer · **CLOSED**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026 |
+| **Closed** | 4 September 2026 |
+| **Severity** | Distribution. The corridor-page SEO strategy is the whole traffic thesis. |
+
+Rail and provider **detail** pages were in the sitemap with **nothing linking to them**. Until a
+corridor publishes, no page on the site points at either, and a page nothing links to is a page
+that does not get indexed — a sitemap entry is a hint, not an internal link.
+
+Two index pages close it, and every Radar page now links to both from the header.
+
+`/radar/providers` is deliberately plain: name, type, last verified. It exists to give every
+profile an internal link, not to be a second search product.
+
+`/radar/rails` is **written as a reference**, because it can be. "What are payment rails" is a
+real informational query, and the honest answer to it is a correct taxonomy — which this product
+already has to get right internally:
+
+> A rail moves value. An asset is what moves. A network is what it moves over. A messaging
+> system is not a settlement system.
+
+Almost everything written on this subject conflates at least two of those. Setting the four out
+plainly, with every rail correctly categorised and messaging networks visibly separated from
+settlement systems, is a better page than any explainer written around the brand — and it is
+generated from the same rows the rest of the product is verified against. The taxonomy is
+definitional and makes no claim about any named system; those come from rows, each with its
+own source.
+
+Both are in the generated sitemap, and both were removed from the reachability debt list.
+
+### GAP-3 — Twelve orphaned server functions in the CRM · **OPEN, for your decision**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026, generalising the reachability test beyond Radar |
+| **Status** | OPEN. Recorded and frozen; not fixed — it is CRM code and a simplification pass is pending. |
+| **Severity** | Dead code. Not an open door — every one is still authenticated and authorized server-side. |
+
+Generalising the reachability check across all of `src/rpc` (72 functions, 10 modules) found
+**12 functions with no UI reference at all**. Most were almost certainly orphaned by the Phase 2
+admin simplification, which cut the navigation from eight destinations to four: the screens
+went, the server functions stayed. That is the exact failure mode this test now guards.
+
+**Eight are reads** — they compute and return, nothing more: `emailStatus`, `forecastView`,
+`productivityInsights`, `productivityMetrics`, `recordHistory`, `owners`,
+`searchPeopleAndCompanies`, `workstreamsForPerson`.
+
+**Four are genuine writes**, each verified by reading the domain function it calls rather than
+inferring from the HTTP method:
+
+| Function | Writes via | |
+|---|---|---|
+| `setProbability` | `overrideProbability` | `forecast.ts:229` |
+| `setCommissionSplit` | `setSplit` | `assignment.ts:113` |
+| `changeTarget` | `updateTarget` | `targets.ts:110` |
+| `retryEmail` | `drainOutbox` | `email.ts:149` |
+
+Two names mislead and were checked individually: **`recordHistory` only reads** (`historyFor`),
+and **`emailStatus` only reads** (`outboxSummary`). HTTP method is not a reliable signal here —
+most of the reads use POST to pass parameters — so `kind` in the debt list is a human judgement,
+recorded per entry.
+
+Each of the four needs a decision that is yours: wire it to a screen, or delete it. A write
+nobody can reach is a write nobody maintains.
+
+**Frozen, so it can only get better.** `GRANDFATHERED_WRITES` in
+`src/server/test/rpc-reachability.test.ts` names exactly these four. Adding a fifth fails the
+suite — that is what makes "a mutation may never be parked on the debt list" enforceable rather
+than a convention. Verified by negative test in both directions: a new orphaned mutation fails,
+and so does an entry that has been wired up and left on the list.
 
 ## 1. Decisions taken, and by whom
 
@@ -229,6 +298,9 @@ non-empty. A limit without its currency is refused.
 | `public/robots.txt` | Second `Sitemap:` line | Discovery |
 | `src/components/admin/Shell.tsx` | `Radar` added to `NAV`, manager-only, behind a divider | Approved 4 Sep 2026. Five destinations, with `group` separating Radar from the four CRM items so it reads as a different product sharing the admin — the CRM shape stays visually four, and a sixth CRM destination still argues against four. |
 | `src/components/admin/RadarForms.tsx` | New — all Radar editing forms | GAP-1 |
+| `src/routes/radar.rails.index.tsx` | New — the rails reference page | GAP-2 |
+| `src/routes/radar.providers.index.tsx` | New — the provider index | GAP-2 |
+| `src/server/test/rpc-reachability.test.ts` | Renamed from `admin-reachability`, widened to all of `src/rpc` | GAP-3 |
 | `src/server/test/nav.test.ts` | Asserts five, and that a Team Member never sees Radar | That test exists to stop nav creep; moving it deliberately is the point. |
 | `src/server/auth/*`, `eslint.config.js` | SEC-1 fix | See the security log |
 | `PHASE-2-PLAN.md` | Stale production deployment ID corrected | It named a deployment that had already been superseded |
@@ -241,8 +313,8 @@ non-empty. A limit without its currency is refused.
 
 - `npx tsc --noEmit` — clean
 - `npx eslint` on all Radar files — clean (one warning matching the existing `admin/primitives.tsx` pattern)
-- `npx vitest run` — **293 passed** across 13 files: 50 Radar boundary, 13 Radar logic,
-  26 import-boundary, 35 admin-reachability, plus the pre-existing suites
+- `npx vitest run` — **334 passed** across 13 files: 50 Radar boundary, 13 Radar logic,
+  26 import-boundary, 76 rpc-reachability, plus the pre-existing suites
 - `npm run build` — succeeds; `check:client-bundle` finds no secrets
 - SSR verified locally: `/radar`, `/radar/corridors`, `/radar/privacy`, `/radar/sitemap.xml` all 200
 - `/admin/radar` unauthenticated — **307 to `/admin/login`**, no admin data in the response

@@ -43,6 +43,11 @@ export async function radarSitemap(): Promise<string> {
   const entries = [
     url("/radar", null, "0.9"),
     url("/radar/corridors", null, "0.8"),
+    /* The two index pages. They carry the internal links that make every
+       detail page reachable by a crawler, so they belong in here at least as
+       high as the pages they point at. */
+    url("/radar/rails", null, "0.8"),
+    url("/radar/providers", null, "0.7"),
     ...substantive.map((c) =>
       url(`/radar/corridors/${c.slug}`, c.lastVerifiedAt ?? c.updatedAt, "0.7"),
     ),
