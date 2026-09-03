@@ -1,7 +1,9 @@
 # Phase 2 — Implementation Plan
 
 **Status:** IMPLEMENTED and deployed 3 September 2026.
-**Production:** `dpl_FoVzFh8xiVghzhFi4aL4V9XMWgDA` — Ready, aliased to `financialrails.org`.
+**Production:** `dpl_5zVrpvzkepwE8BAz9rjrvj2nB74B` — Ready, aliased to `financialrails.org`.
+Verified against Vercel on 4 September 2026. *(Supersedes `dpl_FoVzFh8xiVghzhFi4aL4V9XMWgDA`, which was recorded here at the time of the Phase 2
+deploy and had since been replaced by a later production deployment.)*
 **Rollback target:** `dpl_99z6AXwuYVmNa9baR3NseAvbnzkJ` — still available.
 **Baseline:** commit `e950cc7`, deployment `dpl_99z6AXwuYVmNa9baR3NseAvbnzkJ` (**rollback target**).
 **Decisions:** Q1–Q6 locked (see `SIMPLIFICATION-AUDIT.md` §O).

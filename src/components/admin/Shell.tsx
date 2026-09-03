@@ -1,11 +1,17 @@
 /**
  * THE ADMIN SHELL.
  *
- * One header, one nav, one content column. Four destinations for a manager, two
+ * One header, one nav, one content column. Five destinations for a manager, two
  * for a team member — few enough that a persistent sidebar would spend 15% of a
  * laptop screen saying very little. On mobile the nav stays a horizontal row
- * rather than a hamburger: four items fit, and hiding them behind a tap costs
- * more than it saves.
+ * rather than a hamburger: five items still fit, and hiding them behind a tap
+ * costs more than it saves.
+ *
+ * Radar is the fifth, added when Rails Radar shipped. It is a manager-only
+ * editorial workspace, not configuration — an editor verifying sources is in it
+ * daily — so unlike Settings it belongs in the primary path rather than the
+ * account menu. Phase 2 cut this nav from eight to four; this is a deliberate
+ * move to five, not creep, and nav.test.ts was updated to say so out loud.
  *
  * Settings is deliberately NOT here. It is configuration, touched rarely, and
  * putting it in the daily path would make four destinations feel like five. It
@@ -42,6 +48,7 @@ export const NAV: NavItem[] = [
   { to: "/admin/leads", label: "Leads", roles: MANAGER },
   { to: "/admin/events", label: "Events", roles: MANAGER },
   { to: "/admin/team", label: "Team", roles: MANAGER },
+  { to: "/admin/radar", label: "Radar", roles: MANAGER },
   { to: "/admin/leads", label: "My Leads", roles: MEMBER },
   { to: "/admin/targets", label: "My Targets", roles: MEMBER },
 ];

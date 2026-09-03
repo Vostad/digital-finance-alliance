@@ -12,6 +12,86 @@ by connecting as the `anon` role (§6). Radar tables are **empty by design**.
 
 ---
 
+## 0. SECURITY LOG
+
+Two findings about the **existing platform**, surfaced while building Radar. Recorded here
+because neither belongs to Radar and both would otherwise be lost with this branch.
+
+### SEC-1 — Authorization boundary bypassable by relative import · **CLOSED**
+
+| | |
+|---|---|
+| **Found** | 3 September 2026, while testing Radar's own import fence |
+| **Closed** | 3 September 2026, commit `b97c6b6` |
+| **Severity** | High — unscoped CRM read/write, and the service-role client, reachable from any file |
+| **Pre-existing** | Yes. Not introduced by Radar. |
+
+`eslint.config.js` describes the authorization boundary as "enforced by tooling", and
+`scopedQuery(ctx)` is the control that makes §37 true. The enforcement had a hole: the
+`no-restricted-imports` rules used minimatch `group` globs, and `**` does not match an import
+specifier beginning with `../`. So the boundary depended on how the import was *spelled*:
+
+```
+import { db } from "@/server/db/client"   ->  blocked
+import { db } from "../db/client"          ->  NOT blocked
+```
+
+It covered all three guarded modules — the raw `db` handle (unscoped access to every CRM
+table), `auth/supabase.server` (the service-role client, which bypasses RLS and can mint a
+session for any user), and `env.server` (secrets). `src/server/domain/*.ts` sits one directory
+from `src/server/db/`, so `../db/client` is the spelling a person reaches for without thinking.
+
+**This matters beyond Radar:** the CRM holds sponsor, delegate and speaker data, and this
+system is about to take real traffic around an event.
+
+**How it surfaced:** Radar's own fence was written with the same `group` pattern and was tested
+rather than assumed. It failed the test. Checking whether the existing rules shared the defect
+showed they did.
+
+**Fix:** all three patterns converted to anchored regexes (`(^|/)db/client$` and equivalents),
+which match every spelling and depth. `src/server/test/import-boundary.test.ts` (26 tests)
+lints both spellings of all three through the *real* config — not a fixture of it — so
+converting them back to globs fails the suite. It also asserts the deliberate exemptions
+(`auth/scoped`, `db/client`, the integration fixture) still pass.
+
+Linting all of `src/` after the tightening found **no existing import newly in violation**, so
+nothing in the codebase had been relying on the gap. One Radar module (`submissions.ts`) had
+been passing lint *only* because of it; that is now an explicit allowlist entry instead of an
+accident, so it survives the fix.
+
+### SEC-2 — No privacy policy anywhere on the platform · **OPEN, deliberately not fixed**
+
+| | |
+|---|---|
+| **Found** | 3 September 2026 |
+| **Status** | OPEN. Out of scope for this branch by instruction. |
+| **Severity** | Compliance/legal, not technical |
+
+`financialrails.org` has **no privacy route at all**. `src/routes/` contains no `privacy`,
+`legal` or `terms` file. The footer link is inert text in every place it appears:
+
+- `src/components/site/Footer.tsx:114` — "Privacy Policy | Terms & Conditions", not a link
+- `src/components/site/EventMicrosite.tsx:1035` — same
+- `src/components/site/DubaiSummit.tsx:1780` — with a comment saying so outright:
+  *"Privacy and Terms have no routes yet, so they stay inert text"*
+
+Meanwhile the platform **is** collecting personal data:
+
+- the public intake endpoint (`src/rpc/intake.ts`) takes name, email, company and role from
+  the forums and microsite forms, and opens a CRM record from it
+- the CRM holds sponsor, delegate and speaker contact data
+- `form_submissions` retains the raw submission verbatim
+
+`/radar/privacy` was written for Rails Radar only, because Radar collects an email address on
+two forms and a footer link pointing nowhere on a page that collects personal data is worse
+than no link. It is **deliberately scoped to Radar** and does not speak for the platform —
+asserting site-wide commitments would mean inventing them.
+
+**To close:** a real site-wide privacy policy, routed, with the three inert footer links
+pointed at it. Worth doing before the event drives traffic to the forms.
+
+---
+
 ## 1. Decisions taken, and by whom
 
 | Decision | Outcome |
@@ -62,29 +142,13 @@ and is exempt from RLS. **RLS closes the anon/PostgREST surface; the hardcoded f
 
 ## 3. A pre-existing hole found while testing the fence
 
-The repo's authorization boundary (`eslint.config.js`, "enforced by tooling") only catches
-**alias-form** imports. Verified empirically:
-
-```
-import { db } from "@/server/db/client"   ->  caught
-import { db } from "../db/client"          ->  NOT caught
-```
-
-`no-restricted-imports` `group` globs are matched against the import string as written, and
-minimatch's `**` does not match a leading `../`. The same gap applies to
-`supabase.server` (service-role client) and `env.server` (secrets). Any file under `src/` can
-query the CRM unscoped by spelling the import relatively.
-
-**Fixed.** All three boundary patterns are now anchored regexes, which match every spelling,
-and `src/server/test/import-boundary.test.ts` (26 tests) lints both spellings of all three
-through the real config — so converting them back to globs fails the suite rather than
-silently reopening the CRM. Linting all of `src/` afterwards found **no existing import
-newly in violation**, so nothing was relying on the gap.
+Recorded in full as **SEC-1** in the security log above: the authorization boundary was
+bypassable by spelling an import relatively rather than through the alias. Found 3 September
+2026 while testing Radar's own fence, closed the same day, covered by
+`src/server/test/import-boundary.test.ts`.
 
 `src/server/radar/*.ts` are allowlisted **explicitly** rather than passing by accident through
 that gap, so they were unaffected by the tightening.
-
----
 
 ## 4. What was built
 
@@ -122,6 +186,10 @@ non-empty. A limit without its currency is refused.
 | `src/server.ts` | Sitemap interception | Generated sitemap; same position as the canonical redirect |
 | `src/routes/__root.tsx` | `isRadar` added to `bare` | Radar carries its own chrome, like the micro-sites and the OS. Scoped to `/radar`; verified no existing route changed. |
 | `public/robots.txt` | Second `Sitemap:` line | Discovery |
+| `src/components/admin/Shell.tsx` | `Radar` added to `NAV`, manager-only | Approved 4 Sep 2026. Takes the admin nav from four destinations to five. |
+| `src/server/test/nav.test.ts` | Asserts five, and that a Team Member never sees Radar | That test exists to stop nav creep; moving it deliberately is the point. |
+| `src/server/auth/*`, `eslint.config.js` | SEC-1 fix | See the security log |
+| `PHASE-2-PLAN.md` | Stale production deployment ID corrected | It named a deployment that had already been superseded |
 
 `schema.ts` was **not** modified. No existing admin route or microsite route was modified.
 
@@ -179,16 +247,96 @@ The sitemap lists only the two index pages, because no corridor has a published 
 
 ## 7. Next steps
 
-1. **Preview deploy is blocked.** Every env var on the Vercel project is scoped to
-   **Production only** — there are no Preview variables, so a preview build boots with no
-   `DATABASE_URL` and no Supabase keys and fails on configuration rather than on Radar. Add
-   `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` scoped to
-   Preview, then the branch can be deployed and checked end to end.
+1. **Preview deploy — ON HOLD, correctly.** Every env var on the Vercel project is scoped to
+   **Production only**, so a preview build boots with no `DATABASE_URL` and no Supabase keys and
+   fails on configuration rather than on Radar. Before adding them, deployment protection is
+   being confirmed: a preview build contains `/admin` and, given Production credentials, would
+   point it at the **production CRM** on a URL with a different access posture. That check
+   gates the env vars, and the env vars gate the deploy.
 2. Promote only after that preview passes. Rollback target is at the top of this file.
-3. Enter real records through `/admin/radar`. **The database is empty by design** — no figure
+3. **Admin forms are narrower than the data model — see §8.** A route cannot be created through
+   the UI at all yet, so the three-corridor data entry cannot proceed until that is built.
+4. Enter real records through `/admin/radar`. **The database is empty by design** — no figure
    from the brief was seeded, because every one of them was a layout placeholder.
-4. One line remains unwritten pending approval: adding Radar to the admin nav in
-   `src/components/admin/Shell.tsx`. `/admin/radar` works directly meanwhile.
+
+Done since first draft: Radar added to the admin nav (§5).
 
 To reverse the migration entirely: `DROP SCHEMA radar CASCADE;` and remove the `0013` entry
 from `drizzle/meta/_journal.json`. Nothing in `public` is involved.
+
+---
+
+## 8. Entering the first three corridors — what the forms ask, and what is missing
+
+Entry order is forced by the foreign keys: **Rail → Provider (+ licences) → Corridor → Route.**
+A route references all three, so it is entered last.
+
+Every entity requires a **source URL** and a **verification date**. These are not optional
+anywhere: the form marks them required, the server re-checks them, and a CHECK constraint sits
+behind that. "Verified by" defaults to the signed-in editor's name if left blank.
+
+### 8.1 Rail — form is complete
+
+| # | Field | Required | Notes |
+|---|---|---|---|
+| 1 | Name | ● | |
+| 2 | Category | | `traditional` · `digital` · `blockchain` · `emerging` |
+| 3 | Description | | One or two sentences |
+| 4 | Source URL | ● | Scheme rulebook, operator page, or regulator page |
+| 5 | Verified on | ● | Defaults to today |
+| 6 | Verified by | | Defaults to the signed-in editor |
+| 7 | **Is a messaging network** | | Checkbox. **Set this correctly — it changes what routes on this rail may claim.** |
+| 8 | Status | | `draft` until checked, then `published` |
+
+Field 7 is the ontological switch. If ticked, the server **refuses** any finality claim on a
+route using this rail unless the settlement system conferring finality is named.
+
+### 8.2 Provider — form is a SUBSET of the data model
+
+Asks, in order: **Name ●**, Type, Website, Markets, Assets, Networks, **Source URL ●**,
+**Verified on ●**, Status. Then per licence, inline: **Licence name**, **Register URL ●**,
+Jurisdiction.
+
+Type is one of `bank · psp · orchestration · stablecoin · fx · custodian · exchange · onramp`.
+Markets, Assets and Networks are comma-separated.
+
+**Not yet on the form, though the database holds them:** description, custody model, API type,
+API documentation URL, settlement time, settlement hours, settlement fee and provider-level
+limits (each with its own source URL), use cases, onboarding requirements, licence reference
+number, and "Verified by".
+
+### 8.3 Corridor — form is a SUBSET
+
+Asks, in order: **Origin country ●**, **Origin ISO ●**, **Origin currency ●**,
+**Destination country ●**, **Destination ISO ●**, **Destination currency ●**,
+**Verified on ●**, Verified by, Status.
+
+The slug is generated once on creation (`united-states-to-brazil`) and never regenerated — it
+is the identity of every inbound link.
+
+**Not yet on the form:** destination regulatory constraints and their source URL, and the
+corridor-level source URL.
+
+### 8.4 Route — **NO FORM EXISTS**
+
+`saveRoute` is implemented, validated and enforced on the server, and `radar_routes` is
+migrated. **The admin screen has no route tab.** A route cannot be created through the UI.
+
+This blocks the three-corridor exercise: without routes, corridors publish with nothing on
+them, and the corridor page renders its empty state. The server would accept, in this order:
+
+| Field | Required | Notes |
+|---|---|---|
+| Corridor, Provider, Rail | ● | Selected from what already exists |
+| Type | ● | `bank` · `local` · `stablecoin` · `hybrid` |
+| Limit min / max | | Each needs its own source URL |
+| Limit currency | ● *if* either limit is set | A bare number is not a limit |
+| Settlement finality | | e.g. Irrevocable · Net · Gross. Needs a source URL |
+| Settlement system | ● *if* the rail is a messaging network | Names what actually confers finality |
+| Operating hours, Cut-off | | Each needs its own source URL |
+| Assets, Networks, Requirements | | Comma-separated |
+| Source URL, Verified on, Verified by | ● | |
+| Status | | |
+
+**Work required before data entry:** build the route tab, and add the missing provider and
+corridor fields above. Not started — the branch is held pending preview env vars.
