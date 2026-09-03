@@ -248,6 +248,54 @@ suite — that is what makes "a mutation may never be parked on the debt list" e
 than a convention. Verified by negative test in both directions: a new orphaned mutation fails,
 and so does an entry that has been wired up and left on the list.
 
+### GAP-4 — `email_outbox` does not record which address sent · **OPEN, for the simplification run**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026, verifying DNS against the one delivered message |
+| **Status** | OPEN. Recorded, not fixed — CRM code, and a simplification pass is pending. |
+| **Severity** | Auditability. Nothing is wrong with delivery; the record of it is incomplete. |
+
+`email_outbox` stores `to_email`, `subject`, `body`, `payload`, `sent_at`, `failed_at`,
+`last_error` and `attempts`. It does **not** store the address the message was sent *from*, and
+`payload` on the one live row holds only `name` and `company`.
+
+The sending address comes from `EMAIL_FROM_ADDRESS`, read at send time from the environment
+(`src/server/domain/email.ts:95`). Change that variable and every historic row silently
+re-describes itself: the outbox will claim messages were sent from an address they were not.
+
+**Why it matters here specifically.** This platform's whole argument is that a claim carries the
+evidence for it. Asked "which address sent the 3 September prospectus", the answer had to be
+*read the environment variable in the Vercel dashboard and assume it has not changed since* —
+which is exactly the kind of answer Rails Radar exists to refuse. A provenance-first system that
+does not record the provenance of its own outbound mail is inconsistent with itself.
+
+It is also operationally real: the moment a second sending identity exists — a summit address, a
+different subdomain, a provider migration — historic rows become unattributable, and a
+deliverability problem cannot be traced to the identity that caused it.
+
+**Fix, when the simplification runs:** add `from_email text` to `email_outbox`, populate it at
+queue or send time from the same value handed to the provider, and surface it on the outbox
+screen being built for `emailStatus` + `retryEmail` (GAP-3). Backfilling the single existing row
+is optional and probably not worth it; a null there is honest.
+
+### NOTE — email keys are deliberately absent from Preview
+
+Not a gap. Recorded because it will otherwise look like one, and someone will "fix" it.
+
+`EMAIL_PROVIDER_API_KEY` and `EMAIL_FROM_ADDRESS` are scoped to **Production only** and are
+deliberately **not** added to Preview or local environments.
+
+`sendViaResend` returns `"no provider configured"` when either is missing
+(`src/server/domain/email.ts:96`) and writes `last_error` rather than `sent_at`, so a preview
+build **physically cannot deliver mail to a real person**. Preview deployments run the same
+intake path as production against the same database; without this, testing the prospectus form
+on a preview URL would email an actual sponsor from an actual address.
+
+The message still queues, so the path is fully exercisable — what is withheld is only the ability
+to hand it to a provider. That is the correct default, not an omission. **Do not add these two
+variables to Preview.**
+
 ## 1. Decisions taken, and by whom
 
 | Decision | Outcome |
