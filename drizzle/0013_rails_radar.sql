@@ -39,316 +39,294 @@
 -- PostgREST/anon surface that ships with every Supabase project.
 -- ============================================================================
 
+/* drizzle-kit does not emit this for a pgSchema; without it every statement
+   below fails on an unknown schema. */
 CREATE SCHEMA IF NOT EXISTS "radar";
-
 --> statement-breakpoint
 
-/* ------------------------------------------------------------------- enums */
-
-CREATE TYPE "radar"."radar_rail_category" AS ENUM('traditional', 'digital', 'blockchain', 'emerging');--> statement-breakpoint
 CREATE TYPE "radar"."radar_provider_type" AS ENUM('bank', 'psp', 'orchestration', 'stablecoin', 'fx', 'custodian', 'exchange', 'onramp');--> statement-breakpoint
+CREATE TYPE "radar"."radar_rail_category" AS ENUM('traditional', 'digital', 'blockchain', 'emerging');--> statement-breakpoint
 CREATE TYPE "radar"."radar_route_type" AS ENUM('bank', 'local', 'stablecoin', 'hybrid');--> statement-breakpoint
-CREATE TYPE "radar"."radar_status" AS ENUM('draft', 'published', 'archived');--> statement-breakpoint
 CREATE TYPE "radar"."radar_source_type" AS ENUM('provider_docs', 'regulator_register', 'provider_confirmed', 'contributed');--> statement-breakpoint
+CREATE TYPE "radar"."radar_status" AS ENUM('draft', 'published', 'archived');--> statement-breakpoint
 CREATE TYPE "radar"."radar_submission_kind" AS ENUM('source', 'inaccuracy');--> statement-breakpoint
 CREATE TYPE "radar"."radar_submission_status" AS ENUM('pending', 'accepted', 'rejected');--> statement-breakpoint
-
-/* ------------------------------------------------------------------- rails */
-
-CREATE TABLE "radar"."radar_rails" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "slug" text NOT NULL,
-  "name" text NOT NULL,
-  "category" "radar"."radar_rail_category" NOT NULL,
-  "description" text,
-  "icon" text,
-  "is_messaging_network" boolean DEFAULT false NOT NULL,
-  "status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
-  "last_verified_at" timestamp with time zone,
-  "last_verified_by" text,
-  "source_url" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid
-);--> statement-breakpoint
-
-CREATE UNIQUE INDEX "radar_rails_slug_key" ON "radar"."radar_rails" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "radar_rails_status_idx" ON "radar"."radar_rails" USING btree ("status");--> statement-breakpoint
-
-/* --------------------------------------------------------------- providers */
-
-CREATE TABLE "radar"."radar_providers" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "slug" text NOT NULL,
-  "name" text NOT NULL,
-  "type" "radar"."radar_provider_type" NOT NULL,
-  "logo" text,
-  "website" text,
-  "description" text,
-  "custody_model" text,
-  "api_type" text,
-  "api_documentation" text,
-  "settlement_time" text,
-  "settlement_time_source_url" text,
-  "settlement_time_source_type" "radar"."radar_source_type",
-  "settlement_time_verified_at" timestamp with time zone,
-  "settlement_time_verified_by" text,
-  "settlement_hours" text,
-  "settlement_hours_source_url" text,
-  "settlement_hours_source_type" "radar"."radar_source_type",
-  "settlement_hours_verified_at" timestamp with time zone,
-  "settlement_hours_verified_by" text,
-  "settlement_fee" text,
-  "settlement_fee_source_url" text,
-  "settlement_fee_source_type" "radar"."radar_source_type",
-  "settlement_fee_verified_at" timestamp with time zone,
-  "settlement_fee_verified_by" text,
-  "limits" text,
-  "limits_source_url" text,
-  "limits_source_type" "radar"."radar_source_type",
-  "limits_verified_at" timestamp with time zone,
-  "limits_verified_by" text,
-  "status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
-  "last_verified_at" timestamp with time zone,
-  "last_verified_by" text,
-  "source_url" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid,
-  CONSTRAINT "radar_providers_settlement_time_sourced" CHECK ("settlement_time" IS NULL OR btrim(coalesce("settlement_time_source_url", '')) <> ''),
-  CONSTRAINT "radar_providers_settlement_hours_sourced" CHECK ("settlement_hours" IS NULL OR btrim(coalesce("settlement_hours_source_url", '')) <> ''),
-  CONSTRAINT "radar_providers_settlement_fee_sourced" CHECK ("settlement_fee" IS NULL OR btrim(coalesce("settlement_fee_source_url", '')) <> ''),
-  CONSTRAINT "radar_providers_limits_sourced" CHECK ("limits" IS NULL OR btrim(coalesce("limits_source_url", '')) <> '')
-);--> statement-breakpoint
-
-CREATE UNIQUE INDEX "radar_providers_slug_key" ON "radar"."radar_providers" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "radar_providers_status_idx" ON "radar"."radar_providers" USING btree ("status");--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_provider_markets" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "market" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_provider_assets" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "asset" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_provider_networks" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "network" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_provider_use_cases" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "use_case" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_provider_requirements" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "requirement" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_licences" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "name" text NOT NULL,
-  "register_url" text NOT NULL,
-  "jurisdiction" text,
-  "reference_number" text,
-  "last_verified_at" timestamp with time zone,
-  "last_verified_by" text,
-  "source_url" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid,
-  CONSTRAINT "radar_licences_register_url_present" CHECK (btrim("register_url") <> '')
-);--> statement-breakpoint
-
-CREATE INDEX "radar_licences_provider_idx" ON "radar"."radar_licences" USING btree ("provider_id");--> statement-breakpoint
-
-/* --------------------------------------------------------------- corridors */
-
+CREATE TABLE "radar"."radar_corridor_events" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"corridor_id" uuid NOT NULL,
+	"occurred_on" date NOT NULL,
+	"description" text NOT NULL,
+	"source_url" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid,
+	CONSTRAINT "radar_corridor_events_source_present" CHECK (btrim("radar"."radar_corridor_events"."source_url") <> '')
+);
+--> statement-breakpoint
 CREATE TABLE "radar"."radar_corridors" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "slug" text NOT NULL,
-  "origin_country" text NOT NULL,
-  "origin_country_code" text NOT NULL,
-  "origin_currency" text NOT NULL,
-  "destination_country" text NOT NULL,
-  "destination_country_code" text NOT NULL,
-  "destination_currency" text NOT NULL,
-  "destination_constraints" text,
-  "destination_constraints_source_url" text,
-  "status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
-  "last_verified_at" timestamp with time zone,
-  "last_verified_by" text,
-  "source_url" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid,
-  CONSTRAINT "radar_corridors_constraints_sourced" CHECK ("destination_constraints" IS NULL OR btrim(coalesce("destination_constraints_source_url", '')) <> '')
-);--> statement-breakpoint
-
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" text NOT NULL,
+	"origin_country" text NOT NULL,
+	"origin_country_code" text NOT NULL,
+	"origin_currency" text NOT NULL,
+	"destination_country" text NOT NULL,
+	"destination_country_code" text NOT NULL,
+	"destination_currency" text NOT NULL,
+	"destination_constraints" text,
+	"destination_constraints_source_url" text,
+	"status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
+	"last_verified_at" timestamp with time zone,
+	"last_verified_by" text,
+	"source_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid,
+	CONSTRAINT "radar_corridors_constraints_sourced" CHECK ("radar"."radar_corridors"."destination_constraints" IS NULL OR btrim(coalesce("radar"."radar_corridors"."destination_constraints_source_url", '')) <> '')
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_licences" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"name" text NOT NULL,
+	"register_url" text NOT NULL,
+	"jurisdiction" text,
+	"reference_number" text,
+	"last_verified_at" timestamp with time zone,
+	"last_verified_by" text,
+	"source_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid,
+	CONSTRAINT "radar_licences_register_url_present" CHECK (btrim("radar"."radar_licences"."register_url") <> '')
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_provider_assets" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"asset" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_provider_markets" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"market" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_provider_networks" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"network" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_provider_requirements" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"requirement" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_provider_use_cases" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"use_case" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_providers" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" text NOT NULL,
+	"name" text NOT NULL,
+	"type" "radar"."radar_provider_type" NOT NULL,
+	"logo" text,
+	"website" text,
+	"description" text,
+	"custody_model" text,
+	"api_type" text,
+	"api_documentation" text,
+	"settlement_time" text,
+	"settlement_time_source_url" text,
+	"settlement_time_source_type" "radar"."radar_source_type",
+	"settlement_time_verified_at" timestamp with time zone,
+	"settlement_time_verified_by" text,
+	"settlement_hours" text,
+	"settlement_hours_source_url" text,
+	"settlement_hours_source_type" "radar"."radar_source_type",
+	"settlement_hours_verified_at" timestamp with time zone,
+	"settlement_hours_verified_by" text,
+	"settlement_fee" text,
+	"settlement_fee_source_url" text,
+	"settlement_fee_source_type" "radar"."radar_source_type",
+	"settlement_fee_verified_at" timestamp with time zone,
+	"settlement_fee_verified_by" text,
+	"limits" text,
+	"limits_source_url" text,
+	"limits_source_type" "radar"."radar_source_type",
+	"limits_verified_at" timestamp with time zone,
+	"limits_verified_by" text,
+	"status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
+	"last_verified_at" timestamp with time zone,
+	"last_verified_by" text,
+	"source_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid,
+	CONSTRAINT "radar_providers_settlement_time_sourced" CHECK ("radar"."radar_providers"."settlement_time" IS NULL OR btrim(coalesce("radar"."radar_providers"."settlement_time_source_url", '')) <> ''),
+	CONSTRAINT "radar_providers_settlement_hours_sourced" CHECK ("radar"."radar_providers"."settlement_hours" IS NULL OR btrim(coalesce("radar"."radar_providers"."settlement_hours_source_url", '')) <> ''),
+	CONSTRAINT "radar_providers_settlement_fee_sourced" CHECK ("radar"."radar_providers"."settlement_fee" IS NULL OR btrim(coalesce("radar"."radar_providers"."settlement_fee_source_url", '')) <> ''),
+	CONSTRAINT "radar_providers_limits_sourced" CHECK ("radar"."radar_providers"."limits" IS NULL OR btrim(coalesce("radar"."radar_providers"."limits_source_url", '')) <> '')
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_rails" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" text NOT NULL,
+	"name" text NOT NULL,
+	"category" "radar"."radar_rail_category" NOT NULL,
+	"description" text,
+	"icon" text,
+	"is_messaging_network" boolean DEFAULT false NOT NULL,
+	"status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
+	"last_verified_at" timestamp with time zone,
+	"last_verified_by" text,
+	"source_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_route_assets" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"route_id" uuid NOT NULL,
+	"asset" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_route_networks" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"route_id" uuid NOT NULL,
+	"network" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_route_requirements" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"route_id" uuid NOT NULL,
+	"requirement" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_routes" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"corridor_id" uuid NOT NULL,
+	"provider_id" uuid NOT NULL,
+	"rail_id" uuid NOT NULL,
+	"type" "radar"."radar_route_type" NOT NULL,
+	"limit_min" numeric(20, 2),
+	"limit_min_source_url" text,
+	"limit_min_source_type" "radar"."radar_source_type",
+	"limit_min_verified_at" timestamp with time zone,
+	"limit_min_verified_by" text,
+	"limit_max" numeric(20, 2),
+	"limit_max_source_url" text,
+	"limit_max_source_type" "radar"."radar_source_type",
+	"limit_max_verified_at" timestamp with time zone,
+	"limit_max_verified_by" text,
+	"limit_currency" text,
+	"settlement_finality" text,
+	"settlement_system" text,
+	"settlement_finality_source_url" text,
+	"settlement_finality_source_type" "radar"."radar_source_type",
+	"settlement_finality_verified_at" timestamp with time zone,
+	"settlement_finality_verified_by" text,
+	"operating_hours" text,
+	"operating_hours_source_url" text,
+	"operating_hours_source_type" "radar"."radar_source_type",
+	"operating_hours_verified_at" timestamp with time zone,
+	"operating_hours_verified_by" text,
+	"cut_off" text,
+	"cut_off_source_url" text,
+	"cut_off_source_type" "radar"."radar_source_type",
+	"cut_off_verified_at" timestamp with time zone,
+	"cut_off_verified_by" text,
+	"status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
+	"last_verified_at" timestamp with time zone,
+	"last_verified_by" text,
+	"source_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_by" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" uuid,
+	CONSTRAINT "radar_routes_limit_min_sourced" CHECK ("radar"."radar_routes"."limit_min" IS NULL OR btrim(coalesce("radar"."radar_routes"."limit_min_source_url", '')) <> ''),
+	CONSTRAINT "radar_routes_limit_max_sourced" CHECK ("radar"."radar_routes"."limit_max" IS NULL OR btrim(coalesce("radar"."radar_routes"."limit_max_source_url", '')) <> ''),
+	CONSTRAINT "radar_routes_limit_currency_present" CHECK (("radar"."radar_routes"."limit_min" IS NULL AND "radar"."radar_routes"."limit_max" IS NULL) OR btrim(coalesce("radar"."radar_routes"."limit_currency", '')) <> ''),
+	CONSTRAINT "radar_routes_finality_sourced" CHECK ("radar"."radar_routes"."settlement_finality" IS NULL OR btrim(coalesce("radar"."radar_routes"."settlement_finality_source_url", '')) <> ''),
+	CONSTRAINT "radar_routes_hours_sourced" CHECK ("radar"."radar_routes"."operating_hours" IS NULL OR btrim(coalesce("radar"."radar_routes"."operating_hours_source_url", '')) <> ''),
+	CONSTRAINT "radar_routes_cut_off_sourced" CHECK ("radar"."radar_routes"."cut_off" IS NULL OR btrim(coalesce("radar"."radar_routes"."cut_off_source_url", '')) <> '')
+);
+--> statement-breakpoint
+CREATE TABLE "radar"."radar_submissions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"kind" "radar"."radar_submission_kind" NOT NULL,
+	"corridor_id" uuid,
+	"route_id" uuid,
+	"provider_id" uuid,
+	"rail_id" uuid,
+	"subject_note" text,
+	"claimed_source_url" text,
+	"submitter_email" text NOT NULL,
+	"message" text,
+	"status" "radar"."radar_submission_status" DEFAULT 'pending' NOT NULL,
+	"reviewed_at" timestamp with time zone,
+	"reviewed_by" uuid,
+	"review_note" text,
+	"ip_hash" text,
+	"user_agent" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "radar"."radar_corridor_events" ADD CONSTRAINT "radar_corridor_events_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_licences" ADD CONSTRAINT "radar_licences_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_provider_assets" ADD CONSTRAINT "radar_provider_assets_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_provider_markets" ADD CONSTRAINT "radar_provider_markets_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_provider_networks" ADD CONSTRAINT "radar_provider_networks_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_provider_requirements" ADD CONSTRAINT "radar_provider_requirements_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_provider_use_cases" ADD CONSTRAINT "radar_provider_use_cases_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_route_assets" ADD CONSTRAINT "radar_route_assets_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_route_networks" ADD CONSTRAINT "radar_route_networks_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_route_requirements" ADD CONSTRAINT "radar_route_requirements_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_rail_id_radar_rails_id_fk" FOREIGN KEY ("rail_id") REFERENCES "radar"."radar_rails"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_rail_id_radar_rails_id_fk" FOREIGN KEY ("rail_id") REFERENCES "radar"."radar_rails"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "radar_corridor_events_corridor_idx" ON "radar"."radar_corridor_events" USING btree ("corridor_id","occurred_on");--> statement-breakpoint
 CREATE UNIQUE INDEX "radar_corridors_slug_key" ON "radar"."radar_corridors" USING btree ("slug");--> statement-breakpoint
 CREATE UNIQUE INDEX "radar_corridors_pair_key" ON "radar"."radar_corridors" USING btree ("origin_country_code","origin_currency","destination_country_code","destination_currency");--> statement-breakpoint
 CREATE INDEX "radar_corridors_status_idx" ON "radar"."radar_corridors" USING btree ("status");--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_corridor_events" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "corridor_id" uuid NOT NULL,
-  "occurred_on" date NOT NULL,
-  "description" text NOT NULL,
-  "source_url" text NOT NULL,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid,
-  CONSTRAINT "radar_corridor_events_source_present" CHECK (btrim("source_url") <> '')
-);--> statement-breakpoint
-
-CREATE INDEX "radar_corridor_events_corridor_idx" ON "radar"."radar_corridor_events" USING btree ("corridor_id","occurred_on");--> statement-breakpoint
-
-/* ------------------------------------------------------------------ routes */
-
-CREATE TABLE "radar"."radar_routes" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "corridor_id" uuid NOT NULL,
-  "provider_id" uuid NOT NULL,
-  "rail_id" uuid NOT NULL,
-  "type" "radar"."radar_route_type" NOT NULL,
-  "limit_min" numeric(20, 2),
-  "limit_min_source_url" text,
-  "limit_min_source_type" "radar"."radar_source_type",
-  "limit_min_verified_at" timestamp with time zone,
-  "limit_min_verified_by" text,
-  "limit_max" numeric(20, 2),
-  "limit_max_source_url" text,
-  "limit_max_source_type" "radar"."radar_source_type",
-  "limit_max_verified_at" timestamp with time zone,
-  "limit_max_verified_by" text,
-  "limit_currency" text,
-  "settlement_finality" text,
-  "settlement_system" text,
-  "settlement_finality_source_url" text,
-  "settlement_finality_source_type" "radar"."radar_source_type",
-  "settlement_finality_verified_at" timestamp with time zone,
-  "settlement_finality_verified_by" text,
-  "operating_hours" text,
-  "operating_hours_source_url" text,
-  "operating_hours_source_type" "radar"."radar_source_type",
-  "operating_hours_verified_at" timestamp with time zone,
-  "operating_hours_verified_by" text,
-  "cut_off" text,
-  "cut_off_source_url" text,
-  "cut_off_source_type" "radar"."radar_source_type",
-  "cut_off_verified_at" timestamp with time zone,
-  "cut_off_verified_by" text,
-  "status" "radar"."radar_status" DEFAULT 'draft' NOT NULL,
-  "last_verified_at" timestamp with time zone,
-  "last_verified_by" text,
-  "source_url" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "created_by" uuid,
-  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-  "updated_by" uuid,
-  CONSTRAINT "radar_routes_limit_min_sourced" CHECK ("limit_min" IS NULL OR btrim(coalesce("limit_min_source_url", '')) <> ''),
-  CONSTRAINT "radar_routes_limit_max_sourced" CHECK ("limit_max" IS NULL OR btrim(coalesce("limit_max_source_url", '')) <> ''),
-  CONSTRAINT "radar_routes_limit_currency_present" CHECK (("limit_min" IS NULL AND "limit_max" IS NULL) OR btrim(coalesce("limit_currency", '')) <> ''),
-  CONSTRAINT "radar_routes_finality_sourced" CHECK ("settlement_finality" IS NULL OR btrim(coalesce("settlement_finality_source_url", '')) <> ''),
-  CONSTRAINT "radar_routes_hours_sourced" CHECK ("operating_hours" IS NULL OR btrim(coalesce("operating_hours_source_url", '')) <> ''),
-  CONSTRAINT "radar_routes_cut_off_sourced" CHECK ("cut_off" IS NULL OR btrim(coalesce("cut_off_source_url", '')) <> '')
-);--> statement-breakpoint
-
+CREATE INDEX "radar_licences_provider_idx" ON "radar"."radar_licences" USING btree ("provider_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_provider_assets_key" ON "radar"."radar_provider_assets" USING btree ("provider_id","asset");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_provider_markets_key" ON "radar"."radar_provider_markets" USING btree ("provider_id","market");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_provider_networks_key" ON "radar"."radar_provider_networks" USING btree ("provider_id","network");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_provider_requirements_key" ON "radar"."radar_provider_requirements" USING btree ("provider_id","requirement");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_provider_use_cases_key" ON "radar"."radar_provider_use_cases" USING btree ("provider_id","use_case");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_providers_slug_key" ON "radar"."radar_providers" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "radar_providers_status_idx" ON "radar"."radar_providers" USING btree ("status");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_rails_slug_key" ON "radar"."radar_rails" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "radar_rails_status_idx" ON "radar"."radar_rails" USING btree ("status");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_route_assets_key" ON "radar"."radar_route_assets" USING btree ("route_id","asset");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_route_networks_key" ON "radar"."radar_route_networks" USING btree ("route_id","network");--> statement-breakpoint
+CREATE UNIQUE INDEX "radar_route_requirements_key" ON "radar"."radar_route_requirements" USING btree ("route_id","requirement");--> statement-breakpoint
 CREATE UNIQUE INDEX "radar_routes_key" ON "radar"."radar_routes" USING btree ("corridor_id","provider_id","rail_id");--> statement-breakpoint
 CREATE INDEX "radar_routes_corridor_idx" ON "radar"."radar_routes" USING btree ("corridor_id");--> statement-breakpoint
 CREATE INDEX "radar_routes_provider_idx" ON "radar"."radar_routes" USING btree ("provider_id");--> statement-breakpoint
 CREATE INDEX "radar_routes_rail_idx" ON "radar"."radar_routes" USING btree ("rail_id");--> statement-breakpoint
 CREATE INDEX "radar_routes_status_idx" ON "radar"."radar_routes" USING btree ("status");--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_route_assets" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "route_id" uuid NOT NULL,
-  "asset" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_route_networks" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "route_id" uuid NOT NULL,
-  "network" text NOT NULL
-);--> statement-breakpoint
-
-CREATE TABLE "radar"."radar_route_requirements" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "route_id" uuid NOT NULL,
-  "requirement" text NOT NULL
-);--> statement-breakpoint
-
-/* ------------------------------------------------------------- submissions */
-
-CREATE TABLE "radar"."radar_submissions" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "kind" "radar"."radar_submission_kind" NOT NULL,
-  "corridor_id" uuid,
-  "route_id" uuid,
-  "provider_id" uuid,
-  "rail_id" uuid,
-  "subject_note" text,
-  "claimed_source_url" text,
-  "submitter_email" text NOT NULL,
-  "message" text,
-  "status" "radar"."radar_submission_status" DEFAULT 'pending' NOT NULL,
-  "reviewed_at" timestamp with time zone,
-  "reviewed_by" uuid,
-  "review_note" text,
-  "ip_hash" text,
-  "user_agent" text,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL
-);--> statement-breakpoint
-
 CREATE INDEX "radar_submissions_status_idx" ON "radar"."radar_submissions" USING btree ("status","created_at");--> statement-breakpoint
 CREATE INDEX "radar_submissions_ip_idx" ON "radar"."radar_submissions" USING btree ("ip_hash","created_at");--> statement-breakpoint
-CREATE INDEX "radar_submissions_corridor_idx" ON "radar"."radar_submissions" USING btree ("corridor_id");--> statement-breakpoint
+CREATE INDEX "radar_submissions_corridor_idx" ON "radar"."radar_submissions" USING btree ("corridor_id");
 
-/* -------------------------------------------------------------- unique keys */
-
-CREATE UNIQUE INDEX "radar_provider_markets_key" ON "radar"."radar_provider_markets" USING btree ("provider_id","market");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_provider_assets_key" ON "radar"."radar_provider_assets" USING btree ("provider_id","asset");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_provider_networks_key" ON "radar"."radar_provider_networks" USING btree ("provider_id","network");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_provider_use_cases_key" ON "radar"."radar_provider_use_cases" USING btree ("provider_id","use_case");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_provider_requirements_key" ON "radar"."radar_provider_requirements" USING btree ("provider_id","requirement");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_route_assets_key" ON "radar"."radar_route_assets" USING btree ("route_id","asset");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_route_networks_key" ON "radar"."radar_route_networks" USING btree ("route_id","network");--> statement-breakpoint
-CREATE UNIQUE INDEX "radar_route_requirements_key" ON "radar"."radar_route_requirements" USING btree ("route_id","requirement");--> statement-breakpoint
-
-/* ------------------------------------------------------------ foreign keys */
-
-ALTER TABLE "radar"."radar_provider_markets" ADD CONSTRAINT "radar_provider_markets_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_provider_assets" ADD CONSTRAINT "radar_provider_assets_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_provider_networks" ADD CONSTRAINT "radar_provider_networks_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_provider_use_cases" ADD CONSTRAINT "radar_provider_use_cases_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_provider_requirements" ADD CONSTRAINT "radar_provider_requirements_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_licences" ADD CONSTRAINT "radar_licences_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_corridor_events" ADD CONSTRAINT "radar_corridor_events_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_routes" ADD CONSTRAINT "radar_routes_rail_id_radar_rails_id_fk" FOREIGN KEY ("rail_id") REFERENCES "radar"."radar_rails"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_route_assets" ADD CONSTRAINT "radar_route_assets_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_route_networks" ADD CONSTRAINT "radar_route_networks_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_route_requirements" ADD CONSTRAINT "radar_route_requirements_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_corridor_id_radar_corridors_id_fk" FOREIGN KEY ("corridor_id") REFERENCES "radar"."radar_corridors"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_route_id_radar_routes_id_fk" FOREIGN KEY ("route_id") REFERENCES "radar"."radar_routes"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_provider_id_radar_providers_id_fk" FOREIGN KEY ("provider_id") REFERENCES "radar"."radar_providers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "radar"."radar_submissions" ADD CONSTRAINT "radar_submissions_rail_id_radar_rails_id_fk" FOREIGN KEY ("rail_id") REFERENCES "radar"."radar_rails"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+--> statement-breakpoint
 
 -- ============================================================================
 -- RLS — ON EVERYWHERE, NO POLICIES. Identical in design to drizzle/0001.

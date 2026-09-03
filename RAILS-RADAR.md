@@ -6,7 +6,9 @@
 *(This supersedes `dpl_FoVzFh8xiVghzhFi4aL4V9XMWgDA` in `PHASE-2-PLAN.md`, which is stale.)*
 
 **Status:** built, typechecked, linted, 257 tests passing, production build succeeds.
-**Not yet done:** migration not applied to any database; no preview deploy; database empty by design.
+**Migration 0013 APPLIED** to the Supabase database, and the boundary verified against Postgres
+by connecting as the `anon` role (§6). Radar tables are **empty by design**.
+**Not yet done:** preview deploy — blocked on Preview-scoped env vars (§7).
 
 ---
 
@@ -136,17 +138,57 @@ non-empty. A limit without its currency is refused.
 - `/admin/radar` unauthenticated — **307 to `/admin/login`**, no admin data in the response
 - Existing routes re-checked — site chrome intact on `/`, `/about`, `/forums`
 
-**Not verified, and needs the migration applied:** that a loader-thrown `notFound()` returns a
-404 status rather than a soft 404. Router-level 404s do return 404. Check this on preview.
+### Verified against the live database, after applying 0013
+
+```
+radar base tables            15,  all with RLS,  policies: 0
+radar views                  14,  anon may read all 14
+anon on radar BASE tables    NONE
+anon on radar_submissions    NONE
+public tables                unchanged; anon in public: NONE   (0003 intact)
+radar_ tables in public      none
+```
+
+Then, connected **as role `anon`**:
+
+| Attempt | Result |
+|---|---|
+| `select from radar.radar_rails` | **denied** 42501 |
+| `select from radar.radar_providers` | **denied** 42501 |
+| `select from radar.radar_submissions` | **denied** 42501 |
+| `insert into radar.radar_submissions` | **denied** 42501 |
+| `select from radar.v_rails` | allowed |
+| `select from radar.v_routes` | allowed |
+| `select from public.opportunities` | **denied** 42501 |
+
+Route status codes against the real tables:
+
+| Path | Status |
+|---|---|
+| `/radar`, `/radar/corridors`, `/radar/privacy`, `/radar/sitemap.xml` | 200 |
+| `/radar/corridors/us-to-brazil` (absent) | **404** |
+| `/radar/providers/nobody`, `/radar/rails/nothing` | **404** |
+
+The soft-404 risk is closed: a loader-thrown `notFound()` returns a real 404, so absent
+corridors will not be indexed as thin duplicates.
+
+Footer renders `0 rails tracked · 0 providers · 0 corridors · 0 routes` — from actual rows.
+The sitemap lists only the two index pages, because no corridor has a published route yet.
 
 ---
 
 ## 7. Next steps
 
-1. Apply `0013` to the database (`npm run db:migrate`). Purely additive — creates schema
-   `radar`; touches nothing in `public`. Reversible with `DROP SCHEMA radar CASCADE`.
-2. Preview deploy, verify the corridor 404 status, then promote.
+1. **Preview deploy is blocked.** Every env var on the Vercel project is scoped to
+   **Production only** — there are no Preview variables, so a preview build boots with no
+   `DATABASE_URL` and no Supabase keys and fails on configuration rather than on Radar. Add
+   `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` scoped to
+   Preview, then the branch can be deployed and checked end to end.
+2. Promote only after that preview passes. Rollback target is at the top of this file.
 3. Enter real records through `/admin/radar`. **The database is empty by design** — no figure
    from the brief was seeded, because every one of them was a layout placeholder.
 4. One line remains unwritten pending approval: adding Radar to the admin nav in
    `src/components/admin/Shell.tsx`. `/admin/radar` works directly meanwhile.
+
+To reverse the migration entirely: `DROP SCHEMA radar CASCADE;` and remove the `0013` entry
+from `drizzle/meta/_journal.json`. Nothing in `public` is involved.
