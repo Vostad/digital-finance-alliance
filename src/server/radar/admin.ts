@@ -22,7 +22,7 @@
  * be removing the product.
  */
 
-import { and, asc, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import { db } from "../db/client";
@@ -304,9 +304,55 @@ async function replaceChildren(providerId: string, input: ProviderInput) {
   ]);
 }
 
+/**
+ * Providers WITH their child rows and licences.
+ *
+ * An edit form has to repopulate what is already there; returning bare provider
+ * rows means every edit silently blanks the markets, assets, networks and
+ * requirements, because `replaceChildren` writes whatever the form submits.
+ * That is why this fans out rather than selecting the parent alone.
+ */
 export async function listProvidersForAdmin() {
   await requireRadarEditor();
-  return db.select().from(radarProviders).orderBy(asc(radarProviders.name));
+  const rows = await db.select().from(radarProviders).orderBy(asc(radarProviders.name));
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((r) => r.id);
+  const [markets, assets, networks, requirements, licences] = await Promise.all([
+    db.select().from(radarProviderMarkets).where(inArray(radarProviderMarkets.providerId, ids)),
+    db.select().from(radarProviderAssets).where(inArray(radarProviderAssets.providerId, ids)),
+    db.select().from(radarProviderNetworks).where(inArray(radarProviderNetworks.providerId, ids)),
+    db
+      .select()
+      .from(radarProviderRequirements)
+      .where(inArray(radarProviderRequirements.providerId, ids)),
+    db
+      .select()
+      .from(radarLicences)
+      .where(inArray(radarLicences.providerId, ids))
+      .orderBy(asc(radarLicences.name)),
+  ]);
+
+  const group = <T extends { providerId: string }>(list: T[], pick: (t: T) => string) => {
+    const m = new Map<string, string[]>();
+    for (const r of list) m.set(r.providerId, [...(m.get(r.providerId) ?? []), pick(r)]);
+    return m;
+  };
+  const m1 = group(markets, (r) => r.market);
+  const m2 = group(assets, (r) => r.asset);
+  const m3 = group(networks, (r) => r.network);
+  const m4 = group(requirements, (r) => r.requirement);
+  const lic = new Map<string, typeof licences>();
+  for (const l of licences) lic.set(l.providerId, [...(lic.get(l.providerId) ?? []), l]);
+
+  return rows.map((p) => ({
+    ...p,
+    markets: (m1.get(p.id) ?? []).sort(),
+    assets: (m2.get(p.id) ?? []).sort(),
+    networks: (m3.get(p.id) ?? []).sort(),
+    requirements: (m4.get(p.id) ?? []).sort(),
+    licences: lic.get(p.id) ?? [],
+  }));
 }
 
 /* ========================================================= licences ====== */
@@ -425,8 +471,13 @@ export async function listCorridorsForAdmin() {
       originCurrency: radarCorridors.originCurrency,
       destinationCountry: radarCorridors.destinationCountry,
       destinationCurrency: radarCorridors.destinationCurrency,
+      originCountryCode: radarCorridors.originCountryCode,
+      destinationCountryCode: radarCorridors.destinationCountryCode,
+      destinationConstraints: radarCorridors.destinationConstraints,
+      destinationConstraintsSourceUrl: radarCorridors.destinationConstraintsSourceUrl,
       status: radarCorridors.status,
       lastVerifiedAt: radarCorridors.lastVerifiedAt,
+      lastVerifiedBy: radarCorridors.lastVerifiedBy,
       routeCount: sql<number>`(
         SELECT count(*)::int FROM "radar"."radar_routes" r WHERE r.corridor_id = ${radarCorridors.id}
       )`,
@@ -607,24 +658,50 @@ export async function upsertRoute(input: RouteInput) {
   return { id };
 }
 
+/** Full route rows plus their child arrays — an edit form must be able to
+    repopulate assets, networks and requirements, which are replaced wholesale
+    on save. Draft rows are included: this is the editing surface, not the
+    public one. */
 export async function listRoutesForAdmin(corridorId: string) {
   await requireRadarEditor();
-  return db
+  const rows = await db
     .select({
-      id: radarRoutes.id,
-      type: radarRoutes.type,
-      status: radarRoutes.status,
-      lastVerifiedAt: radarRoutes.lastVerifiedAt,
+      route: radarRoutes,
       providerName: radarProviders.name,
       railName: radarRails.name,
       railIsMessaging: radarRails.isMessagingNetwork,
-      settlementFinality: radarRoutes.settlementFinality,
     })
     .from(radarRoutes)
     .innerJoin(radarProviders, eq(radarProviders.id, radarRoutes.providerId))
     .innerJoin(radarRails, eq(radarRails.id, radarRoutes.railId))
     .where(eq(radarRoutes.corridorId, corridorId))
     .orderBy(asc(radarRails.name));
+
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => r.route.id);
+  const [assets, networks, requirements] = await Promise.all([
+    db.select().from(radarRouteAssets).where(inArray(radarRouteAssets.routeId, ids)),
+    db.select().from(radarRouteNetworks).where(inArray(radarRouteNetworks.routeId, ids)),
+    db.select().from(radarRouteRequirements).where(inArray(radarRouteRequirements.routeId, ids)),
+  ]);
+  const group = <T extends { routeId: string }>(list: T[], pick: (t: T) => string) => {
+    const m = new Map<string, string[]>();
+    for (const r of list) m.set(r.routeId, [...(m.get(r.routeId) ?? []), pick(r)]);
+    return m;
+  };
+  const a = group(assets, (r) => r.asset);
+  const n = group(networks, (r) => r.network);
+  const q = group(requirements, (r) => r.requirement);
+
+  return rows.map(({ route, providerName, railName, railIsMessaging }) => ({
+    ...route,
+    providerName,
+    railName,
+    railIsMessaging,
+    assets: (a.get(route.id) ?? []).sort(),
+    networks: (n.get(route.id) ?? []).sort(),
+    requirements: (q.get(route.id) ?? []).sort(),
+  }));
 }
 
 /* ====================================================== submissions ====== */

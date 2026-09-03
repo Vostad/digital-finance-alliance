@@ -5,7 +5,7 @@ import { RadarShell } from "@/components/radar/Shell";
 import { SubmitSource } from "@/components/radar/SubmitSource";
 import {
   Cell,
-  Licences,
+  LicenceTable,
   NotPublished,
   Row,
   SourcedField,
@@ -122,9 +122,9 @@ function ProviderPage() {
         <h2 className={cn(T.heading, "border-b border-hairline pb-2 text-ink")}>
           Compliance &amp; licensing
         </h2>
-        <p className="pt-4">
-          <Licences licences={p.licences} />
-        </p>
+        <div className="pt-4">
+          <LicenceTable licences={p.licences} />
+        </div>
         {p.requirements.length > 0 ? (
           <>
             <p className={cn(T.label, "accord-signal mt-6 text-ink/55")}>Onboarding requirements</p>

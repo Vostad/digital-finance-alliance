@@ -266,6 +266,67 @@ export function Licences({
   );
 }
 
+/**
+ * Licences in full, for the provider profile. The compact interpunct form in
+ * `Licences` suits a route card; a profile is where the reference number and
+ * jurisdiction earn a column each — a table, not prose.
+ */
+export function LicenceTable({
+  licences,
+}: {
+  licences: Array<{
+    id: string;
+    name: string;
+    registerUrl: string;
+    jurisdiction: string | null;
+    referenceNumber: string | null;
+    lastVerifiedAt: Date | string | null;
+  }>;
+}) {
+  if (licences.length === 0) {
+    return (
+      <p className={cn(T.body, "text-ink/55")}>
+        No licences verified yet.{" "}
+        <span className="text-ink/45">If you have a source, submit it below.</span>
+      </p>
+    );
+  }
+  return (
+    <Table
+      head={[
+        { label: "Licence" },
+        { label: "Jurisdiction" },
+        { label: "Reference" },
+        { label: "Register" },
+        { label: "Verified" },
+      ]}
+    >
+      {licences.map((l) => (
+        <Row key={l.id}>
+          <Cell>{l.name}</Cell>
+          <Cell>{l.jurisdiction ?? <NotPublished />}</Cell>
+          <Cell className="font-mono text-[13px]">{l.referenceNumber ?? <NotPublished />}</Cell>
+          <Cell>
+            <a
+              href={l.registerUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="underline decoration-ink/25 underline-offset-2 transition-colors hover:text-[var(--accord-orange-deep)]"
+            >
+              View entry
+            </a>
+          </Cell>
+          <Cell>
+            <span className={cn(T.micro, "text-ink/55")}>
+              {formatDate(l.lastVerifiedAt) ?? "Not yet verified"}
+            </span>
+          </Cell>
+        </Row>
+      ))}
+    </Table>
+  );
+}
+
 /* ----------------------------------------------------------------- table -- */
 
 export function Table({

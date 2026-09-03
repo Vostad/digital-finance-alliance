@@ -13,19 +13,26 @@
  * account menu. Phase 2 cut this nav from eight to four; this is a deliberate
  * move to five, not creep, and nav.test.ts was updated to say so out loud.
  *
+ * IT SITS BEHIND A DIVIDER, and that is the point of `group`. Rails Radar is a
+ * DIFFERENT PRODUCT sharing this admin, not a fifth section of the CRM: it has
+ * its own data model, its own public site and its own audience. The rule keeps
+ * the four-item CRM shape visually intact, so a sixth CRM destination still has
+ * to argue against four rather than hide behind five.
+ *
  * Settings is deliberately NOT here. It is configuration, touched rarely, and
  * putting it in the daily path would make four destinations feel like five. It
  * lives in the account menu, which is where people already look for it.
  */
 
 import { Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { logout } from "@/rpc/auth";
 import { TEXT } from "./primitives";
 
-export type NavItem = { to: string; label: string; roles: string[] };
+/** `group` separates products, not sections. See NAV below. */
+export type NavItem = { to: string; label: string; roles: string[]; group: "crm" | "radar" };
 
 const MANAGER = ["super_admin", "admin"];
 const MEMBER = ["team_member"];
@@ -44,13 +51,13 @@ const MEMBER = ["team_member"];
  * are working their own list.
  */
 export const NAV: NavItem[] = [
-  { to: "/admin", label: "Dashboard", roles: MANAGER },
-  { to: "/admin/leads", label: "Leads", roles: MANAGER },
-  { to: "/admin/events", label: "Events", roles: MANAGER },
-  { to: "/admin/team", label: "Team", roles: MANAGER },
-  { to: "/admin/radar", label: "Radar", roles: MANAGER },
-  { to: "/admin/leads", label: "My Leads", roles: MEMBER },
-  { to: "/admin/targets", label: "My Targets", roles: MEMBER },
+  { to: "/admin", label: "Dashboard", roles: MANAGER, group: "crm" },
+  { to: "/admin/leads", label: "Leads", roles: MANAGER, group: "crm" },
+  { to: "/admin/events", label: "Events", roles: MANAGER, group: "crm" },
+  { to: "/admin/team", label: "Team", roles: MANAGER, group: "crm" },
+  { to: "/admin/radar", label: "Radar", roles: MANAGER, group: "radar" },
+  { to: "/admin/leads", label: "My Leads", roles: MEMBER, group: "crm" },
+  { to: "/admin/targets", label: "My Targets", roles: MEMBER, group: "crm" },
 ];
 
 /** An unrecognised role gets the least-privileged set, never the full one:
@@ -87,22 +94,29 @@ export function Shell({
           </Link>
 
           <nav className="-mx-2 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2">
-            {navFor(role ?? "team_member").map((item) => {
+            {navFor(role ?? "team_member").map((item, i, all) => {
               const active =
                 item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
+              /* A rule where the product changes. Rendered before the item, so
+                 the CRM group still reads as one set of four. */
+              const startsGroup = i > 0 && all[i - 1]!.group !== item.group;
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "whitespace-nowrap px-2.5 py-1.5 font-mono text-[13px] uppercase tracking-[0.1em] transition-colors",
-                    active
-                      ? "text-ink underline underline-offset-[6px]"
-                      : "text-ink/50 hover:text-ink",
-                  )}
-                >
-                  {item.label}
-                </Link>
+                <Fragment key={`${item.group}-${item.to}`}>
+                  {startsGroup ? (
+                    <span aria-hidden className="mx-2 h-4 w-px shrink-0 bg-hairline" />
+                  ) : null}
+                  <Link
+                    to={item.to}
+                    className={cn(
+                      "whitespace-nowrap px-2.5 py-1.5 font-mono text-[13px] uppercase tracking-[0.1em] transition-colors",
+                      active
+                        ? "text-ink underline underline-offset-[6px]"
+                        : "text-ink/50 hover:text-ink",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </Fragment>
               );
             })}
           </nav>

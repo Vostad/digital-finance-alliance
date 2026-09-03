@@ -12,10 +12,11 @@ by connecting as the `anon` role (§6). Radar tables are **empty by design**.
 
 ---
 
-## 0. SECURITY LOG
+## 0. FINDINGS LOG
 
-Two findings about the **existing platform**, surfaced while building Radar. Recorded here
-because neither belongs to Radar and both would otherwise be lost with this branch.
+Findings surfaced during the build and recorded here so they survive the branch. **SEC-**
+entries are security; **GAP-** entries are surface completeness — a thing that was built but
+could not be reached.
 
 ### SEC-1 — Authorization boundary bypassable by relative import · **CLOSED**
 
@@ -91,6 +92,46 @@ asserting site-wide commitments would mean inventing them.
 pointed at it. Worth doing before the event drives traffic to the forms.
 
 ---
+
+### GAP-1 — Server mutations shipped with no way to reach them · **CLOSED**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026, **before any real data was entered** |
+| **Closed** | 4 September 2026 |
+| **Severity** | Functional. Nothing broke; things silently could not be done. |
+
+Two related defects, both invisible to every check that existed:
+
+**`saveRoute` had no screen.** It was implemented, validated, ontology-enforced and migrated —
+and the admin surface had no route tab at all. Types passed, lint passed, the build passed,
+257 tests passed. A route could not be created by any means. Radar's central object is the
+route; a corridor without one renders its empty state, so the product could not hold data.
+
+**No upsert could edit.** Every form called its `save*` with `id: null`, so all five entities
+could be created and none corrected. The consequence was worse than it sounds: the
+re-verification queue surfaces stale records **and re-verifying one is an edit**, so the queue
+was decorative. An accepted inaccuracy report could never be acted on either. Records could
+also never move `draft → published` after creation.
+
+**Why nothing caught it.** Every existing check verifies that what exists is *correct*. None
+verified that what exists is *reachable*. A server function with no caller is well-typed,
+lint-clean and fully tested in isolation — it simply never runs.
+
+**Fix.** Route tab built, with per-corridor drill-down and structural-history entry; edit paths
+added for rail, provider, corridor, route and licence; licence delete wired.
+`src/server/test/admin-reachability.test.ts` (35 tests) now parses every `createServerFn` in
+the Radar RPC surface and fails if one has no UI reference, asserts every upsert passes an
+existing id, and re-asserts that reviewing a submission still cannot write to a live record.
+
+**Accepted, recorded rather than silenced:** two *read* endpoints remain unreferenced —
+`railIndex` and `providerIndex`. Radar has `/radar/corridors` but no `/radar/rails` or
+`/radar/providers` index, which is also a small internal-linking gap, since rail and provider
+detail pages sit in the sitemap with nothing linking to them until a corridor publishes. The
+test pins that list exactly: a third dead endpoint fails it, and so does building a page for
+one of these without removing it from the list. **No mutation is on that list, and the test
+asserts none ever can be.** Decision pending: build the two index pages, or delete the
+endpoints.
 
 ## 1. Decisions taken, and by whom
 
@@ -186,7 +227,8 @@ non-empty. A limit without its currency is refused.
 | `src/server.ts` | Sitemap interception | Generated sitemap; same position as the canonical redirect |
 | `src/routes/__root.tsx` | `isRadar` added to `bare` | Radar carries its own chrome, like the micro-sites and the OS. Scoped to `/radar`; verified no existing route changed. |
 | `public/robots.txt` | Second `Sitemap:` line | Discovery |
-| `src/components/admin/Shell.tsx` | `Radar` added to `NAV`, manager-only | Approved 4 Sep 2026. Takes the admin nav from four destinations to five. |
+| `src/components/admin/Shell.tsx` | `Radar` added to `NAV`, manager-only, behind a divider | Approved 4 Sep 2026. Five destinations, with `group` separating Radar from the four CRM items so it reads as a different product sharing the admin — the CRM shape stays visually four, and a sixth CRM destination still argues against four. |
+| `src/components/admin/RadarForms.tsx` | New — all Radar editing forms | GAP-1 |
 | `src/server/test/nav.test.ts` | Asserts five, and that a Team Member never sees Radar | That test exists to stop nav creep; moving it deliberately is the point. |
 | `src/server/auth/*`, `eslint.config.js` | SEC-1 fix | See the security log |
 | `PHASE-2-PLAN.md` | Stale production deployment ID corrected | It named a deployment that had already been superseded |
@@ -199,8 +241,8 @@ non-empty. A limit without its currency is refused.
 
 - `npx tsc --noEmit` — clean
 - `npx eslint` on all Radar files — clean (one warning matching the existing `admin/primitives.tsx` pattern)
-- `npx vitest run` — **257 passed** across 12 files, including 50 Radar boundary tests, 13 Radar
-  logic tests and 26 import-boundary tests
+- `npx vitest run` — **293 passed** across 13 files: 50 Radar boundary, 13 Radar logic,
+  26 import-boundary, 35 admin-reachability, plus the pre-existing suites
 - `npm run build` — succeeds; `check:client-bundle` finds no secrets
 - SSR verified locally: `/radar`, `/radar/corridors`, `/radar/privacy`, `/radar/sitemap.xml` all 200
 - `/admin/radar` unauthenticated — **307 to `/admin/login`**, no admin data in the response
@@ -254,9 +296,7 @@ The sitemap lists only the two index pages, because no corridor has a published 
    point it at the **production CRM** on a URL with a different access posture. That check
    gates the env vars, and the env vars gate the deploy.
 2. Promote only after that preview passes. Rollback target is at the top of this file.
-3. **Admin forms are narrower than the data model — see §8.** A route cannot be created through
-   the UI at all yet, so the three-corridor data entry cannot proceed until that is built.
-4. Enter real records through `/admin/radar`. **The database is empty by design** — no figure
+3. Enter real records through `/admin/radar` — the forms are complete (§8) and GAP-1 is closed. **The database is empty by design** — no figure
    from the brief was seeded, because every one of them was a layout placeholder.
 
 Done since first draft: Radar added to the admin nav (§5).
@@ -266,77 +306,34 @@ from `drizzle/meta/_journal.json`. Nothing in `public` is involved.
 
 ---
 
-## 8. Entering the first three corridors — what the forms ask, and what is missing
+## 8. Entering the first three corridors
 
 Entry order is forced by the foreign keys: **Rail → Provider (+ licences) → Corridor → Route.**
-A route references all three, so it is entered last.
+Every entity requires a **source URL** and a **verification date** — enforced in the form, again
+on the server, and again by a CHECK constraint. "Verified by" defaults to the signed-in editor.
 
-Every entity requires a **source URL** and a **verification date**. These are not optional
-anywhere: the form marks them required, the server re-checks them, and a CHECK constraint sits
-behind that. "Verified by" defaults to the signed-in editor's name if left blank.
+All forms below now exist, and all support **create and edit**. Editing is what re-verification
+is: open the source, confirm it still says what was recorded, save with today's date.
 
-### 8.1 Rail — form is complete
+| Entity | Fields |
+|---|---|
+| **Rail** | Name●, Category, Description, Source URL●, Verified on●, Verified by, **Is a messaging network**, Status |
+| **Provider** | Name●, Type, Website, API docs URL, Markets, Assets, Networks, Custody model, Onboarding requirements, then paired value+source for Settlement time / Settlement hours / Fees / Limits, then Source URL●, Verified on●, Verified by, Status |
+| **Licence** | Licence name●, **Register URL●**, Jurisdiction, Reference number, Verified on●, Verified by |
+| **Corridor** | Origin country●, Origin ISO●, Origin currency●, Destination country●, Destination ISO●, Destination currency●, Destination constraints + source, Verified on●, Verified by, Status |
+| **Route** | Provider●, Rail●, Route type, Limit currency, Min limit + source, Max limit + source, Settlement finality + source, **Settlement system**, Operating hours + source, Cut-off + source, Assets, Networks, Requirements, Source URL●, Verified on●, Verified by, Status |
 
-| # | Field | Required | Notes |
-|---|---|---|---|
-| 1 | Name | ● | |
-| 2 | Category | | `traditional` · `digital` · `blockchain` · `emerging` |
-| 3 | Description | | One or two sentences |
-| 4 | Source URL | ● | Scheme rulebook, operator page, or regulator page |
-| 5 | Verified on | ● | Defaults to today |
-| 6 | Verified by | | Defaults to the signed-in editor |
-| 7 | **Is a messaging network** | | Checkbox. **Set this correctly — it changes what routes on this rail may claim.** |
-| 8 | Status | | `draft` until checked, then `published` |
+Routes are entered from the **Corridors** tab — open a corridor, then "New route". Structural
+history is entered from the same place.
 
-Field 7 is the ontological switch. If ticked, the server **refuses** any finality claim on a
-route using this rail unless the settlement system conferring finality is named.
+**Three rules the forms enforce as you type, before the server has to refuse:**
 
-### 8.2 Provider — form is a SUBSET of the data model
+- a figure with no source URL highlights and will not publish — clearing both is fine, and puts
+  the field back to "Not published"
+- a limit with no currency highlights — a bare number is not a limit
+- **finality on a messaging network** highlights until the settlement system is named, saying
+  which rail is the messaging network and why
 
-Asks, in order: **Name ●**, Type, Website, Markets, Assets, Networks, **Source URL ●**,
-**Verified on ●**, Status. Then per licence, inline: **Licence name**, **Register URL ●**,
-Jurisdiction.
-
-Type is one of `bank · psp · orchestration · stablecoin · fx · custodian · exchange · onramp`.
-Markets, Assets and Networks are comma-separated.
-
-**Not yet on the form, though the database holds them:** description, custody model, API type,
-API documentation URL, settlement time, settlement hours, settlement fee and provider-level
-limits (each with its own source URL), use cases, onboarding requirements, licence reference
-number, and "Verified by".
-
-### 8.3 Corridor — form is a SUBSET
-
-Asks, in order: **Origin country ●**, **Origin ISO ●**, **Origin currency ●**,
-**Destination country ●**, **Destination ISO ●**, **Destination currency ●**,
-**Verified on ●**, Verified by, Status.
-
-The slug is generated once on creation (`united-states-to-brazil`) and never regenerated — it
-is the identity of every inbound link.
-
-**Not yet on the form:** destination regulatory constraints and their source URL, and the
-corridor-level source URL.
-
-### 8.4 Route — **NO FORM EXISTS**
-
-`saveRoute` is implemented, validated and enforced on the server, and `radar_routes` is
-migrated. **The admin screen has no route tab.** A route cannot be created through the UI.
-
-This blocks the three-corridor exercise: without routes, corridors publish with nothing on
-them, and the corridor page renders its empty state. The server would accept, in this order:
-
-| Field | Required | Notes |
-|---|---|---|
-| Corridor, Provider, Rail | ● | Selected from what already exists |
-| Type | ● | `bank` · `local` · `stablecoin` · `hybrid` |
-| Limit min / max | | Each needs its own source URL |
-| Limit currency | ● *if* either limit is set | A bare number is not a limit |
-| Settlement finality | | e.g. Irrevocable · Net · Gross. Needs a source URL |
-| Settlement system | ● *if* the rail is a messaging network | Names what actually confers finality |
-| Operating hours, Cut-off | | Each needs its own source URL |
-| Assets, Networks, Requirements | | Comma-separated |
-| Source URL, Verified on, Verified by | ● | |
-| Status | | |
-
-**Work required before data entry:** build the route tab, and add the missing provider and
-corridor fields above. Not started — the branch is held pending preview env vars.
+**Deliberately not built:** fields no V1 page renders — provider description, API type, use
+cases. The schema holds them; asking for data nobody will see is how an admin surface stops
+being filled in accurately.
