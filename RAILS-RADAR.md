@@ -166,7 +166,7 @@ Both are in the generated sitemap, and both were removed from the reachability d
 | | |
 |---|---|
 | **Found** | 4 September 2026, generalising the reachability test beyond Radar |
-| **Status** | OPEN. Recorded and frozen; not fixed — it is CRM code and a simplification pass is pending. |
+| **Status** | CLASSIFIED 4 Sep 2026, handed to the simplification run. Not actioned in this branch by decision. |
 | **Severity** | Dead code. Not an open door — every one is still authenticated and authorized server-side. |
 
 Generalising the reachability check across all of `src/rpc` (72 functions, 10 modules) found
@@ -193,8 +193,54 @@ and **`emailStatus` only reads** (`outboxSummary`). HTTP method is not a reliabl
 most of the reads use POST to pass parameters — so `kind` in the debt list is a human judgement,
 recorded per entry.
 
-Each of the four needs a decision that is yours: wire it to a screen, or delete it. A write
-nobody can reach is a write nobody maintains.
+#### Decision, recorded 4 September 2026 — all of it is CRM work for the simplification run
+
+**None of this is actioned in the Radar branch.** GAP-3 belongs to the pending admin
+simplification, which audits exactly this surface; this log is handed to it as an input so the
+twelve orphans do not have to be rediscovered.
+
+| | Function | Rationale |
+|---|---|---|
+| **WIRE** | `changeTarget` | Targets can be created and never changed — the same create-only failure found in Radar, sitting in the CRM. A Super Admin sets a target in January and cannot revise it. Not optional. |
+| **WIRE** | `emailStatus` + `retryEmail` | Together, in one small screen. The outbox has no status view and no retry, so the email system is **completely unobservable from the UI**. A prospectus request that silently fails to send is a lost sponsor lead nobody finds out about. |
+| **DEFER** | `setProbability` | A specified feature, not dead code. Wire it **when there is a real pipeline to forecast** — probability override is meaningless against an empty or trivial pipeline. Stays grandfathered until then. |
+| **DEFER** | `setCommissionSplit` | A specified feature, not dead code. Wire it **the first time two people share a deal** — a split has no meaning with a single owner. Stays grandfathered until then. |
+| **LEAVE** | the eight reads | Harmless, and the simplification may wire some of them. Deleting now creates churn against a rewrite that has not happened. |
+
+**Note for whoever runs the simplification:** `GRANDFATHERED_WRITES` in
+`src/server/test/rpc-reachability.test.ts` still names all four. Wiring `changeTarget` or
+`retryEmail` will fail the suite until its entry is removed from `KNOWN_UNREFERENCED` — that is
+the intended pressure, not a bug. `emailStatus` is a read and sits in the read section of the
+same list.
+
+#### Outbox checked live, 4 September 2026 — nothing is stuck
+
+Run because the microsite forms are live and a silent send failure would be invisible. Read-only,
+no writes, addresses not printed.
+
+```
+email_outbox        1 row   ·   sent 1   ·   pending 0   ·   failed 0
+                    kind prospectus_delivery, 1 attempt, no error
+                    2026-09-03T03:32:47Z
+form_submissions    1 row   ·   2026-09-03T03:32:38Z
+```
+
+The submission and the send are nine seconds apart, so the intake → outbox → provider path
+worked end to end. **"Sent" here is a real delivery, not a default:** `sent_at` is written only
+when the provider returns `ok` (`src/server/domain/email.ts:96` returns
+`"no provider configured"` and writes `last_error` instead when the keys are absent), and this
+row has one attempt and a null error.
+
+Two things this does **not** show, stated so the reassurance is not read too widely:
+
+- volume is one message. This is a configuration test passing, not a system proven under load.
+- `EMAIL_PROVIDER_API_KEY` and `EMAIL_FROM_ADDRESS` are **absent from the local `.env`** and set
+  in **Vercel Production only**. Anything run locally against this database cannot send, and a
+  local `emailSent: false` means nothing about production.
+
+That single row is the argument for wiring `emailStatus` + `retryEmail`: the system currently
+works, and there is no way to see that it works, so the first failure will be found by a sponsor
+who never got their prospectus.
 
 **Frozen, so it can only get better.** `GRANDFATHERED_WRITES` in
 `src/server/test/rpc-reachability.test.ts` names exactly these four. Adding a fifth fails the
