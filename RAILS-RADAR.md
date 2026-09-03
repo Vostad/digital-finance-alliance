@@ -453,6 +453,33 @@ The sitemap lists only the two index pages, because no corridor has a published 
 
 ---
 
+### Preview protection — verified empirically, 4 September 2026
+
+The Vercel API reports `ssoProtection: {"deploymentType": "all_except_custom_domains"}`, with no
+password protection, no trusted IPs and **no protection-bypass token**. That was then confirmed
+against real preview URLs rather than trusted:
+
+```
+preview  digital-financa-5lifdt2dt…vercel.app   302 -> vercel.com/sso-api   (logged out)
+preview  digital-financa-furzcy4ky…vercel.app   302 -> vercel.com/sso-api   (logged out)
+custom   financialrails.org                     200                          (public, correct)
+```
+
+The challenge is a **302 redirect to Vercel SSO, not a 401** — worth knowing, because a check
+that asserts `401` would wrongly report protection as absent.
+
+### Git state, 4 September 2026
+
+| Ref | Commit | Note |
+|---|---|---|
+| `origin/main` | `e950cc7` | **untouched** — production branch, not pushed to |
+| `origin/phase-2-local-backup` | `8c8d75e` | backup of the local-only Phase 2 commit; a different ref name, so it deploys as preview, never production |
+| `origin/rails-radar` | this branch | pushed, tracking set |
+
+Vercel is git-connected (`Vostad/digital-finance-alliance`, production branch `main`,
+`createDeployments: enabled`), so **both pushes automatically created preview deployments**.
+Neither touched `main`, so production still runs the rollback target at the top of this file.
+
 ## 7. Next steps
 
 1. **Preview deploy — ON HOLD, correctly.** Every env var on the Vercel project is scoped to
