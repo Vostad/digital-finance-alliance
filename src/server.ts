@@ -4,6 +4,35 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { redirectToCanonicalHost } from "./lib/canonical-host";
 
+/**
+ * The Radar sitemap is generated from database rows, so it cannot be a static
+ * file in public/. It is served here, in the same pre-render position as the
+ * canonical-host redirect, because this entry is guaranteed to run for every
+ * request on every host — and because this version of Start does not expose
+ * file-based server routes to hang it off instead.
+ */
+async function serveRadarSitemap(request: Request): Promise<Response | null> {
+  if (new URL(request.url).pathname !== "/radar/sitemap.xml") return null;
+  try {
+    const { radarSitemap } = await import("./server/radar/sitemap");
+    return new Response(await radarSitemap(), {
+      headers: {
+        "content-type": "application/xml; charset=utf-8",
+        /* Crawlers re-fetch often; the row set changes rarely. */
+        "cache-control": "public, max-age=3600, s-maxage=86400",
+      },
+    });
+  } catch (error) {
+    /* A sitemap that 500s teaches a crawler the site is broken. An empty but
+       valid one teaches it nothing and costs nothing. */
+    console.error("[radar/sitemap]", error);
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n',
+      { headers: { "content-type": "application/xml; charset=utf-8" } },
+    );
+  }
+}
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -53,6 +82,9 @@ export default {
       // localhost/preview, which fall through to the app untouched.
       const redirect = redirectToCanonicalHost(request);
       if (redirect) return redirect;
+
+      const sitemap = await serveRadarSitemap(request);
+      if (sitemap) return sitemap;
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

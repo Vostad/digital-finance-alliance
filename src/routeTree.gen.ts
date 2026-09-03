@@ -25,6 +25,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDirectoryRouteImport } from './routes/admin.directory'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminRadarRouteImport } from './routes/admin.radar'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminTargetsRouteImport } from './routes/admin.targets'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
@@ -36,9 +37,15 @@ import { Route as ForumsFinancialRailsMenaRouteImport } from './routes/forums.fi
 import { Route as ForumsFinancialRailsV2RouteImport } from './routes/forums.financial-rails-v2'
 import { Route as ForumsIndiaDigitalPaymentsRouteImport } from './routes/forums.india-digital-payments'
 import { Route as ForumsMenaRouteImport } from './routes/forums.mena'
+import { Route as RadarIndexRouteImport } from './routes/radar.index'
+import { Route as RadarPrivacyRouteImport } from './routes/radar.privacy'
 import { Route as AdminLeadsIndexRouteImport } from './routes/admin.leads.index'
 import { Route as AdminLeadsIdRouteImport } from './routes/admin.leads.$id'
 import { Route as AdminLeadsNewRouteImport } from './routes/admin.leads.new'
+import { Route as RadarCorridorsIndexRouteImport } from './routes/radar.corridors.index'
+import { Route as RadarCorridorsSlugRouteImport } from './routes/radar.corridors.$slug'
+import { Route as RadarProvidersSlugRouteImport } from './routes/radar.providers.$slug'
+import { Route as RadarRailsSlugRouteImport } from './routes/radar.rails.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -120,6 +127,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRadarRoute = AdminRadarRouteImport.update({
+  id: '/admin/radar',
+  path: '/admin/radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
@@ -180,6 +192,16 @@ const ForumsMenaRoute = ForumsMenaRouteImport.update({
   path: '/forums/mena',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RadarIndexRoute = RadarIndexRouteImport.update({
+  id: '/radar/',
+  path: '/radar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarPrivacyRoute = RadarPrivacyRouteImport.update({
+  id: '/radar/privacy',
+  path: '/radar/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLeadsIndexRoute = AdminLeadsIndexRouteImport.update({
   id: '/admin/leads/',
   path: '/admin/leads/',
@@ -193,6 +215,26 @@ const AdminLeadsIdRoute = AdminLeadsIdRouteImport.update({
 const AdminLeadsNewRoute = AdminLeadsNewRouteImport.update({
   id: '/admin/leads/new',
   path: '/admin/leads/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarCorridorsIndexRoute = RadarCorridorsIndexRouteImport.update({
+  id: '/radar/corridors/',
+  path: '/radar/corridors/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarCorridorsSlugRoute = RadarCorridorsSlugRouteImport.update({
+  id: '/radar/corridors/$slug',
+  path: '/radar/corridors/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarProvidersSlugRoute = RadarProvidersSlugRouteImport.update({
+  id: '/radar/providers/$slug',
+  path: '/radar/providers/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarRailsSlugRoute = RadarRailsSlugRouteImport.update({
+  id: '/radar/rails/$slug',
+  path: '/radar/rails/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -212,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/radar': typeof AdminRadarRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
   '/admin/team': typeof AdminTeamRoute
@@ -222,11 +265,17 @@ export interface FileRoutesByFullPath {
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums/mena': typeof ForumsMenaRoute
+  '/radar/privacy': typeof RadarPrivacyRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
+  '/radar/': typeof RadarIndexRoute
   '/admin/leads/$id': typeof AdminLeadsIdRoute
   '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/radar/corridors/$slug': typeof RadarCorridorsSlugRoute
+  '/radar/providers/$slug': typeof RadarProvidersSlugRoute
+  '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads/': typeof AdminLeadsIndexRoute
+  '/radar/corridors/': typeof RadarCorridorsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -244,6 +293,7 @@ export interface FileRoutesByTo {
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/radar': typeof AdminRadarRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
   '/admin/team': typeof AdminTeamRoute
@@ -254,11 +304,17 @@ export interface FileRoutesByTo {
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums/mena': typeof ForumsMenaRoute
+  '/radar/privacy': typeof RadarPrivacyRoute
   '/admin': typeof AdminIndexRoute
   '/forums': typeof ForumsIndexRoute
+  '/radar': typeof RadarIndexRoute
   '/admin/leads/$id': typeof AdminLeadsIdRoute
   '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/radar/corridors/$slug': typeof RadarCorridorsSlugRoute
+  '/radar/providers/$slug': typeof RadarProvidersSlugRoute
+  '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads': typeof AdminLeadsIndexRoute
+  '/radar/corridors': typeof RadarCorridorsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -277,6 +333,7 @@ export interface FileRoutesById {
   '/admin/directory': typeof AdminDirectoryRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/radar': typeof AdminRadarRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
   '/admin/team': typeof AdminTeamRoute
@@ -287,11 +344,17 @@ export interface FileRoutesById {
   '/forums/financial-rails-v2': typeof ForumsFinancialRailsV2Route
   '/forums/india-digital-payments': typeof ForumsIndiaDigitalPaymentsRoute
   '/forums/mena': typeof ForumsMenaRoute
+  '/radar/privacy': typeof RadarPrivacyRoute
   '/admin/': typeof AdminIndexRoute
   '/forums/': typeof ForumsIndexRoute
+  '/radar/': typeof RadarIndexRoute
   '/admin/leads/$id': typeof AdminLeadsIdRoute
   '/admin/leads/new': typeof AdminLeadsNewRoute
+  '/radar/corridors/$slug': typeof RadarCorridorsSlugRoute
+  '/radar/providers/$slug': typeof RadarProvidersSlugRoute
+  '/radar/rails/$slug': typeof RadarRailsSlugRoute
   '/admin/leads/': typeof AdminLeadsIndexRoute
+  '/radar/corridors/': typeof RadarCorridorsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -311,6 +374,7 @@ export interface FileRouteTypes {
     | '/admin/directory'
     | '/admin/events'
     | '/admin/login'
+    | '/admin/radar'
     | '/admin/settings'
     | '/admin/targets'
     | '/admin/team'
@@ -321,11 +385,17 @@ export interface FileRouteTypes {
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums/mena'
+    | '/radar/privacy'
     | '/admin/'
     | '/forums/'
+    | '/radar/'
     | '/admin/leads/$id'
     | '/admin/leads/new'
+    | '/radar/corridors/$slug'
+    | '/radar/providers/$slug'
+    | '/radar/rails/$slug'
     | '/admin/leads/'
+    | '/radar/corridors/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -343,6 +413,7 @@ export interface FileRouteTypes {
     | '/admin/directory'
     | '/admin/events'
     | '/admin/login'
+    | '/admin/radar'
     | '/admin/settings'
     | '/admin/targets'
     | '/admin/team'
@@ -353,11 +424,17 @@ export interface FileRouteTypes {
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums/mena'
+    | '/radar/privacy'
     | '/admin'
     | '/forums'
+    | '/radar'
     | '/admin/leads/$id'
     | '/admin/leads/new'
+    | '/radar/corridors/$slug'
+    | '/radar/providers/$slug'
+    | '/radar/rails/$slug'
     | '/admin/leads'
+    | '/radar/corridors'
   id:
     | '__root__'
     | '/'
@@ -375,6 +452,7 @@ export interface FileRouteTypes {
     | '/admin/directory'
     | '/admin/events'
     | '/admin/login'
+    | '/admin/radar'
     | '/admin/settings'
     | '/admin/targets'
     | '/admin/team'
@@ -385,11 +463,17 @@ export interface FileRouteTypes {
     | '/forums/financial-rails-v2'
     | '/forums/india-digital-payments'
     | '/forums/mena'
+    | '/radar/privacy'
     | '/admin/'
     | '/forums/'
+    | '/radar/'
     | '/admin/leads/$id'
     | '/admin/leads/new'
+    | '/radar/corridors/$slug'
+    | '/radar/providers/$slug'
+    | '/radar/rails/$slug'
     | '/admin/leads/'
+    | '/radar/corridors/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -408,6 +492,7 @@ export interface RootRouteChildren {
   AdminDirectoryRoute: typeof AdminDirectoryRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminRadarRoute: typeof AdminRadarRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminTargetsRoute: typeof AdminTargetsRoute
   AdminTeamRoute: typeof AdminTeamRoute
@@ -418,11 +503,17 @@ export interface RootRouteChildren {
   ForumsFinancialRailsV2Route: typeof ForumsFinancialRailsV2Route
   ForumsIndiaDigitalPaymentsRoute: typeof ForumsIndiaDigitalPaymentsRoute
   ForumsMenaRoute: typeof ForumsMenaRoute
+  RadarPrivacyRoute: typeof RadarPrivacyRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ForumsIndexRoute: typeof ForumsIndexRoute
+  RadarIndexRoute: typeof RadarIndexRoute
   AdminLeadsIdRoute: typeof AdminLeadsIdRoute
   AdminLeadsNewRoute: typeof AdminLeadsNewRoute
+  RadarCorridorsSlugRoute: typeof RadarCorridorsSlugRoute
+  RadarProvidersSlugRoute: typeof RadarProvidersSlugRoute
+  RadarRailsSlugRoute: typeof RadarRailsSlugRoute
   AdminLeadsIndexRoute: typeof AdminLeadsIndexRoute
+  RadarCorridorsIndexRoute: typeof RadarCorridorsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -539,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/radar': {
+      id: '/admin/radar'
+      path: '/admin/radar'
+      fullPath: '/admin/radar'
+      preLoaderRoute: typeof AdminRadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/admin/settings'
@@ -616,6 +714,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumsMenaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/radar/': {
+      id: '/radar/'
+      path: '/radar'
+      fullPath: '/radar/'
+      preLoaderRoute: typeof RadarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar/privacy': {
+      id: '/radar/privacy'
+      path: '/radar/privacy'
+      fullPath: '/radar/privacy'
+      preLoaderRoute: typeof RadarPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/leads/': {
       id: '/admin/leads/'
       path: '/admin/leads'
@@ -637,6 +749,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLeadsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/radar/corridors/': {
+      id: '/radar/corridors/'
+      path: '/radar/corridors'
+      fullPath: '/radar/corridors/'
+      preLoaderRoute: typeof RadarCorridorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar/corridors/$slug': {
+      id: '/radar/corridors/$slug'
+      path: '/radar/corridors/$slug'
+      fullPath: '/radar/corridors/$slug'
+      preLoaderRoute: typeof RadarCorridorsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar/providers/$slug': {
+      id: '/radar/providers/$slug'
+      path: '/radar/providers/$slug'
+      fullPath: '/radar/providers/$slug'
+      preLoaderRoute: typeof RadarProvidersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar/rails/$slug': {
+      id: '/radar/rails/$slug'
+      path: '/radar/rails/$slug'
+      fullPath: '/radar/rails/$slug'
+      preLoaderRoute: typeof RadarRailsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -656,6 +796,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDirectoryRoute: AdminDirectoryRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminRadarRoute: AdminRadarRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminTargetsRoute: AdminTargetsRoute,
   AdminTeamRoute: AdminTeamRoute,
@@ -666,11 +807,17 @@ const rootRouteChildren: RootRouteChildren = {
   ForumsFinancialRailsV2Route: ForumsFinancialRailsV2Route,
   ForumsIndiaDigitalPaymentsRoute: ForumsIndiaDigitalPaymentsRoute,
   ForumsMenaRoute: ForumsMenaRoute,
+  RadarPrivacyRoute: RadarPrivacyRoute,
   AdminIndexRoute: AdminIndexRoute,
   ForumsIndexRoute: ForumsIndexRoute,
+  RadarIndexRoute: RadarIndexRoute,
   AdminLeadsIdRoute: AdminLeadsIdRoute,
   AdminLeadsNewRoute: AdminLeadsNewRoute,
+  RadarCorridorsSlugRoute: RadarCorridorsSlugRoute,
+  RadarProvidersSlugRoute: RadarProvidersSlugRoute,
+  RadarRailsSlugRoute: RadarRailsSlugRoute,
   AdminLeadsIndexRoute: AdminLeadsIndexRoute,
+  RadarCorridorsIndexRoute: RadarCorridorsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

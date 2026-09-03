@@ -186,7 +186,14 @@ function RootComponent() {
   // site. It shares the router and the design tokens; it must never inherit the
   // marketing navigation or footer.
   const isAdmin = /^\/admin(\/|$)/.test(pathname);
-  const bare = isEventMicrosite || isAdmin;
+
+  // Rails Radar is a tool, not a page of the marketing site. It carries its own
+  // header and its own footer — the footer is not decoration there, it holds the
+  // privacy notice and the row counts — so it takes the same bare treatment the
+  // micro-sites and the OS already take. Scoped to /radar; no existing route
+  // changes behaviour.
+  const isRadar = /^\/radar(\/|$)/.test(pathname);
+  const bare = isEventMicrosite || isAdmin || isRadar;
 
   return (
     <QueryClientProvider client={queryClient}>
