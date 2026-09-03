@@ -23,12 +23,11 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDirectoryRouteImport } from './routes/admin.directory'
-import { Route as AdminForecastRouteImport } from './routes/admin.forecast'
-import { Route as AdminGovernanceRouteImport } from './routes/admin.governance'
-import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
+import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
-import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminTargetsRouteImport } from './routes/admin.targets'
+import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as ForumsIndexRouteImport } from './routes/forums.index'
 import { Route as ForumsAfricanMoneyMovementRouteImport } from './routes/forums.african-money-movement'
 import { Route as ForumsFinancialRailsAfricaRouteImport } from './routes/forums.financial-rails-africa'
@@ -111,19 +110,9 @@ const AdminDirectoryRoute = AdminDirectoryRouteImport.update({
   path: '/admin/directory',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminForecastRoute = AdminForecastRouteImport.update({
-  id: '/admin/forecast',
-  path: '/admin/forecast',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminGovernanceRoute = AdminGovernanceRouteImport.update({
-  id: '/admin/governance',
-  path: '/admin/governance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminInsightsRoute = AdminInsightsRouteImport.update({
-  id: '/admin/insights',
-  path: '/admin/insights',
+const AdminEventsRoute = AdminEventsRouteImport.update({
+  id: '/admin/events',
+  path: '/admin/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -131,14 +120,19 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminPipelineRoute = AdminPipelineRouteImport.update({
-  id: '/admin/pipeline',
-  path: '/admin/pipeline',
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTargetsRoute = AdminTargetsRouteImport.update({
   id: '/admin/targets',
   path: '/admin/targets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTeamRoute = AdminTeamRouteImport.update({
+  id: '/admin/team',
+  path: '/admin/team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumsIndexRoute = ForumsIndexRouteImport.update({
@@ -216,12 +210,11 @@ export interface FileRoutesByFullPath {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
-  '/admin/forecast': typeof AdminForecastRoute
-  '/admin/governance': typeof AdminGovernanceRoute
-  '/admin/insights': typeof AdminInsightsRoute
+  '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -249,12 +242,11 @@ export interface FileRoutesByTo {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
-  '/admin/forecast': typeof AdminForecastRoute
-  '/admin/governance': typeof AdminGovernanceRoute
-  '/admin/insights': typeof AdminInsightsRoute
+  '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -283,12 +275,11 @@ export interface FileRoutesById {
   '/intelligence': typeof IntelligenceRoute
   '/partners': typeof PartnersRoute
   '/admin/directory': typeof AdminDirectoryRoute
-  '/admin/forecast': typeof AdminForecastRoute
-  '/admin/governance': typeof AdminGovernanceRoute
-  '/admin/insights': typeof AdminInsightsRoute
+  '/admin/events': typeof AdminEventsRoute
   '/admin/login': typeof AdminLoginRoute
-  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/targets': typeof AdminTargetsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/forums/african-money-movement': typeof ForumsAfricanMoneyMovementRoute
   '/forums/financial-rails-africa': typeof ForumsFinancialRailsAfricaRoute
   '/forums/financial-rails-asia': typeof ForumsFinancialRailsAsiaRoute
@@ -318,12 +309,11 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/directory'
-    | '/admin/forecast'
-    | '/admin/governance'
-    | '/admin/insights'
+    | '/admin/events'
     | '/admin/login'
-    | '/admin/pipeline'
+    | '/admin/settings'
     | '/admin/targets'
+    | '/admin/team'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -351,12 +341,11 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/directory'
-    | '/admin/forecast'
-    | '/admin/governance'
-    | '/admin/insights'
+    | '/admin/events'
     | '/admin/login'
-    | '/admin/pipeline'
+    | '/admin/settings'
     | '/admin/targets'
+    | '/admin/team'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -384,12 +373,11 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/partners'
     | '/admin/directory'
-    | '/admin/forecast'
-    | '/admin/governance'
-    | '/admin/insights'
+    | '/admin/events'
     | '/admin/login'
-    | '/admin/pipeline'
+    | '/admin/settings'
     | '/admin/targets'
+    | '/admin/team'
     | '/forums/african-money-movement'
     | '/forums/financial-rails-africa'
     | '/forums/financial-rails-asia'
@@ -418,12 +406,11 @@ export interface RootRouteChildren {
   IntelligenceRoute: typeof IntelligenceRoute
   PartnersRoute: typeof PartnersRoute
   AdminDirectoryRoute: typeof AdminDirectoryRoute
-  AdminForecastRoute: typeof AdminForecastRoute
-  AdminGovernanceRoute: typeof AdminGovernanceRoute
-  AdminInsightsRoute: typeof AdminInsightsRoute
+  AdminEventsRoute: typeof AdminEventsRoute
   AdminLoginRoute: typeof AdminLoginRoute
-  AdminPipelineRoute: typeof AdminPipelineRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminTargetsRoute: typeof AdminTargetsRoute
+  AdminTeamRoute: typeof AdminTeamRoute
   ForumsAfricanMoneyMovementRoute: typeof ForumsAfricanMoneyMovementRoute
   ForumsFinancialRailsAfricaRoute: typeof ForumsFinancialRailsAfricaRoute
   ForumsFinancialRailsAsiaRoute: typeof ForumsFinancialRailsAsiaRoute
@@ -538,25 +525,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDirectoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/forecast': {
-      id: '/admin/forecast'
-      path: '/admin/forecast'
-      fullPath: '/admin/forecast'
-      preLoaderRoute: typeof AdminForecastRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/governance': {
-      id: '/admin/governance'
-      path: '/admin/governance'
-      fullPath: '/admin/governance'
-      preLoaderRoute: typeof AdminGovernanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/insights': {
-      id: '/admin/insights'
-      path: '/admin/insights'
-      fullPath: '/admin/insights'
-      preLoaderRoute: typeof AdminInsightsRouteImport
+    '/admin/events': {
+      id: '/admin/events'
+      path: '/admin/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AdminEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
@@ -566,11 +539,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/pipeline': {
-      id: '/admin/pipeline'
-      path: '/admin/pipeline'
-      fullPath: '/admin/pipeline'
-      preLoaderRoute: typeof AdminPipelineRouteImport
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/targets': {
@@ -578,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/targets'
       fullPath: '/admin/targets'
       preLoaderRoute: typeof AdminTargetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/team': {
+      id: '/admin/team'
+      path: '/admin/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AdminTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forums/': {
@@ -674,12 +654,11 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceRoute: IntelligenceRoute,
   PartnersRoute: PartnersRoute,
   AdminDirectoryRoute: AdminDirectoryRoute,
-  AdminForecastRoute: AdminForecastRoute,
-  AdminGovernanceRoute: AdminGovernanceRoute,
-  AdminInsightsRoute: AdminInsightsRoute,
+  AdminEventsRoute: AdminEventsRoute,
   AdminLoginRoute: AdminLoginRoute,
-  AdminPipelineRoute: AdminPipelineRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminTargetsRoute: AdminTargetsRoute,
+  AdminTeamRoute: AdminTeamRoute,
   ForumsAfricanMoneyMovementRoute: ForumsAfricanMoneyMovementRoute,
   ForumsFinancialRailsAfricaRoute: ForumsFinancialRailsAfricaRoute,
   ForumsFinancialRailsAsiaRoute: ForumsFinancialRailsAsiaRoute,

@@ -126,14 +126,35 @@ export const listWorkstreams = createServerFn({ method: "POST" })
       openOnly: z.boolean().optional(),
       search: z.string().max(200).nullable().optional(),
       priority: z.enum(["normal", "high"]).nullable().optional(),
-      limit: z.number().int().min(1).max(500).optional(),
+      page: z.number().int().min(0).max(10_000).optional(),
+      pageSize: z.number().int().min(1).max(200).optional(),
     }),
   )
   .handler(({ data }) =>
     sealed(async () => {
       const s = await q();
-      const { limit, ...filters } = data;
-      return listOpportunities(s.q, filters, limit ?? 200);
+      const { page = 0, pageSize = 50, ...filters } = data;
+
+      /* Ask for one more than the page needs. That single extra row answers
+         "is there another page?" without a second COUNT query over the whole
+         scoped set — the count would double the cost of every list view to
+         render a number nobody reads. */
+      const rows = await listOpportunities(s.q, filters, pageSize + 1, page * pageSize);
+      const hasMore = rows.length > pageSize;
+
+      return {
+        rows: hasMore ? rows.slice(0, pageSize) : rows,
+        page,
+        pageSize,
+        hasMore,
+        /* Carried so the screen needs one call, not two. */
+        user: {
+          userId: s.ctx.userId,
+          fullName: s.ctx.fullName,
+          role: s.ctx.role,
+          functions: [...s.ctx.functions],
+        },
+      };
     }),
   );
 
@@ -218,7 +239,19 @@ export const board = createServerFn({ method: "POST" })
   .handler(({ data }) =>
     sealed(async () => {
       const s = await q();
-      return pipelineBoard(s.q, data.function, data.filters ?? {});
+      const { columns, cards } = await pipelineBoard(s.q, data.function, data.filters ?? {});
+      /* Carried so the Leads screen needs one call in pipeline mode, not two —
+         the same reason listWorkstreams carries it in list mode. */
+      return {
+        columns,
+        cards,
+        user: {
+          userId: s.ctx.userId,
+          fullName: s.ctx.fullName,
+          role: s.ctx.role,
+          functions: [...s.ctx.functions],
+        },
+      };
     }),
   );
 

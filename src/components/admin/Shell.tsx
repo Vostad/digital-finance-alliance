@@ -1,42 +1,57 @@
 /**
- * THE ADMIN SHELL — §20.
+ * THE ADMIN SHELL.
  *
- * One header, one nav, one content column. No sidebar: the OS has six
- * destinations, and a persistent sidebar spends 15% of a laptop screen to say
- * so. On mobile the nav becomes a horizontal scroller rather than a hamburger —
- * six items fit, and hiding them behind a tap costs more than it saves.
+ * One header, one nav, one content column. Four destinations for a manager, two
+ * for a team member — few enough that a persistent sidebar would spend 15% of a
+ * laptop screen saying very little. On mobile the nav stays a horizontal row
+ * rather than a hamburger: four items fit, and hiding them behind a tap costs
+ * more than it saves.
+ *
+ * Settings is deliberately NOT here. It is configuration, touched rarely, and
+ * putting it in the daily path would make four destinations feel like five. It
+ * lives in the account menu, which is where people already look for it.
  */
 
 import { Link, useRouter } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { logout } from "@/rpc/auth";
 import { TEXT } from "./primitives";
 
-export type NavItem = { to: string; label: string; superAdminOnly?: boolean };
+export type NavItem = { to: string; label: string; roles: string[] };
+
+const MANAGER = ["super_admin", "admin"];
+const MEMBER = ["team_member"];
 
 /**
  * The destinations, and who may reach them.
  *
- * A link that bounces you back is worse than no link: it costs a click, a page
- * load, and a moment wondering what you did wrong. Governance is the only
- * Super-Admin-only destination, and it redirects on the server too — this
- * hides the door as well as locking it.
+ * A Super Admin and an Admin see an IDENTICAL structure. They differ only in
+ * what the server returns inside it — an Admin's Leads, Events and Team are all
+ * confined to their event scope by `scopedQuery`, not by a hidden link. Hiding a
+ * link has never secured anything, and every screen below is guarded again on
+ * the server.
+ *
+ * A team member gets the same two screens under names that describe their work
+ * rather than the organisation's: they are not browsing a lead database, they
+ * are working their own list.
  */
 export const NAV: NavItem[] = [
-  { to: "/admin", label: "Today" },
-  { to: "/admin/pipeline", label: "Pipeline" },
-  { to: "/admin/leads", label: "Leads" },
-  { to: "/admin/targets", label: "Targets" },
-  { to: "/admin/forecast", label: "Forecast" },
-  { to: "/admin/insights", label: "Insights" },
-  { to: "/admin/directory", label: "Directory" },
-  { to: "/admin/governance", label: "Governance", superAdminOnly: true },
+  { to: "/admin", label: "Dashboard", roles: MANAGER },
+  { to: "/admin/leads", label: "Leads", roles: MANAGER },
+  { to: "/admin/events", label: "Events", roles: MANAGER },
+  { to: "/admin/team", label: "Team", roles: MANAGER },
+  { to: "/admin/leads", label: "My Leads", roles: MEMBER },
+  { to: "/admin/targets", label: "My Targets", roles: MEMBER },
 ];
 
+/** An unrecognised role gets the least-privileged set, never the full one:
+    defaulting open is how a permission bug ships. */
 export function navFor(role: string): NavItem[] {
-  return NAV.filter((item) => !item.superAdminOnly || role === "super_admin");
+  const known = MANAGER.includes(role) || MEMBER.includes(role);
+  const effective = known ? role : "team_member";
+  return NAV.filter((item) => item.roles.includes(effective));
 }
 
 export function Shell({
@@ -85,16 +100,7 @@ export function Shell({
             })}
           </nav>
 
-          <button
-            type="button"
-            onClick={async () => {
-              await logout();
-              await router.navigate({ to: "/admin/login" });
-            }}
-            className={cn(TEXT.label, "shrink-0 text-ink/50 transition-colors hover:text-ink")}
-          >
-            Sign out
-          </button>
+          <AccountMenu />
         </div>
       </header>
 
@@ -108,6 +114,78 @@ export function Shell({
         </div>
         {children}
       </main>
+    </div>
+  );
+}
+
+/**
+ * THE ACCOUNT MENU — the entry point to Settings, and the way out.
+ *
+ * Rare configuration does not belong in a four-item navigation. It belongs
+ * where people already look for it: behind their own name. Closing on outside
+ * click and on Escape is not decoration — a menu that traps you is worse than
+ * no menu.
+ */
+function AccountMenu() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={box} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={cn(TEXT.label, "text-ink/50 transition-colors hover:text-ink")}
+      >
+        Account
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          className="absolute right-0 z-40 mt-2 w-44 border border-hairline bg-bone py-1 shadow-sm"
+        >
+          <Link
+            to="/admin/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 font-mono text-[13px] uppercase tracking-[0.1em] text-ink/70 transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            Settings
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={async () => {
+              setOpen(false);
+              await logout();
+              await router.navigate({ to: "/admin/login" });
+            }}
+            className="block w-full px-3 py-2 text-left font-mono text-[13px] uppercase tracking-[0.1em] text-ink/70 transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -46,6 +46,7 @@ export type Headline = {
 export async function headline(
   q: ScopedQuery,
   filters: OpportunityFilters = {},
+  sponsorMoney = true,
 ): Promise<Headline> {
   const where = q.where.opportunities(opportunityFilterSql(filters));
 
@@ -62,20 +63,27 @@ export async function headline(
         select 1 from pipeline_stages ps
         where ps.function = ${opportunities.function} and ps.key = ${opportunities.stageKey} and ps.is_open
       ))::int`,
-      totalPipeline: sql<string | null>`sum(${opportunities.estimatedValue}) filter (where exists (
-        select 1 from pipeline_stages ps
-        where ps.function = ${opportunities.function} and ps.key = ${opportunities.stageKey} and ps.is_open
-      ))`,
+      /* MONEY IS SPONSOR MONEY — always, whatever else is being counted.
+         Delegate and speaker workstreams carry no revenue in V1, so summing
+         across every function produced a figure that looked like pipeline and
+         was not. The filter is here, in the SQL, rather than in a caller that
+         might forget it. */
+      totalPipeline: sql<string | null>`sum(${opportunities.estimatedValue}) filter (
+        where ${opportunities.function} = 'sponsor' and exists (
+          select 1 from pipeline_stages ps
+          where ps.function = ${opportunities.function} and ps.key = ${opportunities.stageKey} and ps.is_open
+        ))`,
       weightedPipeline: sql<
         string | null
       >`sum(coalesce(${opportunities.estimatedValue},0) * ${opportunities.probability} / 100.0)
-        filter (where exists (
+        filter (where ${opportunities.function} = 'sponsor' and exists (
           select 1 from pipeline_stages ps
           where ps.function = ${opportunities.function} and ps.key = ${opportunities.stageKey} and ps.is_open
         ))`,
       /* Cancelled money is excluded. It was won and then it collapsed. */
       closedRevenue: sql<string | null>`sum(${opportunities.finalValue}) filter (
-        where ${opportunities.wonAt} is not null and ${opportunities.cancelledAt} is null
+        where ${opportunities.function} = 'sponsor'
+          and ${opportunities.wonAt} is not null and ${opportunities.cancelledAt} is null
       )`,
       achieved: sql<number>`count(*) filter (
         where ${opportunities.wonAt} is not null
@@ -94,7 +102,10 @@ export async function headline(
     .where(where);
 
   const r = rows[0]!;
-  const money = filters.function === "sponsor" || filters.function == null;
+  /* Null means "this viewer has no sponsor work", which the dashboard renders
+     as an absent card. It never means zero: a delegate-only coordinator shown
+     "$0 pipeline" would reasonably conclude the system was broken. */
+  const money = sponsorMoney;
 
   return {
     totalWorkstreams: r.total,
@@ -255,30 +266,34 @@ export async function teamStanding(
 /* --------------------------------------------------------- the assembled view */
 
 export type DashboardView = {
-  role: string;
+  /** Carried with the payload so a screen needs ONE server call, not two.
+      Resolving identity and loading the screen were separate round trips; on a
+      client-side navigation that was a visible wait for nothing. */
+  user: {
+    userId: string;
+    email: string;
+    fullName: string;
+    role: string;
+    functions: WorkFunction[];
+  };
   functions: WorkFunction[];
+  /** False for a delegate-only or speaker-only person. The money cards are then
+      absent rather than zero — see §15.1. */
+  showSponsorMoney: boolean;
   headline: Headline;
-  suggestions: Suggestion[];
   followUps: Awaited<ReturnType<typeof followUps>>;
-  rates: Awaited<ReturnType<typeof conversionRates>>;
-  team: TeamRow[] | null;
-  unassignedInbox: {
-    id: string;
-    personName: string;
-    companyName: string | null;
-    function: string;
-    editionName: string;
-    createdAt: Date;
-  }[];
-  editions: { id: string; name: string; eventName: string }[];
 };
 
 /**
- * One round of queries for one screen.
+ * ONE SCREEN, ONE QUESTION: what needs my attention right now?
  *
- * The role does not change WHAT is asked — every figure is already confined by
- * `scopedQuery`. It changes which extra sections are worth fetching: a Team
- * Member has no team to stand against and no inbox to triage.
+ * This used to fan out to seven branches — team standing, conversion rates, an
+ * inbox of fifty unassigned rows, and every edition joined to every event —
+ * before the page could paint. None of it answered the question the screen
+ * exists to answer, and all of it was on the critical path.
+ *
+ * What is left is two queries: the counted headline, and the follow-up queue.
+ * Everything else is a click away on a screen built to hold it.
  */
 export async function dashboard(
   q: ScopedQuery,
@@ -288,64 +303,43 @@ export async function dashboard(
     editionId?: string | null | undefined;
   } = {},
 ): Promise<DashboardView> {
-  const isManager = ctx.role !== "team_member";
-  /* A manager with no function chosen defaults to sponsor: it is the only
-     function carrying money, so it is the one they open the screen to see.
-     Leaving it null showed them no rates at all, which read as a broken panel
-     rather than as a deliberate absence. */
-  const fn = opts.function ?? (ctx.role === "team_member" ? (ctx.functions[0] ?? null) : "sponsor");
+  const isMember = ctx.role === "team_member";
+
+  /* A manager works every function; a team member works the ones granted to
+     them. This is presentation only — `scopedQuery` has already confined the
+     rows on the server, and nothing here widens that. */
+  const authorized: WorkFunction[] = isMember
+    ? [...ctx.functions]
+    : ["sponsor", "delegate", "speaker"];
+
+  const showSponsorMoney = authorized.includes("sponsor");
+
+  /* No function chosen means "all of my work", not "sponsor". The money figures
+     stay sponsor-scoped regardless, inside the SQL. */
+  const fn = opts.function ?? null;
+
   const filters: OpportunityFilters = {
     function: fn,
     editionId: opts.editionId ?? null,
-    ownerId: ctx.role === "team_member" ? ctx.userId : null,
+    ownerId: isMember ? ctx.userId : null,
   };
 
-  const [head, sugg, queue, rateRow, team, inbox, editionRows] = await Promise.all([
-    headline(q, filters),
-    suggestions(q, ctx, { editionId: opts.editionId ?? null }),
+  const [head, queue] = await Promise.all([
+    headline(q, filters, showSponsorMoney),
     followUps(q, { ownerId: filters.ownerId, editionId: opts.editionId ?? null }),
-    fn ? conversionRates(q, fn, { editionId: opts.editionId ?? null }) : Promise.resolve(null),
-    isManager
-      ? teamStanding(q, { function: fn, editionId: opts.editionId ?? null })
-      : Promise.resolve(null),
-    isManager
-      ? q.directory
-          .select({
-            id: opportunities.id,
-            personName: people.fullName,
-            companyName: companies.name,
-            function: opportunities.function,
-            editionName: editions.name,
-            createdAt: opportunities.createdAt,
-          })
-          .from(opportunities)
-          .innerJoin(people, eq(people.id, opportunities.personId))
-          .innerJoin(editions, eq(editions.id, opportunities.editionId))
-          .leftJoin(companies, eq(companies.id, opportunities.companyId))
-          .where(
-            q.where.opportunities(
-              and(isNull(opportunities.ownerId), isNull(opportunities.archivedAt)),
-            ),
-          )
-          .orderBy(desc(opportunities.createdAt))
-          .limit(50)
-      : Promise.resolve([]),
-    q.directory
-      .select({ id: editions.id, name: editions.name, eventName: events.name })
-      .from(editions)
-      .innerJoin(events, eq(events.id, editions.eventId))
-      .orderBy(desc(editions.startsOn)),
   ]);
 
   return {
-    role: ctx.role,
-    functions: ctx.role === "team_member" ? [...ctx.functions] : ["sponsor", "delegate", "speaker"],
+    user: {
+      userId: ctx.userId,
+      email: ctx.email,
+      fullName: ctx.fullName,
+      role: ctx.role,
+      functions: [...ctx.functions],
+    },
+    functions: authorized,
+    showSponsorMoney,
     headline: head,
-    suggestions: sugg,
     followUps: queue,
-    rates: rateRow,
-    team,
-    unassignedInbox: inbox,
-    editions: editionRows,
   };
 }

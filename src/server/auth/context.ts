@@ -19,7 +19,13 @@
  */
 
 import { eq } from "drizzle-orm";
-import { deleteCookie, getCookie, getRequestHeader, setCookie } from "@tanstack/react-start/server";
+import {
+  deleteCookie,
+  getCookie,
+  getRequest,
+  getRequestHeader,
+  setCookie,
+} from "@tanstack/react-start/server";
 
 import { db } from "../db/client";
 import { userEventScopes, userFunctions, users } from "../db/schema";
@@ -189,7 +195,7 @@ export async function loadContext(authUserId: string): Promise<AuthContext> {
  * that may no longer act — the difference matters, because the first is "show
  * the login page" and the second is "say why".
  */
-export async function getAuthContext(): Promise<AuthContext | null> {
+async function resolveAuthContext(): Promise<AuthContext | null> {
   const token = bearerToken();
 
   /** Verify what we have; if it has expired, refresh once and verify again.
@@ -202,6 +208,55 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   if (!authUserId) return null;
 
   return loadContext(authUserId);
+}
+
+/**
+ * REQUEST-SCOPED MEMOISATION — and the reasoning that makes it safe.
+ *
+ * Every server function calls requireAuth(), and resolving a context costs one
+ * token verification plus three queries. During SSR, `beforeLoad` and `loader`
+ * run inside a SINGLE server request, so a page that calls two server functions
+ * paid for all of that twice. Measured: the dashboard did 6 auth queries where 3
+ * would do.
+ *
+ * The key is the Request OBJECT ITSELF, not a user id, a token, or a string.
+ * That single choice is what makes this safe rather than dangerous:
+ *
+ *   - it cannot cross requests   — a different request is a different object,
+ *                                  so there is no key that could collide;
+ *   - it cannot cross users      — two users are never in one request;
+ *   - it cannot go stale         — the entry dies with the request, and a
+ *                                  request is milliseconds long. There is no
+ *                                  TTL to tune and nothing to invalidate;
+ *   - it cannot leak memory      — a WeakMap entry is collected with its key.
+ *
+ * Deactivation, role changes and scope changes therefore take effect on the very
+ * next request, exactly as before. This does not cache authorization; it
+ * deduplicates identical work inside one request. §28 forbids the other thing.
+ *
+ * The promise is stored rather than the resolved value so that two concurrent
+ * callers in the same request share one in-flight resolution instead of racing.
+ *
+ * Outside a request — integration tests, scripts — `getRequest()` throws and we
+ * simply do not cache. Correctness never depends on the cache existing.
+ */
+const contextByRequest = new WeakMap<Request, Promise<AuthContext | null>>();
+
+export async function getAuthContext(): Promise<AuthContext | null> {
+  let request: Request | null = null;
+  try {
+    request = getRequest();
+  } catch {
+    /* No request scope. Resolve normally, cache nothing. */
+  }
+  if (!request) return resolveAuthContext();
+
+  const inFlight = contextByRequest.get(request);
+  if (inFlight) return inFlight;
+
+  const pending = resolveAuthContext();
+  contextByRequest.set(request, pending);
+  return pending;
 }
 
 /** The form every server function uses. There is no unauthenticated data path

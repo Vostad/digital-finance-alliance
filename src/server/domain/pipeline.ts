@@ -35,39 +35,66 @@ export type Stage = {
 
 const TTL_MS = 60_000;
 let cache: { at: number; stages: Record<WorkFunction, Stage[]> } | null = null;
+/**
+ * SINGLE-FLIGHT. The lead form asks for all three ladders through one
+ * `Promise.all`, so on a cold process three callers arrive together, all find
+ * the cache empty, and — if we cached only the RESULT — all three run the query.
+ * That is not merely wasteful: it fans three statements out over the pooler at
+ * once for reference data that never changes within a request.
+ *
+ * Caching the in-flight PROMISE collapses them into one query whose single
+ * result every caller shares. The old dashboard hid this for months by calling
+ * `conversionRates`, which warmed the cache before anyone reached the form;
+ * making the dashboard lean removed that accident, so the fix belongs here where
+ * the guarantee is, not in a caller that happens to run first.
+ */
+let inFlight: Promise<Record<WorkFunction, Stage[]>> | null = null;
 
 export async function loadStages(q: ScopedQuery): Promise<Record<WorkFunction, Stage[]>> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.stages;
+  if (inFlight) return inFlight;
 
-  const rows = await q.directory
-    .select({
-      function: pipelineStages.function,
-      key: pipelineStages.key,
-      label: pipelineStages.label,
-      sortOrder: pipelineStages.sortOrder,
-      defaultProbability: pipelineStages.defaultProbability,
-      isOpen: pipelineStages.isOpen,
-      isWon: pipelineStages.isWon,
-      isLost: pipelineStages.isLost,
-      isCancelled: pipelineStages.isCancelled,
-      isAttendance: pipelineStages.isAttendance,
-      isAttrition: pipelineStages.isAttrition,
-    })
-    .from(pipelineStages)
-    .orderBy(asc(pipelineStages.sortOrder));
+  const pending = (async () => {
+    const rows = await q.directory
+      .select({
+        function: pipelineStages.function,
+        key: pipelineStages.key,
+        label: pipelineStages.label,
+        sortOrder: pipelineStages.sortOrder,
+        defaultProbability: pipelineStages.defaultProbability,
+        isOpen: pipelineStages.isOpen,
+        isWon: pipelineStages.isWon,
+        isLost: pipelineStages.isLost,
+        isCancelled: pipelineStages.isCancelled,
+        isAttendance: pipelineStages.isAttendance,
+        isAttrition: pipelineStages.isAttrition,
+      })
+      .from(pipelineStages)
+      .orderBy(asc(pipelineStages.sortOrder));
 
-  const stages: Record<WorkFunction, Stage[]> = { sponsor: [], delegate: [], speaker: [] };
-  for (const row of rows) {
-    const { function: fn, ...stage } = row;
-    stages[fn as WorkFunction].push(stage);
-  }
-  cache = { at: Date.now(), stages };
-  return stages;
+    const stages: Record<WorkFunction, Stage[]> = { sponsor: [], delegate: [], speaker: [] };
+    for (const row of rows) {
+      const { function: fn, ...stage } = row;
+      stages[fn as WorkFunction].push(stage);
+    }
+    cache = { at: Date.now(), stages };
+    return stages;
+  })();
+
+  inFlight = pending;
+  /* Clear the in-flight slot once settled — on failure too, so a transient
+     error does not wedge every future caller onto a rejected promise. Only if
+     it is still ours: a clearPipelineCache() mid-flight must not be undone. */
+  void pending.finally(() => {
+    if (inFlight === pending) inFlight = null;
+  });
+  return pending;
 }
 
 /** Tests and migrations change reference data underneath a live process. */
 export function clearPipelineCache() {
   cache = null;
+  inFlight = null;
 }
 
 export async function stagesFor(q: ScopedQuery, fn: WorkFunction): Promise<Stage[]> {

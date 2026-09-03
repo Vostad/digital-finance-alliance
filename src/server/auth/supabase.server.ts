@@ -59,3 +59,41 @@ export async function restoreUserSessions(authUserId: string) {
   });
   if (error) throw error;
 }
+
+/**
+ * Create the Supabase Auth account that a `public.users` row must point at.
+ *
+ * `public.users.id` is a foreign key onto `auth.users(id)` with ON DELETE
+ * RESTRICT, so the order is forced: the auth account first, then our row. There
+ * is no way to provision a user the other way round, and nothing here invents a
+ * second place where accounts come from.
+ *
+ * `email_confirm: true` because a Super Admin creating a colleague's account IS
+ * the verification — there is no self-service signup in this system to confirm.
+ */
+export async function createAuthUser(email: string, password: string): Promise<string> {
+  const { data, error } = await adminClient().auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error) throw error;
+  const id = data.user?.id;
+  if (!id) throw new Error("Supabase returned no user id");
+  return id;
+}
+
+/**
+ * Remove an auth account.
+ *
+ * Used for exactly one purpose: undoing a half-finished creation. If the auth
+ * account exists but our row could not be written, the account can sign in and
+ * resolve to nothing — `loadContext` fails it closed as `not_provisioned`, so
+ * it is safe, but it is litter that would accumulate and confuse the next
+ * person reading the user list. Deleting it is how creation stays all-or-nothing
+ * across two systems that have no shared transaction.
+ */
+export async function deleteAuthUser(authUserId: string): Promise<void> {
+  const { error } = await adminClient().auth.admin.deleteUser(authUserId);
+  if (error) throw error;
+}

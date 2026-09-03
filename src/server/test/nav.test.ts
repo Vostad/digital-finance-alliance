@@ -1,41 +1,66 @@
 /**
  * WHICH DESTINATIONS EACH ROLE SEES.
  *
- * A link that bounces you back costs a click, a page load, and a moment
- * wondering what you did wrong. This is a UI convenience only — every one of
- * these screens is also guarded on the server, and hiding a link has never
- * secured anything.
+ * This is a UI convenience only — every screen below is also guarded on the
+ * server, and hiding a link has never secured anything. What the test protects
+ * is the SHAPE of the product: the navigation was cut from eight destinations
+ * to four, and the whole simplification rests on it not creeping back.
+ *
+ * A Super Admin and an Admin see an identical structure on purpose. They differ
+ * in what the server returns inside it, not in which doors exist.
  */
 
 import { describe, expect, it } from "vitest";
 
-import { NAV, navFor } from "@/components/admin/Shell";
+import { navFor } from "@/components/admin/Shell";
+
+const labels = (role: string) => navFor(role).map((n) => n.label);
 
 describe("navFor", () => {
-  it("shows a Super Admin every destination", () => {
-    expect(navFor("super_admin")).toHaveLength(NAV.length);
-    expect(navFor("super_admin").map((n) => n.label)).toContain("Governance");
+  it("gives a Super Admin exactly four destinations", () => {
+    expect(labels("super_admin")).toEqual(["Dashboard", "Leads", "Events", "Team"]);
   });
 
-  it.each(["admin", "team_member"])("hides Governance from a %s", (role) => {
-    expect(navFor(role).map((n) => n.label)).not.toContain("Governance");
+  it("gives an Admin the SAME four — scope is the server's job, not the nav's", () => {
+    expect(labels("admin")).toEqual(["Dashboard", "Leads", "Events", "Team"]);
   });
 
-  it("still shows everyone the working screens", () => {
-    const member = navFor("team_member").map((n) => n.label);
-    expect(member).toEqual([
-      "Today",
-      "Pipeline",
-      "Leads",
-      "Targets",
-      "Forecast",
-      "Insights",
-      "Directory",
-    ]);
+  it("gives a Team Member exactly their own two", () => {
+    expect(labels("team_member")).toEqual(["My Leads", "My Targets"]);
   });
 
-  it("an unknown role gets the safe subset, never the full one", () => {
+  it.each(["Events", "Team", "Dashboard"])("never shows a Team Member %s", (label) => {
+    expect(labels("team_member")).not.toContain(label);
+  });
+
+  it.each([
+    "Pipeline",
+    "Targets",
+    "Forecast",
+    "Insights",
+    "Directory",
+    "Governance",
+    "Reports",
+    "Commissions",
+    "Settings",
+    "People",
+    "Companies",
+  ])("keeps %s out of primary navigation for every role", (label) => {
+    for (const role of ["super_admin", "admin", "team_member"]) {
+      expect(labels(role)).not.toContain(label);
+    }
+  });
+
+  it("an unknown role gets the least-privileged set, never the full one", () => {
     /* Defaulting open is how a permission bug ships. */
-    expect(navFor("nonsense").map((n) => n.label)).not.toContain("Governance");
+    expect(labels("nonsense")).toEqual(["My Leads", "My Targets"]);
+  });
+
+  it("Settings is reachable, but not from the primary navigation", () => {
+    /* It lives in the account menu. This test exists so that "not in the nav"
+       is never mistaken for "not reachable". */
+    for (const role of ["super_admin", "admin", "team_member"]) {
+      expect(labels(role)).not.toContain("Settings");
+    }
   });
 });

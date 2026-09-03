@@ -434,6 +434,7 @@ export async function listOpportunities(
   q: ScopedQuery,
   filters: OpportunityFilters = {},
   limit = 200,
+  offset = 0,
 ) {
   const rows = await q.directory
     .select({
@@ -455,6 +456,16 @@ export async function listOpportunities(
       personId: people.id,
       personName: people.fullName,
       jobTitle: people.jobTitle,
+      phone: people.phone,
+      /* A correlated subquery rather than a join: a person may hold several
+         addresses, and joining would multiply the workstream row by however
+         many they have. Primary first, oldest as the tiebreak. */
+      email: sql<string | null>`(
+        select pe.email from person_emails pe
+        where pe.person_id = ${people.id}
+        order by pe.is_primary desc, pe.created_at asc
+        limit 1
+      )`,
       companyId: companies.id,
       companyName: companies.name,
       country: people.country,
@@ -471,7 +482,8 @@ export async function listOpportunities(
     .leftJoin(users, eq(users.id, opportunities.ownerId))
     .where(q.where.opportunities(opportunityFilterSql(filters)))
     .orderBy(desc(opportunities.createdAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 
   return rows;
 }
