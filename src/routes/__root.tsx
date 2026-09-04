@@ -186,7 +186,6 @@ function RootComponent() {
   // site. It shares the router and the design tokens; it must never inherit the
   // marketing navigation or footer.
   const isAdmin = /^\/admin(\/|$)/.test(pathname);
-
   const bare = isEventMicrosite || isAdmin;
 
   return (

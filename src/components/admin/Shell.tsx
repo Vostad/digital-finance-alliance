@@ -7,7 +7,6 @@
  * rather than a hamburger: four items fit, and hiding them behind a tap costs
  * more than it saves.
  *
- *
  * Settings is deliberately NOT here. It is configuration, touched rarely, and
  * putting it in the daily path would make four destinations feel like five. It
  * lives in the account menu, which is where people already look for it.
