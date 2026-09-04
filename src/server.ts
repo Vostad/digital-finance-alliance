@@ -29,7 +29,7 @@ import {
  *
  * Returns null when the request is already where it belongs.
  */
-function redirectAcrossOrigins(request: Request): Response | null {
+export function redirectAcrossOrigins(request: Request): Response | null {
   const url = new URL(request.url);
   const host = url.hostname;
   const move = (to: string) =>

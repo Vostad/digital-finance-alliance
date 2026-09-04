@@ -159,3 +159,88 @@ describe("no Radar page hardcodes the old URL any more", () => {
     }
   });
 });
+
+/**
+ * THE REDIRECTS THEMSELVES, exercised against the real server entry.
+ *
+ * The dev server does not use `src/server.ts` — Vite serves the app directly —
+ * so none of this ran during local Host-header testing. Everything below was
+ * therefore unverified until this suite existed, which is precisely the gap
+ * worth closing: these rules only execute in production.
+ */
+describe("cross-origin redirects", () => {
+  const req = (url: string) => new Request(url, { redirect: "manual" });
+
+  it("financialrails.org/radar/* moves to railsradar.com, prefix dropped", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    for (const [from, to] of [
+      ["https://financialrails.org/radar", "https://railsradar.com/"],
+      ["https://financialrails.org/radar/corridors", "https://railsradar.com/corridors"],
+      [
+        "https://financialrails.org/radar/corridors/uae-to-india",
+        "https://railsradar.com/corridors/uae-to-india",
+      ],
+      ["https://financialrails.org/radar/privacy", "https://railsradar.com/privacy"],
+    ] as const) {
+      const res = redirectAcrossOrigins(req(from));
+      expect(res, `${from} should redirect`).not.toBeNull();
+      expect(res!.status).toBe(301);
+      expect(res!.headers.get("location")).toBe(to);
+    }
+  });
+
+  it("keeps the query string across the move", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    const res = redirectAcrossOrigins(
+      req("https://financialrails.org/radar/corridors/uae-to-india?amount=50000"),
+    );
+    expect(res!.headers.get("location")).toBe(
+      "https://railsradar.com/corridors/uae-to-india?amount=50000",
+    );
+  });
+
+  it("sends platform paths on the Radar origin home, rather than 404ing them", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    for (const [from, to] of [
+      ["https://railsradar.com/forums", "https://financialrails.org/forums"],
+      ["https://railsradar.com/admin", "https://financialrails.org/admin"],
+      ["https://railsradar.com/admin/radar", "https://financialrails.org/admin/radar"],
+      ["https://railsradar.com/about", "https://financialrails.org/about"],
+      ["https://railsradar.com/contact", "https://financialrails.org/contact"],
+    ] as const) {
+      const res = redirectAcrossOrigins(req(from));
+      expect(res, `${from} should redirect`).not.toBeNull();
+      expect(res!.status).toBe(301);
+      expect(res!.headers.get("location")).toBe(to);
+    }
+  });
+
+  it("leaves Radar's own paths alone on the Radar origin", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    for (const p of ["/", "/corridors", "/corridors/uae-to-india", "/rails", "/privacy"]) {
+      expect(redirectAcrossOrigins(req(`https://railsradar.com${p}`))).toBeNull();
+    }
+  });
+
+  it("leaves the platform's own paths alone on the platform origin", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    for (const p of ["/", "/forums", "/admin/radar", "/intelligence"]) {
+      expect(redirectAcrossOrigins(req(`https://financialrails.org${p}`))).toBeNull();
+    }
+  });
+
+  /* A redirect that pointed back at the origin it came from would loop. */
+  it("never redirects a URL to itself", async () => {
+    const { redirectAcrossOrigins } = await import("@/server");
+    for (const u of [
+      "https://financialrails.org/radar/corridors",
+      "https://railsradar.com/forums",
+      "https://railsradar.com/admin/radar",
+    ]) {
+      const res = redirectAcrossOrigins(req(u));
+      expect(res!.headers.get("location")).not.toBe(u);
+      /* and the destination must not itself redirect */
+      expect(redirectAcrossOrigins(req(res!.headers.get("location")!))).toBeNull();
+    }
+  });
+});
