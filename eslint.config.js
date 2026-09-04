@@ -72,17 +72,17 @@ export default tseslint.config(
           ],
           patterns: [
             {
-              group: ["**/server/db/client", "@/server/db/client"],
+              regex: "(^|/)db/client$",
               message:
                 "Do not import the raw `db` handle. Use scopedQuery(ctx) from @/server/auth/scoped — it applies the visibility filter that authorization depends on.",
             },
             {
-              group: ["**/server/auth/supabase.server", "@/server/auth/supabase.server"],
+              regex: "(^|/)auth/supabase\\.server$",
               message:
                 "The service-role Supabase client bypasses RLS and can mint a session for any user. Use the helpers in @/server/auth instead of reaching for it directly.",
             },
             {
-              group: ["**/server/env.server", "@/server/env.server"],
+              regex: "(^|/)env\\.server$",
               message:
                 "Secrets are read in one place. If you need a value from the environment, expose it through a server function rather than importing serverEnv here.",
             },

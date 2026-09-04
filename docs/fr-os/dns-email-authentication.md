@@ -1,188 +1,143 @@
-# DNS — SPF · DKIM · DMARC
+# DNS — SPF · DKIM · DMARC, as actually configured
 
-Paste-ready records for a **dedicated sending subdomain**. Nothing here has been
-applied: I have not touched DNS and will not.
+**Status: all three are live and passing.** Verified against `1.1.1.1` on 4 September 2026, from
+the records themselves rather than a provider dashboard.
 
-## The subdomain
-
-```
-send.financialrails.org
-```
-
-Every record below hangs off it. The root `financialrails.org` is not modified.
-
-**Why a subdomain, in one line:** sending reputation is scored per domain, and a
-run of bounced invitations should not be able to affect whether your ordinary
-mail from `financialrails.org` reaches an inbox. Keeping them separate means a
-sending mistake stays contained.
+> **This document previously described a setup that was never applied.** It prescribed a
+> dedicated `send.financialrails.org` sending domain with `include:amazonses.com` and a strict
+> `_dmarc.send` record, and stated that DNS had not been touched. That is not what exists. The
+> domain was verified with Resend against the **root** domain, and `send.` exists as the return
+> path rather than the sending identity. What follows is the live configuration.
 
 ---
 
-## Records to paste
+## What is configured
 
-Host column is written both ways — most registrars want the relative name, a few
-(Cloudflare among them) want the full name. Use whichever your panel expects.
+Mail is sent through **Resend**, authenticated on the **root** domain
+`financialrails.org`. Zoho serves ordinary mailboxes on the same domain, and the two coexist.
 
-### 1 · SPF
+### SPF
 
-| Field | Value |
+| Host | Value |
 |---|---|
-| **HOST** | `send` &nbsp;(full: `send.financialrails.org`) |
-| **TYPE** | `TXT` |
-| **VALUE** | `v=spf1 include:PROVIDER_SPF_HOST -all` |
-| TTL | 3600 |
+| `financialrails.org` | `v=spf1 include:zoho.in include:spf.efwd.registrar-servers.com ~all` |
+| `send.financialrails.org` | `v=spf1 ip4:52.3.252.119 ip4:44.222.39.36 ip4:199.249.231.0/24 ~all` |
 
-Replace `PROVIDER_SPF_HOST` with the one your email provider gives you:
+**The root SPF does not list Resend, and does not need to.** SPF is evaluated against the
+envelope return-path, not the `From:` header. Resend sets the return path on
+`send.financialrails.org`, which carries its own SPF and its own bounce MX
+(`feedback.forge.rmta.net`). SPF therefore passes on the subdomain.
 
-| Provider | `include:` value |
-|---|---|
-| Resend | `amazonses.com` |
-| Postmark | `spf.mtasv.net` |
-| SendGrid | `sendgrid.net` |
-| Amazon SES | `amazonses.com` |
-| Mailgun | `mailgun.org` |
+### DKIM
 
-`-all` is a hard fail: mail from anywhere else claiming this subdomain is
-rejected outright. That is the correct setting for a subdomain with exactly one
-sender. Do not use `~all` here.
-
-**One SPF record per host, ever.** Two TXT records both starting `v=spf1` is a
-permerror and SPF stops working entirely. If you later add a second sender, add
-a second `include:` to this one record.
-
----
-
-### 2 · DKIM
-
-**I cannot give you this value.** DKIM publishes a public key that your provider
-generates and holds the private half of — inventing one would produce a record
-that silently fails every signature check. Your provider shows the exact record
-when you add `send.financialrails.org` as a sending domain.
-
-It will have this shape:
-
-| Field | Value |
-|---|---|
-| **HOST** | `SELECTOR._domainkey.send` &nbsp;(full: `SELECTOR._domainkey.send.financialrails.org`) |
-| **TYPE** | `TXT` (some providers issue `CNAME` instead — paste what they give you) |
-| **VALUE** | `v=DKIM1; k=rsa; p=<long base64 public key from your provider>` |
-| TTL | 3600 |
-
-Selectors by provider — so you can recognise the record when you see it:
-
-| Provider | Selector | Record type |
+| Host | Type | Value |
 |---|---|---|
-| Resend | `resend` | TXT |
-| Postmark | `<token>._domainkey` | CNAME |
-| SendGrid | `s1`, `s2` (two records) | CNAME |
-| Amazon SES | three `<token>._domainkey` | CNAME |
-| Mailgun | `mailo`, `krs` or similar | TXT |
+| `resend._domainkey.financialrails.org` | `TXT` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCblWc9…` |
 
-Paste the provider's record verbatim, including any trailing dot the panel adds.
-A DKIM key broken across lines by a copy-paste is the single most common cause
-of "it verified yesterday and not today".
+Resend signs with `d=financialrails.org`. A second selector, `zmail._domainkey`, carries Zoho's
+key for ordinary mailboxes — different selector, no conflict, do not remove it.
 
----
+### DMARC
 
-### 3 · DMARC
-
-| Field | Value |
+| Host | Value |
 |---|---|
-| **HOST** | `_dmarc.send` &nbsp;(full: `_dmarc.send.financialrails.org`) |
-| **TYPE** | `TXT` |
-| **VALUE** | `v=DMARC1; p=none; rua=mailto:dmarc@financialrails.org; ruf=mailto:dmarc@financialrails.org; fo=1; adkim=s; aspf=s; pct=100` |
-| TTL | 3600 |
+| `_dmarc.financialrails.org` | `v=DMARC1; p=none; rua=mailto:zanid.mir@financialrails.org; adkim=r; aspf=r` |
 
-`dmarc@financialrails.org` must be a mailbox that exists and that someone reads —
-it is where the aggregate reports arrive. Change it before pasting if you would
-rather they went elsewhere.
-
-What the parameters do:
-
-- `p=none` — **start here.** Monitor only: nothing is rejected while you confirm
-  SPF and DKIM are aligned and passing. Tighten once the reports are clean.
-- `adkim=s` / `aspf=s` — strict alignment. The `From:` domain must match the
-  signing and envelope domains exactly, not merely share an organisational
-  domain. Appropriate because this subdomain has one sender and no legacy mail.
-- `fo=1` — send a forensic report when either check fails, not only when both do.
-- `pct=100` — apply to all mail.
-
-**The escalation, once reports are clean for two weeks:**
-
-```
-v=DMARC1; p=quarantine; rua=mailto:dmarc@financialrails.org; ruf=mailto:dmarc@financialrails.org; fo=1; adkim=s; aspf=s; pct=100
-```
-
-then, after two more clean weeks:
-
-```
-v=DMARC1; p=reject; rua=mailto:dmarc@financialrails.org; ruf=mailto:dmarc@financialrails.org; fo=1; adkim=s; aspf=s; pct=100
-```
-
-Do not skip to `p=reject`. If alignment is wrong you will not find out from a
-report — you will find out because an invitation never arrived and nobody said so.
+There is **no** `_dmarc.send` record, and none is needed: DMARC is evaluated on the
+organisational domain of the `From:` header, and the root record covers the subdomain by
+inheritance.
 
 ---
 
-### 4 · The return-path record, if your provider asks for one
+## Why it passes
 
-Some providers need a subdomain of their own for bounce handling, so that SPF
-aligns on the envelope sender as well as the header.
+DMARC requires SPF **or** DKIM to pass *and align*. Both do here, and the relaxed alignment
+flags are what make that true:
 
-| Field | Value |
-|---|---|
-| **HOST** | `bounce.send` &nbsp;(or whatever the provider names) |
-| **TYPE** | `CNAME` |
-| **VALUE** | provider-supplied |
-| TTL | 3600 |
+- **SPF** passes on `send.financialrails.org` (the return path). `aspf=r` — relaxed — means
+  alignment holds because that subdomain shares an organisational domain with the `From:`
+  domain. Under `aspf=s` it would **fail**, because strict alignment requires an exact match.
+- **DKIM** passes signed as `d=financialrails.org`. `adkim=r` holds trivially; here strict would
+  also pass, since the signing domain is the root itself.
 
-Resend and SES call it a "custom return path"; SendGrid calls it "link branding
-and return path"; Postmark calls it a "Return-Path domain".
-
----
-
-## One thing to check on the root domain — do not change it
-
-You asked for nothing on the root, and there is nothing to add there. But note
-how the two interact: a DMARC record on the root applies to subdomains by
-inheritance **unless** the subdomain publishes its own — which `_dmarc.send`
-above does, so it wins for `send.financialrails.org` regardless.
-
-If the root has a DMARC record with an `sp=` parameter, that parameter is the
-subdomain policy and it is overridden by the record above. If the root has
-`p=reject` and no `sp=`, it would have applied to this subdomain — the record
-above prevents that, which is exactly why the subdomain needs its own even at
-`p=none`.
-
-Worth reading, not changing:
-
-```bash
-dig +short TXT _dmarc.financialrails.org
-```
+That is why the 3 September send succeeded, and it is the reason **the two `r` flags must not be
+changed to `s` without moving the return path onto the root** — tightening them would break a
+working configuration, silently, in a way only a DMARC report would reveal.
 
 ---
 
-## After pasting — verify before sending anything real
+## The one thing still to do — DMARC is at `p=none`
 
-```bash
-dig +short TXT send.financialrails.org
+`p=none` is **monitor only**. Nothing failing DMARC is quarantined or rejected today; the policy
+observes and reports. That is the correct place to start and the wrong place to stay: until the
+policy has teeth, the domain can still be spoofed.
+
+Aggregate reports go to `zanid.mir@financialrails.org`. Read them, and when they show no
+legitimate mail failing alignment for **two weeks**, move to:
+
+```
+v=DMARC1; p=quarantine; rua=mailto:zanid.mir@financialrails.org; adkim=r; aspf=r
 ```
 
-```bash
-dig +short TXT _dmarc.send.financialrails.org
+Then, after **two more clean weeks**:
+
+```
+v=DMARC1; p=reject; rua=mailto:zanid.mir@financialrails.org; adkim=r; aspf=r
 ```
 
+**Do not skip to `p=reject`.** If alignment is wrong you will not learn it from a report — you
+will learn it because a prospectus never arrived and nobody said so. Keep `adkim=r` / `aspf=r`
+at every step for the reason above.
+
+Worth adding at the same time, once reports are being read: `fo=1`, so a forensic report is
+generated when *either* check fails rather than only when both do.
+
+---
+
+## Verifying it, at any time
+
 ```bash
-dig +short TXT resend._domainkey.send.financialrails.org
+dig +short TXT financialrails.org @1.1.1.1
+```
+```bash
+dig +short TXT send.financialrails.org @1.1.1.1
+```
+```bash
+dig +short TXT resend._domainkey.financialrails.org @1.1.1.1
+```
+```bash
+dig +short TXT _dmarc.financialrails.org @1.1.1.1
 ```
 
-(substitute your provider's selector in the third)
+Query a resolver explicitly rather than the system one, and read the records rather than a
+dashboard — a provider panel showing "verified" is reporting its own last check, not the current
+state of the zone.
 
-Then send one message to a Gmail address, open it, `Show original`, and confirm
-three lines read **PASS**: SPF, DKIM, DMARC. Only then point the application's
-transactional mail at this subdomain.
+**End to end:** send one message to a Gmail address, open it, `Show original`, and confirm SPF,
+DKIM and DMARC all read **PASS**.
 
-Propagation is usually minutes and occasionally an hour. A record that does not
-resolve after two hours is almost always the host field: a panel that appends the
-zone to what you type turns `send.financialrails.org` into
-`send.financialrails.org.financialrails.org`.
+---
+
+## Rules for not breaking this
+
+- **One SPF record per host, ever.** Two TXT records both starting `v=spf1` is a permerror and
+  SPF stops working entirely. To add a sender, add an `include:` to the existing record.
+- **Do not remove `zmail._domainkey`.** It is Zoho's, for ordinary mailboxes, and is unrelated to
+  transactional mail.
+- **Do not switch `adkim` / `aspf` to `s`** while the return path is on `send.` — see above.
+- **Do not delete `send.financialrails.org`.** It looks unused. It is the return path, and
+  without it SPF fails and DMARC then rests on DKIM alone.
+- A DKIM key broken across lines by a copy-paste is the most common cause of "it verified
+  yesterday and not today".
+
+---
+
+## What the application does with this
+
+`EMAIL_PROVIDER_API_KEY` and `EMAIL_FROM_ADDRESS` are set in **Vercel Production only**.
+`src/server/domain/email.ts` sends only when both are present; absent, `sendViaResend` returns
+`"no provider configured"` and writes `last_error` rather than `sent_at`, so a message is never
+recorded as delivered when it was not.
+
+**Preview and local environments deliberately have neither**, and must not be given them: a
+preview build that physically cannot email a real sponsor is the correct default.
