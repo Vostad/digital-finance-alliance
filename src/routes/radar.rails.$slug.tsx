@@ -26,7 +26,7 @@ export const Route = createFileRoute("/radar/rails/$slug")({
     const r = loaderData?.rail;
     if (!r) return {};
     const title = `${r.name} — what it is and what it settles | Rails Radar`;
-    const url = `https://financialrails.org/radar/rails/${r.slug}`;
+    const url = `https://railsradar.com/rails/${r.slug}`;
     return {
       meta: [
         { title },

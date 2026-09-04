@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { RadarShell } from "@/components/radar/Shell";
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/radar/providers/$slug")({
     if (!p) return {};
     const title = `${p.name} — licences, markets, assets and limits | Rails Radar`;
     const description = `${p.name}: markets served, assets and networks supported, licences held with register links, and published limits. Verified per record with sources.`;
-    const url = `https://financialrails.org/radar/providers/${p.slug}`;
+    const url = `https://railsradar.com/providers/${p.slug}`;
     return {
       meta: [
         { title },
@@ -156,12 +156,13 @@ function ProviderPage() {
               {corridors.map((c, i) => (
                 <Row key={`${c.corridorSlug}-${i}`}>
                   <Cell>
-                    <a
-                      href={`/radar/corridors/${c.corridorSlug}`}
+                    <Link
+                      to="/radar/corridors/$slug"
+                      params={{ slug: c.corridorSlug }}
                       className="underline decoration-ink/20 underline-offset-4 hover:text-[var(--accord-orange-deep)]"
                     >
                       {c.origin} → {c.destination}
-                    </a>
+                    </Link>
                   </Cell>
                   <Cell>{c.railName}</Cell>
                   <Cell>

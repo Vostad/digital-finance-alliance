@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { RadarShell } from "@/components/radar/Shell";
@@ -20,9 +20,9 @@ export const Route = createFileRoute("/radar/corridors/")({
         content:
           "Every published corridor on Rails Radar: the rails available between two markets, who provides access, and the licences they hold.",
       },
-      { property: "og:url", content: "https://financialrails.org/radar/corridors" },
+      { property: "og:url", content: "https://railsradar.com/corridors" },
     ],
-    links: [{ rel: "canonical", href: "https://financialrails.org/radar/corridors" }],
+    links: [{ rel: "canonical", href: "https://railsradar.com/corridors" }],
   }),
   loader: () => corridorIndex().catch(() => ({ corridors: [], counts: null })),
   component: CorridorIndex,
@@ -65,12 +65,13 @@ function CorridorIndex() {
             {corridors.map((c) => (
               <Row key={c.slug}>
                 <Cell>
-                  <a
-                    href={`/radar/corridors/${c.slug}`}
+                  <Link
+                    to="/radar/corridors/$slug"
+                    params={{ slug: c.slug }}
                     className="underline decoration-ink/20 underline-offset-4 transition-colors hover:text-[var(--accord-orange-deep)]"
                   >
                     {c.origin.country}
-                  </a>
+                  </Link>
                 </Cell>
                 <Cell>{c.destination.country}</Cell>
                 <Cell className="font-mono text-[13px]">

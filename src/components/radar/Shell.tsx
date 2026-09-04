@@ -22,6 +22,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { PLATFORM_ORIGIN } from "@/lib/radar-host";
 import { Breadcrumbs, T } from "./primitives";
 
 export type RadarCounts = {
@@ -62,15 +63,18 @@ export function RadarShell({
             >
               Corridors
             </Link>
-            <Link
-              to="/contact"
+            {/* Contact is a PLATFORM page, not a Radar route. Absolute, because on
+                railsradar.com a relative /contact is scoped out and would take a
+                redirect to reach where it was always going. */}
+            <a
+              href={`${PLATFORM_ORIGIN}/contact`}
               className={cn(
                 T.label,
                 "text-ink/55 transition-colors hover:text-[var(--accord-orange-deep)]",
               )}
             >
               Contact
-            </Link>
+            </a>
           </nav>
         </div>
       </header>

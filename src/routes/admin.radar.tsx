@@ -2,6 +2,9 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
+/* The admin is on financialrails.org; the public site is not. Absolute, so the
+   link lands directly rather than through the cross-origin 301. */
+import { radarUrl } from "@/lib/radar-host";
 import { Shell } from "@/components/admin/Shell";
 import {
   Button,
@@ -496,7 +499,12 @@ function Corridors({ rows, refresh }: { rows: CorridorList; refresh: () => Promi
           {rows.map((c) => (
             <Row key={c.id}>
               <Cell>
-                <a href={`/radar/corridors/${c.slug}`} className="underline underline-offset-2">
+                <a
+                  href={radarUrl(`/radar/corridors/${c.slug}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
                   {c.originCountry} → {c.destinationCountry}
                 </a>
               </Cell>
@@ -842,7 +850,12 @@ function Providers({
           {rows.map((p) => (
             <Row key={p.id}>
               <Cell>
-                <a href={`/radar/providers/${p.slug}`} className="underline underline-offset-2">
+                <a
+                  href={radarUrl(`/radar/providers/${p.slug}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
                   {p.name}
                 </a>
               </Cell>

@@ -21,6 +21,13 @@ export default defineConfig({
     // Honour an externally assigned port (e.g. the Claude Code preview's PORT
     // env var) so two sessions can run dev servers side by side. Without PORT
     // set, this resolves to 8080 — identical to the previous behaviour.
-    server: { port: Number(process.env["PORT"]) || 8080 },
+    server: {
+      port: Number(process.env["PORT"]) || 8080,
+      /* Radar is served from a second origin in production. Vite's host check
+         rejects a Host header it does not know, so the two-origin behaviour
+         cannot be exercised locally without listing them here. Dev only — this
+         has no bearing on the built server. */
+      allowedHosts: ["localhost", "financialrails.org", "railsradar.com", "www.railsradar.com"],
+    },
   },
 });

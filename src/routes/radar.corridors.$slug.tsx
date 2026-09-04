@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/radar/corridors/$slug")({
       n > 0
         ? `${n} verified route${n === 1 ? "" : "s"} from ${c.origin.country} (${c.origin.currency}) to ${c.destination.country} (${c.destination.currency}) — the rails available, who provides access, licences held with register links, operating hours, settlement finality and published limits.`
         : `Rails, providers and licences for moving money from ${c.origin.country} (${c.origin.currency}) to ${c.destination.country} (${c.destination.currency}). Verification in progress — every figure published carries its source.`;
-    const url = `https://financialrails.org/radar/corridors/${c.slug}`;
+    const url = `https://railsradar.com/corridors/${c.slug}`;
     return {
       meta: [
         { title },
@@ -94,9 +94,9 @@ export const Route = createFileRoute("/radar/corridors/$slug")({
         That corridor is not published. It may not have been verified yet.
       </p>
       <p className={cn(T.body, "mt-4")}>
-        <a href="/radar/corridors" className="underline underline-offset-4">
+        <Link to="/radar/corridors" className="underline underline-offset-4">
           Browse published corridors
-        </a>
+        </Link>
       </p>
     </RadarShell>
   ),
@@ -118,7 +118,7 @@ function CorridorPage() {
     "@type": "Dataset",
     name: `Payment rails: ${c.origin.country} to ${c.destination.country}`,
     description: `Rails, providers, licences, operating hours, settlement finality and published limits for moving money from ${c.origin.country} to ${c.destination.country}.`,
-    url: `https://financialrails.org/radar/corridors/${c.slug}`,
+    url: `https://railsradar.com/corridors/${c.slug}`,
     isAccessibleForFree: true,
     creator: {
       "@type": "Organization",
@@ -133,7 +133,7 @@ function CorridorPage() {
       provider: {
         "@type": "Organization",
         name: r.provider.name,
-        url: `https://financialrails.org/radar/providers/${r.provider.slug}`,
+        url: `https://railsradar.com/providers/${r.provider.slug}`,
         ...(r.licences.length
           ? {
               hasCredential: r.licences.map((l) => ({
@@ -293,12 +293,13 @@ function RouteCards({ routes }: { routes: CorridorRoutes }) {
             <div className="min-w-0">
               <p className={cn(T.label, "accord-signal text-ink/55")}>Rail</p>
               <h3 className={cn(T.heading, "mt-1 text-ink")}>
-                <a
-                  href={`/radar/rails/${r.rail.slug}`}
+                <Link
+                  to="/radar/rails/$slug"
+                  params={{ slug: r.rail.slug }}
                   className="underline decoration-ink/20 underline-offset-4 hover:text-[var(--accord-orange-deep)]"
                 >
                   {r.rail.name}
-                </a>
+                </Link>
               </h3>
               {/* The ontological correction, stated on the card itself. */}
               {r.rail.isMessagingNetwork ? (
@@ -310,12 +311,13 @@ function RouteCards({ routes }: { routes: CorridorRoutes }) {
             <div className="min-w-0 text-right">
               <p className={cn(T.label, "accord-signal text-ink/55")}>Provider</p>
               <p className={cn(T.strong, "mt-1")}>
-                <a
-                  href={`/radar/providers/${r.provider.slug}`}
+                <Link
+                  to="/radar/providers/$slug"
+                  params={{ slug: r.provider.slug }}
                   className="underline decoration-ink/20 underline-offset-4 hover:text-[var(--accord-orange-deep)]"
                 >
                   {r.provider.name}
-                </a>
+                </Link>
               </p>
             </div>
           </header>

@@ -401,6 +401,78 @@ The reachability suite caught a consequence of the refactor immediately: `submis
 orphaned once `radarScreen` returned the queue inline. Deleted rather than parked — the Radar
 surface carries no debt entries, and the test asserts that separately.
 
+### DOMAIN — Radar moved to railsradar.com, one codebase · 4 September 2026
+
+Radar is published on **railsradar.com**; the platform stays on financialrails.org. Same
+deployment, same route tree, same admin login. No split.
+
+#### The mechanism, and why a plain rewrite would not have worked
+
+The instruction was to "scope the rewrite". A server-side rewrite alone would have broken on the
+first click: the **client** router builds its location from `window.location`, so it would look
+for `/corridors`, find no such route, and 404 on navigation while SSR looked fine.
+
+TanStack Router has a `rewrite` option — a `{ input, output }` URL pair that runs on the server
+**and** in the browser:
+
+```
+input   railsradar.com/corridors  ->  /radar/corridors     (what the router matches)
+output  /radar/corridors          ->  /corridors           (what the browser is shown)
+```
+
+So the route files stay `radar.*`, `index.tsx` is untouched, and nothing is renamed. It is
+host-conditional, so financialrails.org is byte-for-byte unaffected.
+
+**Consequence worth knowing:** every Radar link must be a `<Link>`, never a bare `<a href>` — an
+anchor bypasses `output` and would emit a path that only resolves on the other origin. Ten
+anchors were converted, and a test now fails if one comes back.
+
+#### A bug found in this work, by reading rendered HTML
+
+The scoping check first ran against the *internal* path. The input rewrite puts `/radar` in
+front of everything on that host, so "starts with /radar" was **always true** — the redirect
+branch was unreachable, and `railsradar.com/forums` would have 404ed rather than going home. It
+surfaced from a rendered `/contact` link in the Radar shell, not from any check that existed.
+Scoping is now judged on the public path against a named segment list, and is the regression
+case in `two-origin.test.ts`.
+
+#### What changed
+
+| | |
+|---|---|
+| `src/lib/radar-host.ts` | **new** — origins, the rewrite pair, the scoping predicate, `radarUrl()` |
+| `src/router.tsx` | `rewrite: radarRewrite` |
+| `src/server.ts` | cross-origin 301s both ways; robots.txt and sitemap on the Radar origin |
+| `src/routes/__root.tsx` | bare layout now host-aware as well as path-aware |
+| `src/routes/radar*.tsx` | canonicals and `og:url` → railsradar.com; 10 anchors → `<Link>` |
+| `src/components/radar/Shell.tsx` | Contact points absolutely at the platform |
+| `src/server/radar/sitemap.ts` | emits `railsradar.com`, prefix-free |
+| `src/routes/admin.radar.tsx` | links to the public site are absolute |
+| `vite.config.ts` | dev `allowedHosts`, so two-origin behaviour is testable locally |
+
+#### What did NOT change
+
+No schema, no auth, no RLS, no authorization. No route renamed, no site page touched, no
+rebrand — Radar keeps the existing tokens. **The admin stays at
+financialrails.org/admin/radar**, behind the one login, and railsradar.com/admin 301s away from
+it rather than serving a second front door.
+
+#### If railsradar.com is later moved to its own app
+
+Cheap, because the seams are already drawn:
+
+- **Carries over unchanged:** every `radar.*` route, `src/server/radar/*`, `src/rpc/radar*.ts`,
+  `src/components/radar/*`, the `radar` Postgres schema, and migration 0013.
+- **Breaks and needs attention:** the `radar` schema lives in the platform's database, so a
+  separate app needs either its own connection to that database or a data move — and the
+  published-only views and the `anon` grants go with it. `src/lib/radar-host.ts` and the router
+  rewrite become dead: the new app serves Radar at its own root and the prefix disappears, so
+  every internal `/radar/...` path shortens by one segment. Public URLs do **not** change, which
+  is the point of doing the move now. The 301s in `src/server.ts` must stay on the platform
+  forever. The admin would have to be rebuilt or kept on the platform, and it shares
+  `requireAuth`, `Shell` and the admin primitives — that is the largest single cost.
+- **Do not** let the corridor slugs change. They are the identity of every inbound link.
+
 ## 1. Decisions taken, and by whom
 
 | Decision | Outcome |
@@ -512,7 +584,7 @@ non-empty. A limit without its currency is refused.
 
 - `npx tsc --noEmit` — clean
 - `npx eslint` on all Radar files — clean (one warning matching the existing `admin/primitives.tsx` pattern)
-- `npx vitest run` — **351 passed** across 14 files: 50 Radar boundary, 13 Radar logic,
+- `npx vitest run` — **390 passed** across 15 files: 50 Radar boundary, 13 Radar logic,
   26 import-boundary, 76 rpc-reachability, plus the pre-existing suites
 - `npm run build` — succeeds; `check:client-bundle` finds no secrets
 - SSR verified locally: `/radar`, `/radar/corridors`, `/radar/privacy`, `/radar/sitemap.xml` all 200

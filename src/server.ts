@@ -3,6 +3,55 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { redirectToCanonicalHost } from "./lib/canonical-host";
+import {
+  PLATFORM_ORIGIN,
+  RADAR_ORIGIN,
+  isRadarHost,
+  isRadarPublicPath,
+  stripRadarPrefix,
+} from "./lib/radar-host";
+
+/**
+ * THE TWO-ORIGIN RULE, applied before anything renders.
+ *
+ * Radar is published on railsradar.com; everything else on financialrails.org.
+ * Both are the same deployment, so the split is enforced here rather than by
+ * having two apps — and enforced with 301s, not 404s, because every one of
+ * these paths has a correct home on the other origin and a permanent redirect
+ * is what tells a crawler which one it is.
+ *
+ *   financialrails.org/radar/*  ->  railsradar.com/*      the move itself
+ *   railsradar.com/<non-radar>  ->  financialrails.org/*  scoping
+ *
+ * ADMIN IS DELIBERATELY IN THE SECOND CASE. Radar's admin stays at
+ * financialrails.org/admin/radar behind the one existing login. A public
+ * product domain should not carry a second front door to it.
+ *
+ * Returns null when the request is already where it belongs.
+ */
+function redirectAcrossOrigins(request: Request): Response | null {
+  const url = new URL(request.url);
+  const host = url.hostname;
+  const move = (to: string) =>
+    new Response(null, {
+      status: 301,
+      headers: { location: to, "cache-control": "public, max-age=3600" },
+    });
+
+  if (isRadarHost(host)) {
+    /* Judged on the PUBLIC path. Reconstructing the internal one first would
+       prefix everything with /radar and scope nothing out. */
+    if (isRadarPublicPath(url.pathname)) return null;
+    return move(`${PLATFORM_ORIGIN}${url.pathname}${url.search}`);
+  }
+
+  /* The platform origin no longer serves Radar. Path preserved, prefix dropped:
+     /radar/corridors/x -> railsradar.com/corridors/x */
+  if (url.pathname === "/radar" || url.pathname.startsWith("/radar/")) {
+    return move(`${RADAR_ORIGIN}${stripRadarPrefix(url.pathname)}${url.search}`);
+  }
+  return null;
+}
 
 /**
  * The Radar sitemap is generated from database rows, so it cannot be a static
@@ -12,7 +61,14 @@ import { redirectToCanonicalHost } from "./lib/canonical-host";
  * file-based server routes to hang it off instead.
  */
 async function serveRadarSitemap(request: Request): Promise<Response | null> {
-  if (new URL(request.url).pathname !== "/radar/sitemap.xml") return null;
+  const url = new URL(request.url);
+  /* railsradar.com/sitemap.xml is the real one. The old path is still answered
+     on the Radar host so a crawler that cached it is not sent in a circle by
+     the redirect above. */
+  const wanted = isRadarHost(url.hostname)
+    ? url.pathname === "/sitemap.xml" || url.pathname === "/radar/sitemap.xml"
+    : false;
+  if (!wanted) return null;
   try {
     const { radarSitemap } = await import("./server/radar/sitemap");
     return new Response(await radarSitemap(), {
@@ -74,6 +130,21 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/**
+ * railsradar.com needs its own robots.txt: the one in public/ names the
+ * platform's sitemap and would advertise the wrong origin here.
+ */
+function serveRadarRobots(request: Request): Response | null {
+  const url = new URL(request.url);
+  if (!isRadarHost(url.hostname) || url.pathname !== "/robots.txt") return null;
+  return new Response(`User-agent: *\nAllow: /\n\nSitemap: ${RADAR_ORIGIN}/sitemap.xml\n`, {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "public, max-age=3600",
+    },
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
@@ -82,6 +153,12 @@ export default {
       // localhost/preview, which fall through to the app untouched.
       const redirect = redirectToCanonicalHost(request);
       if (redirect) return redirect;
+
+      const crossOrigin = redirectAcrossOrigins(request);
+      if (crossOrigin) return crossOrigin;
+
+      const robots = serveRadarRobots(request);
+      if (robots) return robots;
 
       const sitemap = await serveRadarSitemap(request);
       if (sitemap) return sitemap;

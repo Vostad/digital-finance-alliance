@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { RadarShell } from "@/components/radar/Shell";
@@ -25,9 +25,9 @@ export const Route = createFileRoute("/radar/providers/")({
         content:
           "Every provider Rails Radar tracks: banks, payment service providers, stablecoin infrastructure, custodians and on/off-ramps — with the licences each holds and the registers they appear on.",
       },
-      { property: "og:url", content: "https://financialrails.org/radar/providers" },
+      { property: "og:url", content: "https://railsradar.com/providers" },
     ],
-    links: [{ rel: "canonical", href: "https://financialrails.org/radar/providers" }],
+    links: [{ rel: "canonical", href: "https://railsradar.com/providers" }],
   }),
   loader: async () => {
     const [{ providers }, counts] = await Promise.all([
@@ -78,12 +78,13 @@ function ProviderIndex() {
             {providers.map((p) => (
               <Row key={p.slug}>
                 <Cell>
-                  <a
-                    href={`/radar/providers/${p.slug}`}
+                  <Link
+                    to="/radar/providers/$slug"
+                    params={{ slug: p.slug }}
                     className="underline decoration-ink/20 underline-offset-4 transition-colors hover:text-[var(--accord-orange-deep)]"
                   >
                     {p.name}
-                  </a>
+                  </Link>
                 </Cell>
                 <Cell>{TYPE_LABEL[p.type] ?? p.type}</Cell>
                 <Cell>

@@ -13,10 +13,14 @@
  * It just does not ask to be indexed until it has something to say.
  */
 
+import { RADAR_ORIGIN } from "@/lib/radar-host";
 import { listPublishedCorridors, listPublishedProviders, listPublishedRails } from "./public";
 import { listRoutesForCorridor } from "./public";
 
-const ORIGIN = "https://financialrails.org";
+/* The indexed origin. Radar's canonicals, its internal links and this file all
+   name the same host, because a sitemap that disagrees with the canonical tag
+   is a sitemap a crawler discards. */
+const ORIGIN = RADAR_ORIGIN;
 
 function url(loc: string, lastmod: Date | null, priority: string): string {
   const parts = [`    <loc>${ORIGIN}${loc}</loc>`];
@@ -41,18 +45,16 @@ export async function radarSitemap(): Promise<string> {
   const substantive = withRoutes.filter((x) => x.routes > 0).map((x) => x.c);
 
   const entries = [
-    url("/radar", null, "0.9"),
-    url("/radar/corridors", null, "0.8"),
+    url("/", null, "0.9"),
+    url("/corridors", null, "0.8"),
     /* The two index pages. They carry the internal links that make every
        detail page reachable by a crawler, so they belong in here at least as
        high as the pages they point at. */
-    url("/radar/rails", null, "0.8"),
-    url("/radar/providers", null, "0.7"),
-    ...substantive.map((c) =>
-      url(`/radar/corridors/${c.slug}`, c.lastVerifiedAt ?? c.updatedAt, "0.7"),
-    ),
-    ...providers.map((p) => url(`/radar/providers/${p.slug}`, p.lastVerifiedAt, "0.6")),
-    ...rails.map((r) => url(`/radar/rails/${r.slug}`, r.lastVerifiedAt, "0.5")),
+    url("/rails", null, "0.8"),
+    url("/providers", null, "0.7"),
+    ...substantive.map((c) => url(`/corridors/${c.slug}`, c.lastVerifiedAt ?? c.updatedAt, "0.7")),
+    ...providers.map((p) => url(`/providers/${p.slug}`, p.lastVerifiedAt, "0.6")),
+    ...rails.map((r) => url(`/rails/${r.slug}`, r.lastVerifiedAt, "0.5")),
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>

@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { RadarShell } from "@/components/radar/Shell";
 import { T } from "@/components/radar/primitives";
+/* A platform page, not a Radar route — see src/lib/radar-host.ts. */
+import { PLATFORM_ORIGIN } from "@/lib/radar-host";
 
 /**
  * THE PRIVACY NOTICE — scoped to Rails Radar, and only to Rails Radar.
@@ -26,7 +28,7 @@ export const Route = createFileRoute("/radar/privacy")({
           "What Rails Radar collects when you submit a source or report an inaccuracy, why, and how long it is kept.",
       },
     ],
-    links: [{ rel: "canonical", href: "https://financialrails.org/radar/privacy" }],
+    links: [{ rel: "canonical", href: "https://railsradar.com/privacy" }],
   }),
   component: Privacy,
 });

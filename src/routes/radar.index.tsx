@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -35,9 +35,9 @@ export const Route = createFileRoute("/radar/")({
         content:
           "The rails, providers, licences and limits behind every corridor — sourced and verified per record.",
       },
-      { property: "og:url", content: "https://financialrails.org/radar" },
+      { property: "og:url", content: "https://railsradar.com" },
     ],
-    links: [{ rel: "canonical", href: "https://financialrails.org/radar" }],
+    links: [{ rel: "canonical", href: "https://railsradar.com" }],
   }),
   loader: () => corridorIndex().catch(() => ({ corridors: [], counts: null })),
   component: RadarHome,
@@ -163,9 +163,9 @@ function RadarHome() {
           {from && to && !match ? (
             <p className={cn(T.micro, "mt-3 text-[var(--accord-orange-deep)]")}>
               No corridor recorded for that pair yet.{" "}
-              <a href="/radar/corridors" className="underline underline-offset-2">
+              <Link to="/radar/corridors" className="underline underline-offset-2">
                 Browse what exists
-              </a>
+              </Link>
               .
             </p>
           ) : null}
@@ -177,15 +177,16 @@ function RadarHome() {
             <ul className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
               {popular.map((c) => (
                 <li key={c.slug}>
-                  <a
-                    href={`/radar/corridors/${c.slug}`}
+                  <Link
+                    to="/radar/corridors/$slug"
+                    params={{ slug: c.slug }}
                     className={cn(
                       T.body,
                       "text-ink underline decoration-ink/20 underline-offset-4 transition-colors hover:text-[var(--accord-orange-deep)] hover:decoration-[var(--accord-orange-deep)]",
                     )}
                   >
                     {c.origin.country} → {c.destination.country}
-                  </a>
+                  </Link>
                   <span className={cn(T.micro, "ml-2 text-ink/40")}>
                     {c.origin.currency}/{c.destination.currency}
                   </span>
@@ -206,12 +207,12 @@ function RadarHome() {
               rather than all at once.
             </p>
             <p className={cn(T.body, "mt-4")}>
-              <a
-                href="/radar/corridors"
+              <Link
+                to="/radar/corridors"
                 className="underline decoration-ink/25 underline-offset-4 transition-colors hover:text-[var(--accord-orange-deep)]"
               >
                 Submit a source
-              </a>
+              </Link>
               <span className="text-ink/45">
                 {" "}
                 — if you have documentation for a corridor, it goes into the verification queue.

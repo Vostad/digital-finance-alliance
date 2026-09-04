@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { RadarShell } from "@/components/radar/Shell";
@@ -45,9 +45,9 @@ export const Route = createFileRoute("/radar/rails/")({
         content:
           "Rails, assets, networks and messaging systems are four different things. The distinction, and every rail we track.",
       },
-      { property: "og:url", content: "https://financialrails.org/radar/rails" },
+      { property: "og:url", content: "https://railsradar.com/rails" },
     ],
-    links: [{ rel: "canonical", href: "https://financialrails.org/radar/rails" }],
+    links: [{ rel: "canonical", href: "https://railsradar.com/rails" }],
   }),
   loader: async () => {
     const [{ rails }, counts] = await Promise.all([
@@ -184,15 +184,16 @@ function RailsIndex() {
                 <ul className="mt-4 divide-y divide-hairline border-y border-hairline">
                   {items.map((r) => (
                     <li key={r.slug} className="py-3">
-                      <a
-                        href={`/radar/rails/${r.slug}`}
+                      <Link
+                        to="/radar/rails/$slug"
+                        params={{ slug: r.slug }}
                         className={cn(
                           T.strong,
                           "text-ink underline decoration-ink/20 underline-offset-4 transition-colors hover:text-[var(--accord-orange-deep)] hover:decoration-[var(--accord-orange-deep)]",
                         )}
                       >
                         {r.name}
-                      </a>
+                      </Link>
                       {r.isMessagingNetwork ? (
                         <span className={cn(T.micro, "ml-3 text-[var(--accord-orange-deep)]")}>
                           messaging network — does not settle
