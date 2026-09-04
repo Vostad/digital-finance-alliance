@@ -92,7 +92,7 @@ describe("application code cannot reach past the scoped layer", () => {
   });
 
   it("says nothing about imports that are not the guarded three", async () => {
-    expect(await restrictedImports(DOMAIN_FILE, "../db/radar")).toEqual([]);
+    expect(await restrictedImports(DOMAIN_FILE, "../db/schema")).toEqual([]);
     expect(await restrictedImports(DOMAIN_FILE, "../auth/scoped")).toEqual([]);
     expect(await restrictedImports(DOMAIN_FILE, "zod")).toEqual([]);
   });
@@ -112,34 +112,6 @@ describe("the layers that are exempt on purpose still are", () => {
     ["src/server/test/scope-sql.test.ts", "../db/client"],
     ["src/server/test/integration/fixture.ts", "@/server/db/client"],
   ])("%s may still import %s", async (filePath, specifier) => {
-    expect(await restrictedImports(filePath, specifier)).toEqual([]);
-  });
-});
-
-/**
- * Radar's own blocks replace the boundary's rule rather than adding to it, so
- * those files keep the raw handle they are allowlisted for. What must not
- * loosen is the fence that replaced it: Radar cannot name a CRM table, cannot
- * touch the service-role client, and cannot enter the CRM domain layer.
- */
-describe("the Radar fences are no weaker than before", () => {
-  it.each([
-    ["src/server/radar/public.ts", "../db/schema"],
-    ["src/server/radar/public.ts", "@/server/db/schema"],
-    ["src/server/radar/public.ts", "../auth/supabase.server"],
-    ["src/server/radar/public.ts", "../domain/leads"],
-    ["src/server/radar/submissions.ts", "../db/schema"],
-    ["src/server/radar/admin.ts", "../db/schema"],
-    ["src/server/radar/admin.ts", "@/server/auth/supabase.server"],
-  ])("%s still cannot import %s", async (filePath, specifier) => {
-    expect(await restrictedImports(filePath, specifier)).toHaveLength(1);
-  });
-
-  it.each([
-    ["src/server/radar/public.ts", "../db/client"],
-    ["src/server/radar/public.ts", "../db/radar"],
-    ["src/server/radar/submissions.ts", "../db/client"],
-  ])("%s keeps the handle it is allowlisted for (%s)", async (filePath, specifier) => {
     expect(await restrictedImports(filePath, specifier)).toEqual([]);
   });
 });

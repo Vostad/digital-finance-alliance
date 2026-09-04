@@ -8,21 +8,15 @@ import { defineConfig } from "drizzle-kit";
  * DDL needs session-level state that the transaction pooler does not preserve.
  */
 export default defineConfig({
-  /**
-   * Two products, one migration history. `radar.ts` declares the Rails Radar
-   * tables, which live in their own `radar` Postgres schema — see the header of
-   * that file for why they are not in `public`.
-   */
-  schema: ["./src/server/db/schema.ts", "./src/server/db/radar.ts"],
+  schema: "./src/server/db/schema.ts",
   out: "./drizzle",
   dialect: "postgresql",
   casing: "snake_case",
   dbCredentials: {
     url: process.env["DIRECT_DATABASE_URL"] ?? "",
   },
-  /** Supabase owns auth, storage, realtime, etc. Never diff or drop them.
-      `radar` is ours and is managed here like `public`. */
-  schemaFilter: ["public", "radar"],
+  /** Supabase owns auth, storage, realtime, etc. Never diff or drop them. */
+  schemaFilter: ["public"],
   verbose: true,
   strict: true,
 });

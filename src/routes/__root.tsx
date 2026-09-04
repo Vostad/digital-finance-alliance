@@ -11,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { ACTIVE_PALETTE } from "../lib/accord-palette";
-import { isRadarHost } from "../lib/radar-host";
 import { FINANCIAL_RAILS } from "../lib/financial-rails";
 import { jsonLd, rootGraph } from "../lib/structured-data";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -188,20 +187,7 @@ function RootComponent() {
   // marketing navigation or footer.
   const isAdmin = /^\/admin(\/|$)/.test(pathname);
 
-  // Rails Radar is a tool, not a page of the marketing site. It carries its own
-  // header and its own footer — the footer is not decoration there, it holds the
-  // privacy notice and the row counts — so it takes the same bare treatment the
-  // micro-sites and the OS already take.
-  //
-  // Matched on the ROUTER'S pathname, which is the internal one: on
-  // railsradar.com the browser shows /corridors while the router matches
-  // /radar/corridors, so this test holds on both origins. The host check is the
-  // belt to that brace — it also covers railsradar.com's root, where the
-  // internal path is exactly "/radar".
-  const isRadar =
-    /^\/radar(\/|$)/.test(pathname) ||
-    (typeof window !== "undefined" && isRadarHost(window.location.hostname));
-  const bare = isEventMicrosite || isAdmin || isRadar;
+  const bare = isEventMicrosite || isAdmin;
 
   return (
     <QueryClientProvider client={queryClient}>

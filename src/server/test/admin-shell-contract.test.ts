@@ -6,8 +6,8 @@
  *
  *   1. `<Shell>` takes an OPTIONAL `role`. Omit it and the nav does not fail —
  *      it renders `navFor("team_member")`, the least-privileged menu. So
- *      /admin/radar showed "My Leads · My Targets" to a Super Admin, on the
- *      same session where /admin showed all five destinations.
+ *      an admin screen showed "My Leads · My Targets" to a Super Admin, on
+ *      the same session where /admin showed every destination.
  *
  *   2. Date defaults used `toISOString()`, which is UTC. An editor in GST+4 at
  *      01:30 on the 4th is at 21:30 UTC on the 3rd, so every record entered
@@ -55,9 +55,8 @@ function shellTags(src: string): string[] {
  * draws a Team Member's nav for anybody. Its main render, further down the same
  * file, is correct.
  *
- * Real but minor, and it is CRM code: this branch is Rails Radar and is kept
- * clean of CRM edits by decision. One line — `role={user?.role}` — closes it
- * whenever that file is next opened.
+ * Real but minor. One line — `role={user?.role}` — closes it whenever that file
+ * is next opened.
  */
 const KNOWN_ROLELESS_SHELLS = ['admin.leads.$id.tsx:<Shell title="Not found">'];
 
@@ -80,13 +79,6 @@ describe("every admin screen tells the shell who is looking at it", () => {
     }
   });
 
-  it("Radar's own screen passes it — the bug this test was written for", () => {
-    const src = readFileSync(join(root, "src/routes/admin.radar.tsx"), "utf8");
-    const tags = shellTags(src);
-    expect(tags.length).toBeGreaterThan(0);
-    for (const t of tags) expect(t.replace(/\s+/g, " ")).toMatch(/role=\{data\.viewer\.role\}/);
-  });
-
   /* The reason it matters, stated as behaviour rather than as a source check. */
   it("omitting the role yields the least-privileged nav, not an error", () => {
     expect(navFor("team_member").map((n) => n.label)).toEqual(["My Leads", "My Targets"]);
@@ -95,52 +87,10 @@ describe("every admin screen tells the shell who is looking at it", () => {
       "Leads",
       "Events",
       "Team",
-      "Radar",
     ]);
   });
 
   it("an unknown role still falls back closed, which is why the bug was silent", () => {
     expect(navFor("nonsense").map((n) => n.label)).toEqual(["My Leads", "My Targets"]);
-  });
-});
-
-describe("verification dates are the editor's calendar date, never the server's", () => {
-  const forms = readFileSync(join(root, "src/components/admin/RadarForms.tsx"), "utf8");
-
-  it("no date default is derived from toISOString", () => {
-    expect(forms).not.toMatch(/toISOString\(\)\.slice\(0,\s*10\)/);
-  });
-
-  it("builds the value from local calendar parts", () => {
-    expect(forms).toContain("getFullYear()");
-    expect(forms).toContain("getMonth() + 1");
-    expect(forms).toContain("getDate()");
-  });
-
-  /**
-   * The failure, reproduced. A UTC-derived date disagrees with the local one for
-   * part of every day at any positive offset — which is exactly the window an
-   * editor in Dubai does their evening work in.
-   */
-  it("UTC and local disagree for an evening east of Greenwich", () => {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const local = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-    /* 2026-09-03T21:30Z is 2026-09-04 01:30 in GST+4. */
-    const instant = new Date("2026-09-03T21:30:00Z");
-    expect(instant.toISOString().slice(0, 10)).toBe("2026-09-03");
-
-    /* Asserted through a real +04:00 wall clock rather than the host's zone, so
-       the test means the same thing wherever CI runs it. */
-    const gst = new Date(instant.getTime() + 4 * 60 * 60 * 1000);
-    const gstCalendarDate = `${gst.getUTCFullYear()}-${pad(gst.getUTCMonth() + 1)}-${pad(gst.getUTCDate())}`;
-    expect(gstCalendarDate).toBe("2026-09-04");
-    expect(gstCalendarDate).not.toBe(instant.toISOString().slice(0, 10));
-
-    /* And the helper agrees with the wall clock it is run under. */
-    const now = new Date();
-    expect(local(now)).toBe(
-      `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
-    );
   });
 });

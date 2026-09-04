@@ -17,18 +17,12 @@ import { navFor } from "@/components/admin/Shell";
 const labels = (role: string) => navFor(role).map((n) => n.label);
 
 describe("navFor", () => {
-  it("gives a Super Admin exactly five destinations", () => {
-    expect(labels("super_admin")).toEqual(["Dashboard", "Leads", "Events", "Team", "Radar"]);
+  it("gives a Super Admin exactly four destinations", () => {
+    expect(labels("super_admin")).toEqual(["Dashboard", "Leads", "Events", "Team"]);
   });
 
-  it("gives an Admin the SAME five — scope is the server's job, not the nav's", () => {
-    expect(labels("admin")).toEqual(["Dashboard", "Leads", "Events", "Team", "Radar"]);
-  });
-
-  /* Radar editing is Super Admin and Admin only (canEditRadar). A Team Member
-     must not see the door, and the server refuses them regardless. */
-  it("never shows a Team Member Radar", () => {
-    expect(labels("team_member")).not.toContain("Radar");
+  it("gives an Admin the SAME four — scope is the server's job, not the nav's", () => {
+    expect(labels("admin")).toEqual(["Dashboard", "Leads", "Events", "Team"]);
   });
 
   it("gives a Team Member exactly their own two", () => {

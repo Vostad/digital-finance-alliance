@@ -1,23 +1,12 @@
 /**
  * THE ADMIN SHELL.
  *
- * One header, one nav, one content column. Five destinations for a manager, two
+ * One header, one nav, one content column. Four destinations for a manager, two
  * for a team member — few enough that a persistent sidebar would spend 15% of a
  * laptop screen saying very little. On mobile the nav stays a horizontal row
- * rather than a hamburger: five items still fit, and hiding them behind a tap
- * costs more than it saves.
+ * rather than a hamburger: four items fit, and hiding them behind a tap costs
+ * more than it saves.
  *
- * Radar is the fifth, added when Rails Radar shipped. It is a manager-only
- * editorial workspace, not configuration — an editor verifying sources is in it
- * daily — so unlike Settings it belongs in the primary path rather than the
- * account menu. Phase 2 cut this nav from eight to four; this is a deliberate
- * move to five, not creep, and nav.test.ts was updated to say so out loud.
- *
- * IT SITS BEHIND A DIVIDER, and that is the point of `group`. Rails Radar is a
- * DIFFERENT PRODUCT sharing this admin, not a fifth section of the CRM: it has
- * its own data model, its own public site and its own audience. The rule keeps
- * the four-item CRM shape visually intact, so a sixth CRM destination still has
- * to argue against four rather than hide behind five.
  *
  * Settings is deliberately NOT here. It is configuration, touched rarely, and
  * putting it in the daily path would make four destinations feel like five. It
@@ -25,14 +14,13 @@
  */
 
 import { Link, useRouter } from "@tanstack/react-router";
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { logout } from "@/rpc/auth";
 import { TEXT } from "./primitives";
 
-/** `group` separates products, not sections. See NAV below. */
-export type NavItem = { to: string; label: string; roles: string[]; group: "crm" | "radar" };
+export type NavItem = { to: string; label: string; roles: string[] };
 
 const MANAGER = ["super_admin", "admin"];
 const MEMBER = ["team_member"];
@@ -51,13 +39,12 @@ const MEMBER = ["team_member"];
  * are working their own list.
  */
 export const NAV: NavItem[] = [
-  { to: "/admin", label: "Dashboard", roles: MANAGER, group: "crm" },
-  { to: "/admin/leads", label: "Leads", roles: MANAGER, group: "crm" },
-  { to: "/admin/events", label: "Events", roles: MANAGER, group: "crm" },
-  { to: "/admin/team", label: "Team", roles: MANAGER, group: "crm" },
-  { to: "/admin/radar", label: "Radar", roles: MANAGER, group: "radar" },
-  { to: "/admin/leads", label: "My Leads", roles: MEMBER, group: "crm" },
-  { to: "/admin/targets", label: "My Targets", roles: MEMBER, group: "crm" },
+  { to: "/admin", label: "Dashboard", roles: MANAGER },
+  { to: "/admin/leads", label: "Leads", roles: MANAGER },
+  { to: "/admin/events", label: "Events", roles: MANAGER },
+  { to: "/admin/team", label: "Team", roles: MANAGER },
+  { to: "/admin/leads", label: "My Leads", roles: MEMBER },
+  { to: "/admin/targets", label: "My Targets", roles: MEMBER },
 ];
 
 /** An unrecognised role gets the least-privileged set, never the full one:
@@ -94,29 +81,22 @@ export function Shell({
           </Link>
 
           <nav className="-mx-2 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2">
-            {navFor(role ?? "team_member").map((item, i, all) => {
+            {navFor(role ?? "team_member").map((item) => {
               const active =
                 item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
-              /* A rule where the product changes. Rendered before the item, so
-                 the CRM group still reads as one set of four. */
-              const startsGroup = i > 0 && all[i - 1]!.group !== item.group;
               return (
-                <Fragment key={`${item.group}-${item.to}`}>
-                  {startsGroup ? (
-                    <span aria-hidden className="mx-2 h-4 w-px shrink-0 bg-hairline" />
-                  ) : null}
-                  <Link
-                    to={item.to}
-                    className={cn(
-                      "whitespace-nowrap px-2.5 py-1.5 font-mono text-[13px] uppercase tracking-[0.1em] transition-colors",
-                      active
-                        ? "text-ink underline underline-offset-[6px]"
-                        : "text-ink/50 hover:text-ink",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </Fragment>
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "whitespace-nowrap px-2.5 py-1.5 font-mono text-[13px] uppercase tracking-[0.1em] transition-colors",
+                    active
+                      ? "text-ink underline underline-offset-[6px]"
+                      : "text-ink/50 hover:text-ink",
+                  )}
+                >
+                  {item.label}
+                </Link>
               );
             })}
           </nav>

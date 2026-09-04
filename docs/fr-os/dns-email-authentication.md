@@ -140,5 +140,4 @@ DKIM and DMARC all read **PASS**.
 recorded as delivered when it was not.
 
 **Preview and local environments deliberately have neither**, and must not be given them: a
-preview build that physically cannot email a real sponsor is the correct default. See the
-findings log in `RAILS-RADAR.md`.
+preview build that physically cannot email a real sponsor is the correct default.

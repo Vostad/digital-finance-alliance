@@ -14,4 +14,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://financialrails.org/sitemap.xml
-Sitemap: https://financialrails.org/radar/sitemap.xml
