@@ -478,11 +478,14 @@ export async function listCorridorsForAdmin() {
       status: radarCorridors.status,
       lastVerifiedAt: radarCorridors.lastVerifiedAt,
       lastVerifiedBy: radarCorridors.lastVerifiedBy,
-      routeCount: sql<number>`(
-        SELECT count(*)::int FROM "radar"."radar_routes" r WHERE r.corridor_id = ${radarCorridors.id}
-      )`,
+      /* A correlated subquery here re-ran per row — an N+1 written in SQL. A
+         left join and a group by is one pass, and returns 0 rather than null
+         for a corridor with no routes. */
+      routeCount: sql<number>`count(${radarRoutes.id})::int`,
     })
     .from(radarCorridors)
+    .leftJoin(radarRoutes, eq(radarRoutes.corridorId, radarCorridors.id))
+    .groupBy(radarCorridors.id)
     .orderBy(asc(radarCorridors.originCountry), asc(radarCorridors.destinationCountry));
 }
 
@@ -662,8 +665,7 @@ export async function upsertRoute(input: RouteInput) {
     repopulate assets, networks and requirements, which are replaced wholesale
     on save. Draft rows are included: this is the editing surface, not the
     public one. */
-export async function listRoutesForAdmin(corridorId: string) {
-  await requireRadarEditor();
+async function routeRows(corridorId: string) {
   const rows = await db
     .select({
       route: radarRoutes,
@@ -704,10 +706,39 @@ export async function listRoutesForAdmin(corridorId: string) {
   }));
 }
 
+/**
+ * Everything the corridor drill-down needs, in one authorized call: its routes,
+ * plus the provider and rail lists the route form selects from. Those two lists
+ * used to be loaded for every visit to the screen, to populate a form most
+ * visits never open.
+ */
+export async function routeContext(corridorId: string) {
+  await requireRadarEditor();
+  const [routes, providers, rails] = await Promise.all([
+    routeRows(corridorId),
+    db
+      .select({ id: radarProviders.id, name: radarProviders.name, status: radarProviders.status })
+      .from(radarProviders)
+      .orderBy(asc(radarProviders.name)),
+    db
+      .select({
+        id: radarRails.id,
+        name: radarRails.name,
+        status: radarRails.status,
+        isMessagingNetwork: radarRails.isMessagingNetwork,
+      })
+      .from(radarRails)
+      .orderBy(asc(radarRails.name)),
+  ]);
+  return { routes, providers, rails };
+}
+
 /* ====================================================== submissions ====== */
 
-export async function listSubmissions(status: "pending" | "accepted" | "rejected" = "pending") {
-  await requireRadarEditor();
+/** The query, without the authorization check — so `radarScreen` can include it
+    in its own single authorized wave instead of paying for a second one. Not
+    exported: every caller reaches it through a function that authorizes. */
+function submissionRows(status: "pending" | "accepted" | "rejected") {
   return db
     .select({
       id: radarSubmissions.id,
@@ -809,41 +840,81 @@ export async function reverificationQueue() {
 }
 
 /**
- * THE OVERVIEW, INCLUDING WHO IS ASKING.
+ * THE FIRST-PAINT PAYLOAD — one call, one authorization, one parallel wave.
  *
- * The viewer is returned because the admin shell needs the role to draw its
- * navigation, and a screen that does not receive it silently falls back to the
- * least-privileged menu — which is what happened: /admin/radar rendered a Team
- * Member's nav to a Super Admin. It is a display bug, not an authorization one
- * (every RPC below still resolves identity server-side and refuses on its own),
- * but a nav that lies about who you are is not acceptable either.
+ * This replaced five separate server functions. Each of those independently ran
+ * `requireRadarEditor()`, and because they arrive as five separate HTTP
+ * requests the request-scoped memoisation in context.ts cannot help across
+ * them: five auth resolutions, measured at ~56ms each, before any data moved.
+ * They also ran in two waves — the overview awaited alone, then the rest — so
+ * the waterfall was structural rather than incidental.
+ *
+ * WHAT IS AND IS NOT FETCHED HERE is decided by what the screen actually shows
+ * on arrival. The default tab is the submission queue, and the tab strip needs
+ * two numbers. So this returns the queue rows, the headline counts, and the
+ * stale COUNTS — not the stale rows, and not corridors, rails or providers,
+ * which are nine queries and three authorizations that render nothing until
+ * their tab is opened.
+ *
+ * Everything below is one `Promise.all`, so the whole payload costs roughly one
+ * round trip rather than accumulating them.
  */
-export async function radarOverview() {
+export async function radarScreen() {
   const ctx = await requireRadarEditor();
-  const [counts, stale] = await Promise.all([adminCounts(), reverificationQueue()]);
+  const cutoff = new Date(Date.now() - REVERIFY_AFTER_DAYS * 24 * 60 * 60 * 1000);
+  const stale = (col: AnyPgColumn) => or(isNull(col), lt(col, cutoff));
+  const n = sql<number>`count(*)::int`;
+
+  const [
+    railCount,
+    providerCount,
+    corridorCount,
+    routeCount,
+    pendingCount,
+    staleRails,
+    staleProviders,
+    staleRoutes,
+    queue,
+  ] = await Promise.all([
+    db.select({ n }).from(radarRails),
+    db.select({ n }).from(radarProviders),
+    db.select({ n }).from(radarCorridors),
+    db.select({ n }).from(radarRoutes),
+    db.select({ n }).from(radarSubmissions).where(eq(radarSubmissions.status, "pending")),
+    db
+      .select({ n })
+      .from(radarRails)
+      .where(and(eq(radarRails.status, "published"), stale(radarRails.lastVerifiedAt))),
+    db
+      .select({ n })
+      .from(radarProviders)
+      .where(and(eq(radarProviders.status, "published"), stale(radarProviders.lastVerifiedAt))),
+    db
+      .select({ n })
+      .from(radarRoutes)
+      .where(and(eq(radarRoutes.status, "published"), stale(radarRoutes.lastVerifiedAt))),
+    submissionRows("pending"),
+  ]);
+
+  const v = (r: Array<{ n: number }>) => r[0]?.n ?? 0;
   return {
     viewer: { role: ctx.role, fullName: ctx.fullName },
-    counts,
-    stale,
+    counts: {
+      rails: v(railCount),
+      providers: v(providerCount),
+      corridors: v(corridorCount),
+      routes: v(routeCount),
+      pending: v(pendingCount),
+    },
+    staleCounts: {
+      rails: v(staleRails),
+      providers: v(staleProviders),
+      routes: v(staleRoutes),
+      total: v(staleRails) + v(staleProviders) + v(staleRoutes),
+      afterDays: REVERIFY_AFTER_DAYS,
+    },
+    queue,
   };
-}
-
-export async function adminCounts() {
-  await requireRadarEditor();
-  const one = async (
-    t: typeof radarRails | typeof radarProviders | typeof radarCorridors | typeof radarRoutes,
-  ) => (await db.select({ n: sql<number>`count(*)::int` }).from(t))[0]?.n ?? 0;
-  const [rails, providers, corridors, routes, pending] = await Promise.all([
-    one(radarRails),
-    one(radarProviders),
-    one(radarCorridors),
-    one(radarRoutes),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(radarSubmissions)
-      .where(eq(radarSubmissions.status, "pending")),
-  ]);
-  return { rails, providers, corridors, routes, pending: pending[0]?.n ?? 0 };
 }
 
 export { AuthError };

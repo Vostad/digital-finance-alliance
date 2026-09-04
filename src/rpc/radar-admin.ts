@@ -21,10 +21,10 @@ import {
   listCorridorsForAdmin,
   listProvidersForAdmin,
   listRailsForAdmin,
-  listRoutesForAdmin,
-  listSubmissions,
-  radarOverview,
+  radarScreen,
+  reverificationQueue,
   reviewSubmission,
+  routeContext,
   upsertCorridor,
   upsertLicence,
   upsertProvider,
@@ -54,8 +54,22 @@ const provenance = {
 
 /* ------------------------------------------------------------ dashboard -- */
 
-export const radarAdminOverview = createServerFn({ method: "GET" }).handler(() =>
-  sealed(() => radarOverview()),
+/**
+ * EVERYTHING THE SCREEN NEEDS TO PAINT, in one call.
+ *
+ * Was five: overview, queue, corridors, rails, providers — five HTTP requests,
+ * five independent authorizations at ~56ms each, in two sequential waves, of
+ * which three served tabs that were not open. The tabs below now fetch on
+ * demand, so arriving at this screen costs one round trip.
+ */
+export const radarAdminScreen = createServerFn({ method: "GET" }).handler(() =>
+  sealed(() => radarScreen()),
+);
+
+/** The re-verification ROWS. The screen paints with only the counts; these
+    arrive when someone actually opens that tab. */
+export const radarStale = createServerFn({ method: "GET" }).handler(() =>
+  sealed(() => reverificationQueue()),
 );
 
 export const adminCorridors = createServerFn({ method: "GET" }).handler(() =>
@@ -70,9 +84,12 @@ export const adminProviders = createServerFn({ method: "GET" }).handler(() =>
   sealed(() => listProvidersForAdmin()),
 );
 
-export const adminRoutes = createServerFn({ method: "GET" })
+/** Routes for one corridor, plus the provider and rail lists its form selects
+    from — one authorized call, made when the drill-down opens rather than on
+    every visit to the screen. */
+export const radarRouteContext = createServerFn({ method: "GET" })
   .validator(z.object({ corridorId: z.string().uuid() }))
-  .handler(({ data }) => sealed(() => listRoutesForAdmin(data.corridorId)));
+  .handler(({ data }) => sealed(() => routeContext(data.corridorId)));
 
 /* ---------------------------------------------------------------- rails -- */
 
@@ -324,10 +341,6 @@ export const saveRoute = createServerFn({ method: "POST" })
   );
 
 /* ---------------------------------------------------------- submissions -- */
-
-export const submissionQueue = createServerFn({ method: "GET" })
-  .validator(z.object({ status: z.enum(["pending", "accepted", "rejected"]).optional() }))
-  .handler(({ data }) => sealed(() => listSubmissions(data.status ?? "pending")));
 
 /**
  * Mark a submission reviewed. Takes no field and no value — there is no shape

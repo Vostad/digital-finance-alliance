@@ -331,6 +331,76 @@ the wrong nav for everybody. Its main render is correct. Real but minor, and CRM
 branch is kept clean of CRM edits, so it is an explicit exception in the test rather than a
 silent pass. One line closes it when that file is next opened.
 
+### PERF-1 — The Radar admin's first paint · **FIXED**
+
+| | |
+|---|---|
+| **Found** | 4 September 2026, reported as "the admin is loading slowly" |
+| **Fixed** | 4 September 2026 |
+| **Cause** | Request waterfall and over-fetching. **Not** cold start, **not** the SSO challenge. |
+
+#### What it was, measured before guessing
+
+| | `/admin` | `/admin/radar` |
+|---|---|---|
+| server-function calls | 1 | **5, in 2 sequential waves** |
+| authorization resolutions | 1 | **5** |
+| DB queries before first paint | dashboard's own | **~17** |
+
+Each of the five ran `requireRadarEditor()` independently. They arrive as five separate HTTP
+requests, so the request-scoped memoisation in `context.ts` cannot help across them — measured at
+**56ms each**, ~280ms of pure re-authentication before any data moved.
+
+**Three of the five served tabs that were not open.** The default tab is the submission queue;
+corridors, rails and providers — nine queries and three authorizations, including a five-way
+fan-out over provider child tables — rendered nothing on arrival.
+
+`listCorridorsForAdmin` also carried a correlated subquery per row: an N+1 written in SQL.
+
+#### Ruling out the other two candidates
+
+- **Not cold start.** Production warm TTFB is flat across static and DB-touching pages —
+  `/intelligence` 455ms, `/admin` 456ms, `/` 473ms. No cold-start signature. The ~450ms is
+  distance to the region, identical for every route.
+- **Not SSO.** The challenge is an edge redirect, identical for `/admin` and `/admin/radar`, and
+  the difference is visible *within* an authenticated session. Constant, so not the variable.
+- **The database is empty.** These are round-trip counts, not data volume — which means the cost
+  would not have improved as records were added. It would have got worse.
+
+#### The fix
+
+One `radarScreen()`: one authorization, one `Promise.all`, returning exactly what the screen
+paints — the viewer, the headline counts, the **stale counts** (not rows), and the queue. Every
+other tab fetches when it is opened, once, via `useLazy`. The corridor drill-down takes one
+`routeContext()` call for its routes plus the provider and rail lists its form selects from —
+lists that previously loaded on every visit to populate a form most visits never open. The
+correlated subquery became a `LEFT JOIN … GROUP BY`.
+
+#### Measured, production build, same method both times
+
+| | Before | After |
+|---|---|---|
+| server-function calls | 5 (2 waves) | **1** |
+| authorization resolutions | 5 | **1** |
+| DB queries at first paint | ~17 | **9**, all parallel |
+| DB time | 294ms | **169ms** |
+| HTTP waves | 2 | **1** |
+| cost of the removed wave | — | **456ms** |
+| **total removed per load** | | **~580ms** |
+
+Baseline for scale: one round trip to the pooler is 54ms; one HTTP round trip to the function is
+~456ms from the measuring location.
+
+#### Not done, deliberately
+
+No schema, auth, RLS or authorization change. **The admin simplification was not started** — this
+is confined to how the Radar screen loads its own data. The CRM dashboard was measured for
+comparison and not touched.
+
+The reachability suite caught a consequence of the refactor immediately: `submissionQueue` became
+orphaned once `radarScreen` returned the queue inline. Deleted rather than parked — the Radar
+surface carries no debt entries, and the test asserts that separately.
+
 ## 1. Decisions taken, and by whom
 
 | Decision | Outcome |

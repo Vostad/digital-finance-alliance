@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Shell } from "@/components/admin/Shell";
@@ -32,11 +32,11 @@ import {
   adminCorridors,
   adminProviders,
   adminRails,
-  adminRoutes,
   decideSubmission,
-  radarAdminOverview,
+  radarAdminScreen,
+  radarRouteContext,
+  radarStale,
   removeLicence,
-  submissionQueue,
 } from "@/rpc/radar-admin";
 
 /**
@@ -61,16 +61,14 @@ export const Route = createFileRoute("/admin/radar")({
   head: () => ({
     meta: [{ title: "Rails Radar — Financial Rails OS" }, { name: "robots", content: "noindex" }],
   }),
+  /**
+   * ONE call. It was five, in two waves, three of which served tabs that were
+   * not open — see radarAdminScreen. Everything else loads when its tab does.
+   */
   loader: async () => {
-    const overview = await radarAdminOverview().catch(() => null);
-    if (!overview) throw redirect({ to: "/admin/login" });
-    const [queue, corridors, rails, providers] = await Promise.all([
-      submissionQueue({ data: {} }).catch(() => []),
-      adminCorridors().catch(() => []),
-      adminRails().catch(() => []),
-      adminProviders().catch(() => []),
-    ]);
-    return { ...overview, queue, corridors, rails, providers };
+    const screen = await radarAdminScreen().catch(() => null);
+    if (!screen) throw redirect({ to: "/admin/login" });
+    return screen;
   },
   component: RadarAdmin,
 });
@@ -79,16 +77,42 @@ type Tab = "queue" | "stale" | "corridors" | "rails" | "providers";
 
 /** Derived from the RPCs rather than from `Route.useLoaderData`, which resolves
     to `any` here and takes every child prop down with it. */
-type Overview = Awaited<ReturnType<typeof radarAdminOverview>>;
-type Data = {
-  viewer: Overview["viewer"];
-  counts: Overview["counts"];
-  stale: Overview["stale"];
-  queue: Awaited<ReturnType<typeof submissionQueue>>;
-  corridors: Awaited<ReturnType<typeof adminCorridors>>;
-  rails: Awaited<ReturnType<typeof adminRails>>;
-  providers: Awaited<ReturnType<typeof adminProviders>>;
-};
+type Data = Awaited<ReturnType<typeof radarAdminScreen>>;
+type CorridorList = Awaited<ReturnType<typeof adminCorridors>>;
+type RailList = Awaited<ReturnType<typeof adminRails>>;
+type ProviderList = Awaited<ReturnType<typeof adminProviders>>;
+type StaleRows = Awaited<ReturnType<typeof radarStale>>;
+type RouteCtx = Awaited<ReturnType<typeof radarRouteContext>>;
+
+/**
+ * Fetch when a tab is first opened, once, and keep it.
+ *
+ * The point of the whole change: a tab nobody has clicked costs nothing. `key`
+ * bumps to force a refetch after a save, so an edit still shows immediately.
+ */
+function useLazy<T>(active: boolean, load: () => Promise<T>, key = 0) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const seen = useRef<string | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    const stamp = String(key);
+    if (seen.current === stamp) return;
+    seen.current = stamp;
+    setLoading(true);
+    void load()
+      .then(setData)
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, key]);
+  return {
+    data,
+    loading,
+    reload: () => {
+      seen.current = null;
+    },
+  };
+}
 
 function RadarAdmin() {
   const data = Route.useLoaderData() as Data;
@@ -110,8 +134,12 @@ function RadarAdmin() {
     }
   };
 
-  const staleTotal =
-    data.stale.rails.length + data.stale.providers.length + data.stale.routes.length;
+  /* A bump forces the lazy tabs to refetch after a save. */
+  const [version, setVersion] = useState(0);
+  const bump = useCallback(async () => {
+    setVersion((v) => v + 1);
+    await refresh();
+  }, [refresh]);
 
   return (
     /* `role` drives which destinations the shell draws. Omitting it does not
@@ -142,8 +170,9 @@ function RadarAdmin() {
       <nav className="mt-6 flex flex-wrap gap-1 border-b border-hairline">
         {(
           [
-            ["queue", `Queue (${data.queue.length})`],
-            ["stale", `Re-verify (${staleTotal})`],
+            ["queue", `Queue (${data.counts.pending})`],
+            /* Counts, not rows. The rows arrive only if this tab is opened. */
+            ["stale", `Re-verify (${data.staleCounts.total})`],
             ["corridors", "Corridors"],
             ["rails", "Rails"],
             ["providers", "Providers"],
@@ -167,21 +196,105 @@ function RadarAdmin() {
 
       <div className="mt-8">
         {tab === "queue" ? <Queue rows={data.queue} run={run} /> : null}
-        {tab === "stale" ? <Stale stale={data.stale} onGo={setTab} /> : null}
-        {tab === "corridors" ? (
-          <Corridors
-            rows={data.corridors}
-            providers={data.providers}
-            rails={data.rails}
-            refresh={refresh}
-          />
-        ) : null}
-        {tab === "rails" ? <Rails rows={data.rails} refresh={refresh} /> : null}
-        {tab === "providers" ? (
-          <Providers rows={data.providers} refresh={refresh} run={run} />
-        ) : null}
+        <StaleTab active={tab === "stale"} counts={data.staleCounts} onGo={setTab} />
+        <CorridorsTab active={tab === "corridors"} version={version} refresh={bump} />
+        <RailsTab active={tab === "rails"} version={version} refresh={bump} />
+        <ProvidersTab active={tab === "providers"} version={version} refresh={bump} run={run} />
       </div>
     </Shell>
+  );
+}
+
+/* ------------------------------------------------------------ lazy tabs -- */
+
+function Loading() {
+  return <p className={cn(TEXT.micro, "text-ink/50")}>Loading…</p>;
+}
+
+function StaleTab({
+  active,
+  counts,
+  onGo,
+}: {
+  active: boolean;
+  counts: Data["staleCounts"];
+  onGo: (t: Tab) => void;
+}) {
+  const { data, loading } = useLazy<StaleRows>(active, () => radarStale());
+  if (!active) return null;
+  if (loading || !data) return <Loading />;
+  return <Stale stale={data} onGo={onGo} />;
+}
+
+function CorridorsTab({
+  active,
+  version,
+  refresh,
+}: {
+  active: boolean;
+  version: number;
+  refresh: () => Promise<void>;
+}) {
+  const { data, loading, reload } = useLazy<CorridorList>(active, () => adminCorridors(), version);
+  if (!active) return null;
+  if (loading || !data) return <Loading />;
+  return (
+    <Corridors
+      rows={data}
+      refresh={async () => {
+        reload();
+        await refresh();
+      }}
+    />
+  );
+}
+
+function RailsTab({
+  active,
+  version,
+  refresh,
+}: {
+  active: boolean;
+  version: number;
+  refresh: () => Promise<void>;
+}) {
+  const { data, loading, reload } = useLazy<RailList>(active, () => adminRails(), version);
+  if (!active) return null;
+  if (loading || !data) return <Loading />;
+  return (
+    <Rails
+      rows={data}
+      refresh={async () => {
+        reload();
+        await refresh();
+      }}
+    />
+  );
+}
+
+function ProvidersTab({
+  active,
+  version,
+  refresh,
+  run,
+}: {
+  active: boolean;
+  version: number;
+  refresh: () => Promise<void>;
+  run: (w: () => Promise<unknown>) => Promise<void>;
+}) {
+  const { data, loading, reload } = useLazy<ProviderList>(active, () => adminProviders(), version);
+  if (!active) return null;
+  if (loading || !data) return <Loading />;
+  return (
+    <Providers
+      rows={data}
+      run={run}
+      refresh={async () => {
+        reload();
+        await refresh();
+      }}
+    />
   );
 }
 
@@ -289,7 +402,7 @@ function Queue({
 
 /* ----------------------------------------------------------------- stale -- */
 
-function Stale({ stale, onGo }: { stale: Data["stale"]; onGo: (t: Tab) => void }) {
+function Stale({ stale, onGo }: { stale: StaleRows; onGo: (t: Tab) => void }) {
   const rows = [
     ...stale.rails.map((r) => ({ kind: "Rail" as const, name: r.name, at: r.lastVerifiedAt })),
     ...stale.providers.map((r) => ({
@@ -344,17 +457,7 @@ function Stale({ stale, onGo }: { stale: Data["stale"]; onGo: (t: Tab) => void }
 
 /* ------------------------------------------------------------- corridors -- */
 
-function Corridors({
-  rows,
-  providers,
-  rails,
-  refresh,
-}: {
-  rows: Data["corridors"];
-  providers: Data["providers"];
-  rails: Data["rails"];
-  refresh: () => Promise<void>;
-}) {
+function Corridors({ rows, refresh }: { rows: CorridorList; refresh: () => Promise<void> }) {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -441,15 +544,7 @@ function Corridors({
         </div>
       ) : null}
 
-      {open ? (
-        <CorridorDetail
-          corridor={open}
-          providers={providers}
-          rails={rails}
-          refresh={refresh}
-          key={open.id}
-        />
-      ) : null}
+      {open ? <CorridorDetail corridor={open} refresh={refresh} key={open.id} /> : null}
     </Panel>
   );
 }
@@ -458,16 +553,15 @@ function Corridors({
     overview does not need every route in the system to render. */
 function CorridorDetail({
   corridor,
-  providers,
-  rails,
   refresh,
 }: {
-  corridor: Data["corridors"][number];
-  providers: Data["providers"];
-  rails: Data["rails"];
+  corridor: CorridorList[number];
   refresh: () => Promise<void>;
 }) {
-  const [routes, setRoutes] = useState<Awaited<ReturnType<typeof adminRoutes>> | null>(null);
+  /* Routes AND the provider/rail lists the form selects from, in one authorized
+     call, made when this drill-down opens. Those two lists used to load on every
+     visit to the screen to populate a form most visits never opened. */
+  const [ctx, setCtx] = useState<RouteCtx | null>(null);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -476,13 +570,19 @@ function CorridorDetail({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setRoutes(await adminRoutes({ data: { corridorId: corridor.id } }));
+      setCtx(await radarRouteContext({ data: { corridorId: corridor.id } }));
     } finally {
       setLoading(false);
     }
   }, [corridor.id]);
 
-  if (routes === null && !loading) void load();
+  useEffect(() => {
+    if (ctx === null && !loading) void load();
+  }, [ctx, loading, load]);
+
+  const routes = ctx?.routes ?? null;
+  const providers = ctx?.providers ?? [];
+  const rails = ctx?.rails ?? [];
 
   const after = async () => {
     setCreating(false);
@@ -609,7 +709,7 @@ function CorridorDetail({
 
 /* ----------------------------------------------------------------- rails -- */
 
-function Rails({ rows, refresh }: { rows: Data["rails"]; refresh: () => Promise<void> }) {
+function Rails({ rows, refresh }: { rows: RailList; refresh: () => Promise<void> }) {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
 
@@ -698,7 +798,7 @@ function Providers({
   refresh,
   run,
 }: {
-  rows: Data["providers"];
+  rows: ProviderList;
   refresh: () => Promise<void>;
   run: (w: () => Promise<unknown>) => Promise<void>;
 }) {
